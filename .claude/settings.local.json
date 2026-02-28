@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git ls-tree:*)",
+      "Bash(xargs grep:*)",
+      "Bash(find F:\\\\UnityProject\\\\ET\\\\Library\\\\PackageCache:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "mcp__ide__getDiagnostics",
+      "mcp__UnityMCP__read_console",
+      "Bash(dotnet build:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python3:*)",
+      "WebSearch",
+      "Bash(claude plugins:*)",
+      "Bash(node:*)",
+      "Bash(npm view:*)",
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(omc tui)",
+      "Bash(omc stats)",
+      "Bash(omc agents)",
+      "Bash(omc --help)",
+      "Bash(omc info)",
+      "Bash(git remote set-url origin https://github.com/arsenal0615/ET)"
+    ]
+  }
+}
