@@ -1,7 +1,7 @@
 {
 "enabledPlugins": {
     "csharp-lsp@claude-plugins-official": true,
-    "oh-my-claudecode@omc": true
+    "oh-my-claudecode@omc": false
   },
   "permissions": {
     "allow": [
