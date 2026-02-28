@@ -2,7 +2,7 @@
 "enabledPlugins": {
     "csharp-lsp@claude-plugins-official": true,
     "oh-my-claudecode@omc": true
-  }
+  },
   "permissions": {
     "allow": [
       "mcp__unity",
