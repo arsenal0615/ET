@@ -23,7 +23,11 @@
       "Bash(omc agents)",
       "Bash(omc --help)",
       "Bash(omc info)",
-      "Bash(git remote set-url origin https://github.com/arsenal0615/ET)"
+      "Bash(git remote set-url origin https://github.com/arsenal0615/ET)",
+      "Bash(gh repo view abhigyanpatwari/GitNexus --json name,description,url,stargazerCount,forkCount,primaryLanguage,languages,createdAt,updatedAt,licenseInfo,repositoryTopics,defaultBranchRef)",
+      "Bash(dotnet ./Packages/cn.etetet.proto/DotNet~/Exe/ET.Proto2CS.dll ./)",
+      "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
+      "Bash(git check-ignore -v Packages/cn.etetet.actorlocation)"
     ]
   }
 }
