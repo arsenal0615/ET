@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"omc tui\",\"timeout\":10000,\"description\":\"Launch OMC TUI dashboard\"}",
-  "error": "Exit code 1\n\n⚠  WARNING: Native Windows (win32) detected\n   OMC requires tmux, which is not available on native Windows.\n   Native Windows support is experimental and may have limited functionality.\n   WSL2 is strongly recommended: https://learn.microsoft.com/en-us/windows/wsl/install\n\n[omc] Error: Already inside a Claude Code session. Nested launches are not supported.\n\n\n⚠  WARNING: Native Windows (win32) detected\n   OMC requires tmux, which is not available on native Windows.\n   Native Windows...",
-  "timestamp": "2026-02-28T01:36:21.482Z",
-  "retry_count": 1
-}
