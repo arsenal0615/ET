@@ -1,9 +1,10 @@
 # ET 框架知识库索引
 
-本目录整理自 `Book/` 文档和项目 CLAUDE.md，为 AI 辅助 ET 框架游戏开发提供深度参考。
+本目录整理自 `Book/` 文档、项目代码和 CLAUDE.md，为 AI 辅助 ET 框架游戏开发提供深度参考。
 
 ## 知识文件
 
+### ET 框架核心（来源：Book/ 文档）
 | 文件 | 内容 | 关键词 |
 |------|------|--------|
 | [et-async-pattern.md](et-async-pattern.md) | ETTask 原理、单线程异步、协程取消 | ETTask, async/await, ETCancelToken, 单线程 |
@@ -12,6 +13,12 @@
 | [et-actor-network.md](et-actor-network.md) | Actor 消息、Actor Location、锁机制 | Actor, MailBox, Location Server, 进程间通信 |
 | [et-game-systems.md](et-game-systems.md) | 数值组件 KV 设计、AI 行为机 | NumericComponent, Buff, 行为机, AINode, CancelToken |
 | [et-package-structure.md](et-package-structure.md) | 包目录规范、包列表、MongoBson 序列化 | Package, Scripts, CodeMode, BsonSerializer |
+
+### 第三方库集成（来源：Packages 代码分析）
+| 文件 | 内容 | 关键词 |
+|------|------|--------|
+| [et-yooasset.md](et-yooasset.md) | YooAsset 资源管理在 ET 中的封装与用法 | ResourcesComponent, ResourcesLoaderComponent, PlayMode, AB包 |
+| [et-hybridclr.md](et-hybridclr.md) | HybridCLR 热更新在 ET 中的集成与流程 | CodeLoader, AOT元数据, F6编译, F7热重载, 打包 |
 
 ## 快速参考：ET9 核心编码规则
 

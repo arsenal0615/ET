@@ -5,17 +5,15 @@
   },
   "permissions": {
     "allow": [
+      "Bash(.*)",
+      "Read(.*)",
+      "Write(.*)",
+      "Edit(.*)",
+      "Glob(.*)",
+      "Grep(.*)",
       "mcp__unity",
-      "Edit(reports/**)",
-      "MultiEdit(reports/**)"
+      "mcp__pencil"
     ],
-    "deny": [
-      "WebFetch",
-      "WebSearch",
-      "Task",
-      "TodoWrite",
-      "NotebookEdit",
-      "NotebookRead"
-    ]
+    "deny": []
   }
 }
