@@ -55,3 +55,4 @@ Unity.sln.DotSettings.user
 Assets/Plugins/Sirenix*
 Assets/HybridCLR*
 .omc
+/.claude/settings.local.json
