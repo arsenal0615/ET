@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ET
+namespace ET.Server
 {
     [EntitySystemOf(typeof(DeterministicRngComponent))]
     [FriendOf(typeof(DeterministicRngComponent))]
