@@ -16,6 +16,14 @@
 - **cn.etetet.ai** — AI 框架
 - **cn.etetet.aoi** — 兴趣区域（AOI）
 - **cn.etetet.hybridclr** — 客户端热更新支持
+- **cn.etetet.numeric** — KV 数值组件
+- **cn.etetet.actorlocation** — Actor Location 机制
+- **cn.etetet.db** — MongoDB 封装
+- **cn.etetet.yooassets** — YooAsset 资源管理封装
+- **cn.etetet.fairygui** — FairyGUI UI 框架（第三方库，Runtime/ 模式）
+- **cn.etetet.recast** — 3D Recast 寻路
+- **cn.etetet.router** — 软路由（防网络攻击）
+- **cn.etetet.lockstep** — 帧同步演示
 
 ## 四程序集分离
 
@@ -35,11 +43,29 @@
 - **Client** — 仅 Client + Share（用于独立客户端构建）
 - **Server** — 仅 Server + Share
 
-## 目录结构
+## 包内目录规范
+
+### 热更代码包（标准模式）
 
 每个包 `Packages/cn.etetet.*/Scripts/` 下分 `Model/` 和 `Hotfix/`，每层再分 `Client/` `Server/` `Share/`。
 
-第三方库包（如 FairyGUI、YooAssets）用 `Runtime/` + `Editor/` 模式，不参与四程序集分离。
+| 目录 | 用途 |
+|------|------|
+| **Scripts/** | 热更代码，下含 Model/Hotfix/ModelView/HotfixView |
+| **CodeMode/** | 模式相关代码，子目录 Server/Client/ClientServer |
+| **Runtime/** | AOT 代码，需定义 asmdef |
+| **Editor/** | 编辑器代码 |
+| **DotNet~/** | .NET 专用工程（`~` 后缀让 Unity 忽略） |
+| **Excel/** | Excel 配置表 |
+| **Proto/** | 消息定义 |
+
+关键规则：
+- 每个包顶层放 `Ignore` 的 asmdef → 默认代码不生效，只有显式 asmdef 才生效
+- `Scripts/Share/` = 双端共用，`CodeMode/ClientServer/` = 仅编辑器 ClientServer 模式
+
+### 第三方库包（Runtime 模式）
+
+FairyGUI、YooAssets 等用 `Runtime/` + `Editor/` 模式，不参与四程序集分离。
 
 ## 入口点
 
@@ -75,3 +101,4 @@ dotnet build ET.sln
 # 启动服务器（单进程，从 ET 根目录执行）
 dotnet Bin/ET.App.dll --SceneName=StateSync --Process=1 --StartConfig=StartConfig/Localhost --Console=1
 ```
+

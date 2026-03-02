@@ -1,10 +1,6 @@
-# ET 编码模式参考
+# ET 代码模板与速查
 
-## Entity-Component 模式
-
-Entity 是纯数据容器。逻辑通过独立 System 类中的**静态扩展方法**实现。
-
-### Component 模板（Model 程序集）
+## Component 模板（Model 程序集）
 
 ```csharp
 [ComponentOf(typeof(ParentEntity))]
@@ -14,7 +10,7 @@ public class MyComponent : Entity, IAwake, IDestroy
 }
 ```
 
-### System 模板（Hotfix 程序集）
+## System 模板（Hotfix 程序集）
 
 ```csharp
 [EntitySystemOf(typeof(MyComponent))]
@@ -29,7 +25,7 @@ public static partial class MyComponentSystem
 }
 ```
 
-### 消息处理器模板（Hotfix 程序集）
+## 消息处理器模板（Hotfix 程序集）
 
 ```csharp
 [MessageSessionHandler(SceneType.Gate)]
@@ -39,7 +35,7 @@ public class C2G_MyRequestHandler : MessageSessionHandler<C2G_MyRequest, G2C_MyR
 }
 ```
 
-### 事件处理器模板（Hotfix 程序集）
+## 事件处理器模板（Hotfix 程序集）
 
 ```csharp
 [Event(SceneType.Client)]

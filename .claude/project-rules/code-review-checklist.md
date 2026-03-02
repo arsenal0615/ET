@@ -37,7 +37,25 @@
 - [ ] Request 有对应 ResponseType 注释
 - [ ] 跨 Fiber 通信使用 Actor 消息（不直接访问对象）
 
+## 异步安全
+
+- [ ] 异步回调后检查 InstanceId 是否变化（防止操作已回收对象）
+- [ ] 可打断的异步行为每个 await 都传入 cancelToken 并检查返回值
+- [ ] 异步循环中防止空转死循环（加短暂 Wait）
+- [ ] 不等待的协程用 `.Coroutine()` 启动
+
 ## 配置和资源
 
 - [ ] 新配置已定义 Excel 并运行 ExcelExporter
 - [ ] 资源加载使用框架提供的 API
+
+## 常见陷阱速查
+
+| 症状 | 原因 |
+|------|------|
+| Source Generator 不工作 | System 类忘记 `partial` 关键字 |
+| Awake 不触发 | 忘记 `[EntitySystemOf(typeof(...))]` |
+| 字段不可访问 | 忘记 `[FriendOf(typeof(...))]` |
+| 消息无法路由 | 忘记 `[MessageHandler(SceneType.X)]` |
+| 运行时异常（消息相关） | 改了 Proto 没跑 Proto2CS |
+| 跨 Fiber 访问崩溃 | 直接访问对象，应使用 Actor 消息 |
