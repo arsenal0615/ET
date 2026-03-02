@@ -1,0 +1,11 @@
+{
+  "name": "cn.etetet.autochess",
+  "displayName": "ET.AutoChess",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "自走棋游戏模块 - A1 Auto Chess",
+  "author": {
+    "name": "team",
+    "url": ""
+  }
+}
