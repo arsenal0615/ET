@@ -142,6 +142,87 @@ _本文件包含 AI Agent 在本项目中实现代码时必须遵循的关键规
 - `Session` 是网络连接封装，RPC 调用使用 `session.Call(request)`
 - 带 `MailBoxComponent` 的 Entity 可通过 Actor ID 从任意服务器接收消息
 
+### FairyGUI UI 框架
+
+#### 包信息
+
+| 项 | 值 |
+|---|---|
+| 包名 | `cn.etetet.fairygui` |
+| 位置 | `Packages/cn.etetet.fairygui/` |
+| 运行时程序集 | `ET.FairyGUI`（asmdef: `Runtime/ET.FairyGUI.asmdef`） |
+| 编辑器程序集 | `ET.FairyGUI.Editor`（asmdef: `Editor/ET.FairyGUI.Editor.asmdef`） |
+| 命名空间 | `FairyGUI`、`FairyGUI.Utils` |
+| 依赖 | `com.unity.ugui`（Unity 6 中 TMP 已合并进 ugui） |
+
+#### 与标准 ET 包的区别
+
+FairyGUI 是**第三方 UI 库**，不参与 ET 四程序集热更分离：
+- 使用 `Runtime/` 目录（非 `Scripts/Model/Hotfix/`），与 `cn.etetet.yooassets` 同模式
+- 保留原始 `FairyGUI` / `FairyGUI.Utils` 命名空间，未改为 `ET.*`
+- 无 `Client/Server/Share` 分层（纯客户端库）
+- 其他 ET 包引用 FairyGUI 时，在 asmdef 的 references 中添加 `"ET.FairyGUI"`
+
+#### 目录结构
+
+```
+cn.etetet.fairygui/
+├── Runtime/              # 运行时代码 (158 个 .cs)
+│   ├── Core/             # 渲染核心 (DisplayObject, NGraphics, Stage, Mesh, HitTest, Text)
+│   ├── Event/            # 事件系统 (EventDispatcher, EventListener)
+│   ├── Extensions/       # 扩展 (DragonBones, Spine, TextMeshPro, WebGL)
+│   ├── Filter/           # 滤镜 (BlurFilter, ColorFilter)
+│   ├── Gesture/          # 手势 (LongPress, Pinch, Rotation, Swipe)
+│   ├── Tween/            # 补间动画 (GTween, GTweener)
+│   ├── UI/               # UI 组件 (GObject 层级, UIPackage, ScrollPane, Controller, Transition)
+│   └── Utils/            # 工具 (XML, HTML, ByteBuffer, UBBParser)
+├── Editor/               # 编辑器扩展 (8 个 Inspector/Window)
+└── Resources/Shaders/    # 内置 Shader (Image, Text, BMFont, BlurFilter)
+```
+
+#### 核心类层级
+
+```
+GObject (所有 UI 元素基类)
+├── GComponent (容器，可包含子对象)
+│   ├── GRoot (全局根节点，单例)
+│   ├── GList (列表/虚拟列表)
+│   ├── GComboBox (下拉框)
+│   ├── GLabel (标签)
+│   ├── GButton (按钮)
+│   ├── GProgressBar (进度条)
+│   ├── GSlider (滑块)
+│   ├── GScrollBar (滚动条)
+│   └── Window (窗口基类)
+├── GImage (图片)
+├── GTextField / GRichTextField (文本)
+├── GTextInput (输入框)
+├── GGraph (图形)
+├── GLoader / GLoader3D (外部资源加载)
+├── GMovieClip (序列帧动画)
+└── GTree (树形控件)
+```
+
+#### 关键类职责
+
+| 类 | 职责 |
+|---|---|
+| `UIPackage` | 管理 FairyGUI 编辑器导出的 UI 资源包，`AddPackage()` / `RemovePackage()` |
+| `UIPanel` | MonoBehaviour 组件，将 FairyGUI 面板挂载到 Unity 场景 |
+| `GRoot` | 全局 UI 根节点（单例），`GRoot.inst` 访问 |
+| `Controller` | 组件状态控制器（页面切换） |
+| `Transition` | 组件过渡动画 |
+| `ScrollPane` | 滚动容器（支持虚拟列表） |
+| `UIObjectFactory` | 自定义组件类映射（`SetPackageItemExtension<T>(url)`） |
+| `Stage` | 渲染和输入管理的底层单例 |
+
+#### TextMeshPro 支持
+
+- TMP 功能在 `#if FAIRYGUI_TMPRO` 条件编译下
+- 启用方式：在 Project Settings > Player > Scripting Define Symbols 中添加 `FAIRYGUI_TMPRO`
+- 相关类：`TMPFont`、`TMPTextFormat`（位于 `Runtime/Extensions/TextMeshPro/`）
+- 包含专用 Shader：`Runtime/Extensions/TextMeshPro/Shaders/FairyGUI-TMP.shader`
+
 ### 开发工作流规则
 
 #### 编译与热更新
@@ -164,8 +245,8 @@ _本文件包含 AI Agent 在本项目中实现代码时必须遵循的关键规
 #### 包结构
 
 - 所有框架代码位于 `Packages/cn.etetet.*` 下
-- 每个包包含 `Scripts/Model/`（数据）和 `Scripts/Hotfix/`（逻辑）
-- 每层再分 `Client/` `Server/` `Share/` 子目录
+- **ET 业务包**：`Scripts/Model/` + `Scripts/Hotfix/`，每层再分 `Client/` `Server/` `Share/`
+- **第三方库包**（FairyGUI、YooAssets）：`Runtime/` + `Editor/` 模式，不参与四程序集分离
 
 ### 关键易错规则
 
@@ -245,4 +326,4 @@ public class C2G_MyRequestHandler : MessageSessionHandler<C2G_MyRequest, G2C_MyR
 - 定期审查，移除已过时的规则
 - 保持精简，聚焦于 Agent 易出错的非显而易见的细节
 
-最后更新：2026-02-28
+最后更新：2026-03-02
