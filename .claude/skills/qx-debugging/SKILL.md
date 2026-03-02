@@ -1,6 +1,6 @@
 ---
 name: qx-debugging
-description: "Use when encountering any bug, test failure, or unexpected behavior in the ET/Unity project, before proposing fixes. Enforces systematic root cause investigation."
+description: "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes. Enforces systematic root cause investigation."
 ---
 
 # Systematic Debugging
@@ -71,7 +71,7 @@ You MUST complete each phase before proceeding to the next.
 
 4. **Gather Evidence in Multi-Component Systems**
 
-   **WHEN system has multiple components (Client → Gate → Map, or Fiber → Actor → Handler):**
+   **WHEN system has multiple components (client → server, or service → service):**
 
    **BEFORE proposing fixes, add diagnostic instrumentation:**
    ```
@@ -86,22 +86,22 @@ You MUST complete each phase before proceeding to the next.
    THEN investigate that specific component
    ```
 
-   **Example (ET message chain):**
-   ```csharp
-   // Layer 1: Client sends
-   Log.Debug($"=== Client sending C2G_Login: Account={request.Account} ===");
+   **Example (multi-layer request chain):**
+   ```
+   // Layer 1: Client sends request
+   Log("=== Client sending LoginRequest: Account={account} ===");
 
-   // Layer 2: Gate receives
-   Log.Debug($"=== Gate received C2G_Login: Session={session.Id} ===");
+   // Layer 2: Gateway receives
+   Log("=== Gateway received LoginRequest: SessionId={id} ===");
 
-   // Layer 3: Gate forwards to Realm
-   Log.Debug($"=== Gate forwarding to Realm: ActorId={realmActorId} ===");
+   // Layer 3: Gateway forwards to backend
+   Log("=== Gateway forwarding to AuthService: TargetId={serviceId} ===");
 
-   // Layer 4: Realm processes
-   Log.Debug($"=== Realm processing login: Account={request.Account} ===");
+   // Layer 4: Backend processes
+   Log("=== AuthService processing login: Account={account} ===");
    ```
 
-   **This reveals:** Which layer fails (Client → Gate ✓, Gate → Realm ✗)
+   **This reveals:** Which layer fails (Client → Gateway ✓, Gateway → AuthService ✗)
 
 5. **Trace Data Flow**
 
@@ -207,53 +207,19 @@ You MUST complete each phase before proceeding to the next.
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
-## ET Framework Debugging Guide
+## Project-Specific Debugging
 
-ET projects have specific debugging patterns:
+Read the project's CLAUDE.md and MEMORY.md for framework-specific debugging guidance:
 
-### Entity/Component Problems
-| Symptom | Common Cause | Investigation |
-|---------|-------------|---------------|
-| Component Awake not triggered | Missing `[EntitySystemOf]` or `partial` keyword | Check System class declaration |
-| AddComponent throws | `[ComponentOf]` doesn't match parent Entity type | Check attribute declaration |
-| Fields not accessible | Missing `[FriendOf]` on System class | Check System class attributes |
-| Entity has methods (Analyzer error) | Logic in Entity class instead of System | Move methods to static System class |
+- **Common error patterns** — Framework-specific errors and their typical causes
+- **Component/system problems** — Issues related to the project's architecture patterns
+- **Message/network problems** — Communication and serialization issues
+- **Concurrency problems** — Threading, async, and synchronization issues
+- **Build/compilation problems** — Build tool and compiler errors
+- **Config/data problems** — Configuration loading and data validation issues
+- **Debugging tools** — Project-specific debugging tools and commands
 
-### Message/Network Problems
-| Symptom | Common Cause | Investigation |
-|---------|-------------|---------------|
-| Message no response | Wrong `[MessageHandler(SceneType.X)]` | Check SceneType matches receiver |
-| Proto serialization fails | Proto2CS not run after .proto change | Run `dotnet Proto2CS.dll` |
-| Actor message not delivered | Missing `MailBoxComponent` | Check entity has MailBoxComponent added |
-| RPC timeout | Handler throws exception silently | Add logging in handler, check server console |
-
-### Fiber/Concurrency Problems
-| Symptom | Common Cause | Investigation |
-|---------|-------------|---------------|
-| Cross-Fiber access exception | Directly accessing Entity across Fibers | Must use Actor messages |
-| ETTask deadlock | Await chain broken or circular | Trace full await chain, check ETCancelToken |
-| Static field state loss after F7 | Missing `[StaticField]` attribute | Add attribute or redesign |
-
-### Hot-Reload Problems
-| Symptom | Common Cause | Investigation |
-|---------|-------------|---------------|
-| F6 compile fails | Analyzer rule violation | Read Unity Console error messages |
-| F7 reload no effect | Not in Play mode | Ensure Unity is in Play mode |
-| State lost after reload | Static fields without `[StaticField]` | Audit static field usage |
-
-### Config/Data Problems
-| Symptom | Common Cause | Investigation |
-|---------|-------------|---------------|
-| Config load fails | Excel not exported | Run ExcelExporter |
-| Numeric calculation wrong | NumericComponent KV formula error | Dump all KV pairs, verify formula |
-| Missing config entry | Excel row not exported or filtered | Check Excel source and export log |
-
-### Debugging Tools
-- **Unity Console** — Client-side logs (`Log.Debug`, `Log.Warning`, `Log.Error`)
-- **Server Console** — Start with `--Console=1` for server-side output
-- **Entity Visualization** — Add `ENABLE_VIEW` define to see entities in Unity Hierarchy
-- **Compilation Check** — `dotnet build ET.sln` catches Analyzer errors early
-- **Proto Check** — Verify .proto files compile: `dotnet Proto2CS.dll`
+**Always check CLAUDE.md first** — The project's instruction file contains framework rules, common pitfalls, and verification commands that are essential for diagnosing project-specific issues.
 
 ## Red Flags - STOP and Follow Process
 

@@ -27,12 +27,11 @@ model: inherit
 - 与现有系统的集成质量
 - 可扩展性考量
 
-### 4. ET 框架特化审查
-- 四程序集分离是否正确（Model/ModelView/Hotfix/HotfixView）
-- Component/System 职责划分
-- 消息方向（C2G_, G2C_ 等前缀）
-- Fiber 调度选择是否合理
-- 对象池使用（禁止 new Entity）
+### 4. 项目框架特化审查
+- 读取项目 `CLAUDE.md` 获取编译期强制规则
+- 读取 `.claude/project-rules/code-review-checklist.md` 获取完整审查清单
+- 按需读取 `.claude/project-rules/` 下的相关文件获取详细规则
+- 检查程序集/模块分离、数据/逻辑职责划分、通信规范、对象生命周期
 
 ## 输出格式
 

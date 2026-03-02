@@ -16,8 +16,8 @@ Tests must verify real behavior, not mock behavior. Mocks are a means to isolate
 1. NEVER test mock behavior
 2. NEVER add test-only methods to production classes
 3. NEVER mock without understanding dependencies
-4. NEVER use `new` on Entity types in tests
-5. NEVER test methods directly on Entity classes
+4. NEVER bypass object lifecycle in tests
+5. NEVER test methods that shouldn't exist on data classes
 ```
 
 ## Anti-Pattern 1: Testing Mock Behavior
@@ -27,10 +27,10 @@ Tests must verify real behavior, not mock behavior. Mocks are a means to isolate
 [Test]
 public void SendMessage_ShouldWork()
 {
-    var mockSession = new Mock<Session>();
+    var mockSession = new Mock<ISession>();
     mockSession.Setup(s => s.Send(It.IsAny<IMessage>())).Returns(true);
 
-    var result = mockSession.Object.Send(new C2G_Login());
+    var result = mockSession.Object.Send(new LoginRequest());
 
     // BAD: only verifying mock works as configured
     mockSession.Verify(s => s.Send(It.IsAny<IMessage>()), Times.Once);
@@ -48,10 +48,10 @@ public void SendMessage_ShouldWork()
 [Test]
 public void LoginHandler_ShouldSendResponseToClient()
 {
-    var handler = new C2G_LoginHandler();
+    var handler = new LoginHandler();
     var session = CreateTestSession();
-    var request = new C2G_Login { Account = "test", Password = "123" };
-    var response = new G2C_Login();
+    var request = new LoginRequest { Account = "test", Password = "123" };
+    var response = new LoginResponse();
 
     handler.Run(session, request, response);
 
@@ -73,16 +73,15 @@ BEFORE asserting on any mock element:
 
 **The violation:**
 ```csharp
-// In production code (Model assembly)
-[ComponentOf(typeof(Unit))]
-public class NumericComponent : Entity, IAwake
+// In production code
+public class HealthComponent
 {
-    public Dictionary<int, float> numericDic;
+    private int _hp;
 
     // BAD: this method exists only for tests
     public void ResetForTesting()
     {
-        this.numericDic.Clear();
+        this._hp = 0;
     }
 }
 ```
@@ -91,22 +90,22 @@ public class NumericComponent : Entity, IAwake
 - Production class polluted with test-only code
 - Dangerous if accidentally called in production
 - Violates YAGNI and separation of concerns
-- Also violates ET rule: Entity classes should not have methods
+- May violate framework rules (e.g., data classes should not have methods)
 
 **The fix:**
 ```csharp
-// In test utilities
+// In test utilities — use the normal lifecycle
 [Test]
-public void NumericComponent_AfterReset_ShouldHaveDefaultValues()
+public void HealthComponent_AfterReset_ShouldHaveDefaultValues()
 {
     var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
+    var character = scene.CreateChild<Character>();
 
     // Reset by removing and re-adding (normal lifecycle)
-    unit.RemoveComponent<NumericComponent>();
-    var numeric = unit.AddComponent<NumericComponent>();
+    character.RemoveComponent<HealthComponent>();
+    var health = character.AddComponent<HealthComponent>();
 
-    Assert.AreEqual(0, numeric.GetAsInt(NumericType.Hp));
+    Assert.AreEqual(0, health.Hp);
 }
 ```
 
@@ -124,13 +123,13 @@ BEFORE adding any method to production class:
 **The violation:**
 ```csharp
 [Test]
-public void MoveComponent_Update_ShouldMoveUnit()
+public void MoveComponent_Update_ShouldMoveCharacter()
 {
-    var mockMove = new Mock<MoveComponent>();
+    var mockMove = new Mock<IMoveComponent>();
     // BAD: mocking the thing we're testing
     mockMove.Setup(m => m.Speed).Returns(5.0f);
 
-    MoveComponentSystem.Update(mockMove.Object, 0.1f);
+    MoveSystem.Update(mockMove.Object, 0.1f);
 
     // What are we even testing here?
     mockMove.Verify();
@@ -145,21 +144,21 @@ public void MoveComponent_Update_ShouldMoveUnit()
 **The fix:**
 ```csharp
 [Test]
-public void MoveComponent_Update_ShouldAdvancePosition()
+public void MoveSystem_Update_ShouldAdvancePosition()
 {
     var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
-    var move = unit.AddComponent<MoveComponent>();
+    var character = scene.CreateChild<Character>();
+    var move = character.AddComponent<MoveComponent>();
 
     // Set up REAL state
-    move.SetPath(new float3[] { float3.zero, new float3(10, 0, 0) });
+    move.SetPath(new Vector3[] { Vector3.zero, new Vector3(10, 0, 0) });
     move.Speed = 5.0f;
 
     // Call REAL method
-    MoveComponentSystem.Update(move, 1.0f);
+    MoveSystem.Update(move, 1.0f);
 
     // Verify REAL result
-    Assert.AreNotEqual(float3.zero, unit.Position);
+    Assert.AreNotEqual(Vector3.zero, character.Position);
 }
 ```
 
@@ -180,10 +179,10 @@ BEFORE mocking any method:
 
 **The violation:**
 ```csharp
-var mockAOI = new Mock<AOIComponent>();
+var mockAOI = new Mock<IAOIComponent>();
 // Only mock partial methods, others return defaults (null/0/false)
 mockAOI.Setup(a => a.GetUnitsInRange(It.IsAny<float>()))
-       .Returns(new List<Unit>());
+       .Returns(new List<Character>());
 // Missing: GetUnitCount, IsInRange, etc. that downstream code uses
 ```
 
@@ -193,7 +192,7 @@ mockAOI.Setup(a => a.GetUnitsInRange(It.IsAny<float>()))
 - Tests pass but integration fails
 - False confidence
 
-**The fix:** Mock the COMPLETE data structure as it exists in reality, or better yet, use real components in a test Scene.
+**The fix:** Mock the COMPLETE data structure as it exists in reality, or better yet, use real components in a test scene.
 
 ### Gate Function
 ```
@@ -226,16 +225,17 @@ TDD cycle:
 4. THEN claim complete
 ```
 
-## Anti-Pattern 6: Testing Entity Methods Directly (ET-Specific)
+## Anti-Pattern 6: Testing Methods on Data-Only Classes
 
 **The violation:**
 ```csharp
-// WRONG Entity definition (violates ET rules)
-public class HealthComponent : Entity, IAwake
+// WRONG: Data class with logic methods
+public class HealthComponent
 {
     private int _hp;
 
-    // BAD: Entity should NOT have methods
+    // BAD: If framework separates data from logic,
+    // data classes should NOT have methods
     public void TakeDamage(int damage)
     {
         _hp -= damage;
@@ -246,48 +246,46 @@ public class HealthComponent : Entity, IAwake
 [Test]
 public void HealthComponent_TakeDamage_ShouldReduceHP()
 {
-    var health = new HealthComponent(); // BAD: can't new Entity
-    health.TakeDamage(10);             // BAD: Entity shouldn't have methods
+    var health = new HealthComponent();
+    health.TakeDamage(10);
 }
 ```
 
 **Why this is wrong:**
-- Violates ET core rule: Entity classes must not have methods
-- All logic belongs in System static extension methods in Hotfix assembly
-- Analyzer will reject this at compile time
+- Many frameworks enforce data/logic separation (data classes must not have methods)
+- All logic belongs in separate System/Service classes
+- Compiler/analyzer may reject this at compile time
+- Check CLAUDE.md for your project's data/logic separation rules
 
 **The fix:**
 ```csharp
-// Correct Entity (Model assembly) - data only
-[ComponentOf(typeof(Unit))]
-public class HealthComponent : Entity, IAwake
+// Correct: Data class — data only
+public class HealthComponent
 {
     public int Hp;
     public int MaxHp;
 }
 
-// Correct System (Hotfix assembly) - logic here
-[EntitySystemOf(typeof(HealthComponent))]
-[FriendOf(typeof(HealthComponent))]
-public static partial class HealthComponentSystem
+// Correct: Logic in separate System class
+public static class HealthSystem
 {
-    public static void TakeDamage(this HealthComponent self, int damage)
+    public static void TakeDamage(HealthComponent self, int damage)
     {
         self.Hp = Math.Max(0, self.Hp - damage);
     }
 }
 
-// Correct test - tests the System extension method
+// Correct test — tests the System method
 [Test]
-public void HealthComponentSystem_TakeDamage_ShouldReduceHP()
+public void HealthSystem_TakeDamage_ShouldReduceHP()
 {
     var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
-    var health = unit.AddComponent<HealthComponent>();
+    var character = scene.CreateChild<Character>();
+    var health = character.AddComponent<HealthComponent>();
     health.Hp = 100;
     health.MaxHp = 100;
 
-    health.TakeDamage(10); // This calls the System extension method
+    HealthSystem.TakeDamage(health, 10);
 
     Assert.AreEqual(90, health.Hp);
 }
@@ -295,49 +293,52 @@ public void HealthComponentSystem_TakeDamage_ShouldReduceHP()
 
 ### Gate Function
 ```
-BEFORE testing any Entity behavior:
-  Ask: "Am I calling a method ON the Entity class, or on a System extension?"
-  IF on Entity class → STOP — Move logic to System class, test there
+BEFORE testing any data class behavior:
+  Ask: "Am I calling a method ON a data class, or on a System/Service?"
+  IF on data class → STOP — Check CLAUDE.md for data/logic separation rules
+  Move logic to the correct location, test there
 ```
 
-## Anti-Pattern 7: `new` Entity in Tests (ET-Specific)
+## Anti-Pattern 7: Bypassing Object Lifecycle in Tests
 
 **The violation:**
 ```csharp
 [Test]
 public void MoveComponent_ShouldInitializeCorrectly()
 {
-    var move = new MoveComponent(); // BAD: Entity cannot be new'd
+    var move = new MoveComponent(); // BAD: bypasses lifecycle
     move.Speed = 5.0f;
     Assert.AreEqual(5.0f, move.Speed);
 }
 ```
 
 **Why this is wrong:**
-- ET uses object pool for Entity lifecycle management
-- Direct `new` bypasses Awake/Destroy lifecycle hooks
-- Compiler Analyzer will report error (ET Rule 8)
+- Many frameworks use object pools or factories for lifecycle management
+- Direct `new` bypasses initialization/destruction lifecycle hooks
+- Compiler/analyzer may report an error
 - Test results don't represent real runtime behavior
+- Check CLAUDE.md for your project's object creation rules
 
 **The fix:**
 ```csharp
 [Test]
-public void MoveComponent_Awake_ShouldSetDefaultSpeed()
+public void MoveComponent_Init_ShouldSetDefaultSpeed()
 {
     var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
-    var move = unit.AddComponent<MoveComponent>(); // Correct: pool-managed
+    var character = scene.CreateChild<Character>();
+    var move = character.AddComponent<MoveComponent>(); // Correct: lifecycle-managed
 
-    // Awake has been properly called
+    // Initialization has been properly called
     Assert.AreEqual(MoveComponent.DefaultSpeed, move.Speed);
 }
 ```
 
 ### Gate Function
 ```
-BEFORE creating Entity/Component in tests:
-  Ask: "Am I using `new XxxComponent()` or `new XxxEntity()`?"
-  IF yes → STOP — Change to AddComponent<T>() / AddChild<T>()
+BEFORE creating components/entities in tests:
+  Ask: "Am I using `new XxxComponent()` directly?"
+  IF yes → STOP — Check CLAUDE.md for the correct creation pattern
+  Use the framework's designated creation method instead
 ```
 
 ## Quick Reference
@@ -349,8 +350,8 @@ BEFORE creating Entity/Component in tests:
 | Mock without understanding | Understand dependencies first, mock minimally |
 | Incomplete mocks | Mirror real API completely, or use real components |
 | Tests as afterthought | TDD — tests first |
-| Testing Entity methods | Move logic to System class, test there |
-| `new` Entity in tests | Use AddComponent/AddChild |
+| Testing methods on data classes | Move logic to System/Service class, test there |
+| Bypassing object lifecycle | Use framework's creation method |
 
 ## Red Flags
 
@@ -360,9 +361,9 @@ BEFORE creating Entity/Component in tests:
 - Test fails when you remove mock
 - Can't explain why mock is needed
 - Mocking "just to be safe"
-- `new XxxComponent()` or `new XxxEntity()` in test code
-- Testing instance methods on Entity classes
-- Using `Task` or `async void` instead of `ETTask` in async tests
+- Direct `new` on framework-managed types in test code
+- Testing instance methods on data-only classes
+- Using wrong async primitives in async tests
 
 ## The Bottom Line
 

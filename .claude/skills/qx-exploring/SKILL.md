@@ -1,6 +1,6 @@
 ---
 name: qx-exploring
-description: "Enter explore mode - a thinking partner for exploring ideas, investigating ET framework code, comparing options, and clarifying requirements in the QX Unity game development workflow."
+description: "Enter explore mode - a thinking partner for exploring ideas, investigating project code, comparing options, and clarifying requirements in the QX game development workflow."
 ---
 
 Enter explore mode. Think deeply. Visualize freely. Follow the conversation wherever it goes.
@@ -32,12 +32,13 @@ Depending on what the user brings, you might:
 - Reframe the problem
 - Find analogies
 
-**Investigate the ET codebase**
-- **Component/System relationships** — trace `[ComponentOf]` / `[ChildOf]` chains to understand entity ownership and data flow
-- **Message chains** — follow the path from Proto definition → `[MessageHandler]` / `[MessageSessionHandler]` → downstream Events
-- **Fiber scheduling model** — identify which Fiber owns what, how cross-Fiber communication happens via Actor messages, and where `MailBoxComponent` is involved
-- **Four-assembly split** — map which classes belong to Model / ModelView / Hotfix / HotfixView, and where boundaries are crossed or at risk
-- **Event flow** — trace `[Event(SceneType.X)]` handlers to understand reactive chains
+**Investigate the codebase**
+- Read CLAUDE.md and MEMORY.md to understand project architecture and conventions
+- Trace data model relationships and ownership chains
+- Follow message/event chains from definition to handler to downstream effects
+- Understand the concurrency/threading model and inter-process communication
+- Map which code belongs to which module/assembly and where boundaries exist
+- Trace event/signal flows to understand reactive chains
 - Map existing architecture relevant to the discussion
 - Find integration points, identify patterns already in use
 - Surface hidden complexity
@@ -45,28 +46,28 @@ Depending on what the user brings, you might:
 **Compare options**
 - Brainstorm multiple approaches
 - Build comparison tables
-- Sketch tradeoffs (consider ET constraints: no static fields, no `new` on Entity, ETTask over Task)
+- Sketch tradeoffs (consider project-specific constraints from CLAUDE.md)
 - Recommend a path (if asked)
 
 **Visualize**
 ```
-Scene
- └─ Unit [Entity]
-     ├─ MoveComponent [ComponentOf(Unit)]
-     │   └─ MoveComponentSystem (Hotfix)
-     ├─ NumericComponent [ComponentOf(Unit)]
-     │   └─ NumericComponentSystem (Hotfix)
-     └─ MailBoxComponent
-         └─ Actor messages from other Fibers
+Scene/Root
+ └─ Entity [Data Container]
+     ├─ ComponentA [Owned by Entity]
+     │   └─ ComponentASystem (Logic Module)
+     ├─ ComponentB [Owned by Entity]
+     │   └─ ComponentBSystem (Logic Module)
+     └─ InterProcessMessaging
+         └─ Messages from other processes/threads
 ```
 
-System diagrams, entity trees, message flows, Fiber topology, assembly boundaries, comparison tables — use ASCII diagrams liberally.
+System diagrams, entity trees, message flows, process topology, module boundaries, comparison tables — use ASCII diagrams liberally.
 
 **Surface risks and unknowns**
-- Cross-Fiber access patterns (deadlock risk)
-- Assembly boundary violations
-- Proto changes without regenerating C# (Proto2CS)
-- Hot-reload unsafe static state
+- Cross-boundary access patterns (concurrency risks)
+- Module boundary violations
+- Code generation steps that might be missed
+- Hot-reload unsafe state
 - Identify what could go wrong
 - Find gaps in understanding
 - Suggest spikes or investigations
@@ -100,8 +101,8 @@ If the user mentions a change or you detect one is relevant:
    - `docs/changes/<name>/plan.md`
 
 2. **Reference them naturally in conversation**
-   - "Your design mentions using ComponentOf, but we just realized ChildOf fits better..."
-   - "The proposal scopes this to combat only, but we're now thinking it affects movement too..."
+   - "Your design mentions using approach A, but we just realized approach B fits better..."
+   - "The proposal scopes this to system X only, but we're now thinking it affects system Y too..."
 
 3. **Offer to capture when decisions are made**
 
@@ -145,8 +146,8 @@ You: 连击系统的设计空间很大，让我想想几个方向...
           │                   │                  │
        简单可控          手感好但难调       策略性强但复杂
 
-      先看看 ET 里面 Unit 上现在挂了哪些 Component...
-      [读 ComponentOf(Unit) 链]
+      先看看代码库里现有的相关组件...
+      [读相关代码]
 ```
 
 **User brings a specific problem:**
@@ -173,32 +174,21 @@ You: [读 AI 相关代码]
                  │ per frame │
                  └───────────┘
 
-     瓶颈在哪里？让我检查 Fiber 调度和 AOI 查询频率...
+     瓶颈在哪里？让我检查调度模型和查询频率...
 ```
 
 **User wants to compare options:**
 ```
-用户: 这个数据放 Component 还是 ChildOf？
+用户: 这个数据用哪种模式存储好？
 
 You: 得看具体场景。说说你要存什么数据？
 
 用户: 背包里的物品，每个玩家大概200个
 
-You: 200个物品，那答案比较明确了。
+You: 200个物品，让我看看项目里有哪些存储模式可用...
 
-     ┌─────────────────────────────────────────────────┐
-     │         INVENTORY DATA STORAGE                   │
-     └─────────────────────────────────────────────────┘
-
-                  ComponentOf          ChildOf (Entity)
-     数量限制      单个Component ✗       每个是Entity ✓
-     独立生命周期  没有 ✗               有 ✓
-     消息寻址      不能单独寻址 ✗       可加MailBox ✓
-     内存开销      一份数据 ✓           每个Entity一份 △
-     序列化        整体序列化 ✓         单独序列化 ✓
-
-     ChildOf，因为物品需要独立生命周期和可能的跨 Fiber 操作。
-     除非你确定物品不需要独立寻址？
+     [查阅 CLAUDE.md 和代码库中的数据模式]
+     [对比不同方案的优劣]
 ```
 
 **User is stuck mid-implementation:**
@@ -209,7 +199,7 @@ You: [读 change artifacts]
 
      你在 task 4: "实现连击伤害倍率"
 
-     让我看看 NumericComponent 现有的 KV 公式结构...
+     让我看看现有的数值计算结构...
 
      [画图、探索选项、建议路径]
 

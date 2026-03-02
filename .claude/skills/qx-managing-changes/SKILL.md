@@ -109,7 +109,8 @@ Check in order:
 
 **Process:**
 1. If no change is active, ask which change or create one
-2. Draft `proposal.md` using this template:
+2. Read CLAUDE.md for project-specific architecture and conventions
+3. Draft `proposal.md` using this template:
 
 ```markdown
 ## Why
@@ -134,13 +135,13 @@ Check in order:
 
 <!-- Affected code, APIs, dependencies, systems -->
 
-### ET Framework Impact Checklist
-- [ ] **Assemblies affected**: Model / ModelView / Hotfix / HotfixView (which ones?)
-- [ ] **New Proto messages needed?** If yes, list message names and directions (C2G_, G2C_, etc.)
-- [ ] **New Excel configs needed?** If yes, list config table names
-- [ ] **Cross-Fiber communication?** If yes, identify source and target Fibers
-- [ ] **New Components?** List with their [ComponentOf] parent
-- [ ] **New ChildOf entities?** List with their [ChildOf] parent
+### Framework Impact Checklist
+<!-- Read CLAUDE.md for project-specific items. Common checks: -->
+- [ ] **Modules/assemblies affected**: Which ones?
+- [ ] **New protocol/message definitions needed?** If yes, list them
+- [ ] **New config/data files needed?** If yes, list them
+- [ ] **Cross-process/cross-thread communication?** If yes, identify boundaries
+- [ ] **New data model types?** List with their ownership declarations
 - [ ] **Affects system-map.md?** If yes, which systems are impacted
 ```
 
@@ -211,7 +212,8 @@ Check in order:
 **Process:**
 1. Read `proposal.md` and any specs for context
 2. Read `docs/system-map.md` for existing system relationships
-3. Draft `design.md` using this template:
+3. Read CLAUDE.md for project-specific architecture patterns
+4. Draft `design.md` using this template:
 
 ```markdown
 ## Context
@@ -238,22 +240,14 @@ Check in order:
 
 **Rationale:** <why this choice>
 
-## ET Framework Decisions
+## Framework-Specific Decisions
 
-### Component vs ChildOf
-<!-- When the feature needs new data attached to entities -->
-**Choice:** ComponentOf / ChildOf
-**Rationale:** <why — consider: does it need independent lifecycle? separate mailbox? multiple instances?>
-
-### Message Type Selection
-<!-- When the feature needs network communication -->
-**Choice:** IRequest/IResponse | IMessage | ILocationRequest | IActorLocationMessage
-**Rationale:** <why — consider: need response? need location transparency? fire-and-forget?>
-
-### Fiber Scheduling
-<!-- When the feature needs its own processing -->
-**Choice:** Main / Thread / ThreadPool
-**Rationale:** <why — consider: needs Unity API? CPU-intensive? short-lived?>
+<!-- Read CLAUDE.md for project-specific architectural patterns. -->
+<!-- Document decisions about: -->
+<!-- - Data model design (ownership, lifecycle, relationships) -->
+<!-- - Message/protocol type selection -->
+<!-- - Concurrency/threading model choices -->
+<!-- - Module/assembly placement -->
 
 ## Risks / Trade-offs
 
@@ -266,7 +260,7 @@ Check in order:
 - Optional for simple changes — skip if proposal is sufficient
 - Focus on architecture and "why X over Y", not line-by-line code
 - Good design docs explain the reasoning behind technical decisions
-- ET Framework Decisions section is optional — include only the subsections that apply
+- Framework-Specific Decisions section is optional — include only the subsections that apply
 
 ---
 
@@ -345,14 +339,12 @@ Three-dimensional verification with graceful degradation:
 - For each decision in `design.md`, verify implementation follows the chosen approach
 - SUGGESTION if implementation diverges from design
 
-**4. ET Framework Compliance (always checked)**
-- **Four-assembly split**: Are files in the correct assembly? (Model vs Hotfix vs ModelView vs HotfixView)
-- **[ComponentOf]/[ChildOf] declarations**: Do they match actual AddComponent/AddChild usage?
-- **Proto2CS**: If new Proto messages were added, was Proto2CS run?
-- **ExcelExporter**: If new configs were added, was ExcelExporter run?
-- **No static fields**: Check for static fields without `[StaticField]`
-- **ETTask compliance**: No `Task` or `async void` in async methods
-- **Cross-Fiber safety**: No direct object access across Fiber boundaries
+**4. Framework Compliance (always checked)**
+- Read CLAUDE.md for project-specific rules and verification commands
+- Run the project's build/compile commands
+- Verify framework-specific declarations and annotations are correct
+- Check code generation steps were run if applicable
+- Verify no framework rule violations exist
 
 **Output format:**
 ```
@@ -363,7 +355,7 @@ Three-dimensional verification with graceful degradation:
 | Completeness   | ✓ / ✗  | N/M   |
 | Correctness    | ✓ / ✗  | N/M   |
 | Coherence      | ✓ / △  | N/M   |
-| ET Compliance  | ✓ / ✗  | N/M   |
+| Framework Compliance | ✓ / ✗ | N/M |
 
 ### CRITICAL
 - [ ] Task 3.2 is incomplete
@@ -371,10 +363,10 @@ Three-dimensional verification with graceful degradation:
 
 ### WARNING
 - Spec scenario "damage overflow" has no test coverage
-- New Proto message added but Proto2CS not run
+- Code generation step not run after definition changes
 
 ### SUGGESTION
-- Design says "use ComponentOf" but implementation uses ChildOf
+- Design says approach A but implementation uses approach B
 ```
 
 ---

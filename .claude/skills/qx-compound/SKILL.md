@@ -25,9 +25,9 @@ After completing a piece of work, extract the learnings and feed them back into 
 
 | Knowledge Store | What Goes There | How to Update |
 |----------------|-----------------|---------------|
-| **System Map** (`docs/system-map.md`) | System relationships, Component/Message/Event connections | Add new systems, update changed connections |
+| **System Map** (`docs/system-map.md`) | System relationships, component/message/event connections | Add new systems, update changed connections |
 | **MEMORY.md** (`~/.claude/projects/.../memory/MEMORY.md`) | Code patterns, common pitfalls, debugging insights | Add verified patterns, update outdated entries |
-| **Memory topic files** (`~/.claude/projects/.../memory/et-*.md`) | Detailed per-topic knowledge | Add deep-dive findings |
+| **Memory topic files** (`~/.claude/projects/.../memory/*.md`) | Detailed per-topic knowledge | Add deep-dive findings |
 | **QX Knowledge Base** (`qx/knowledge/*.md`) | Generic methodology improvements | Update process insights (rare) |
 | **Sprint data** (`docs/sprints/`) | Velocity, estimation accuracy | Updated by `/qx-sprint retro` |
 
@@ -48,7 +48,7 @@ For each category, ask: "Did this work teach us anything new?"
 #### 2a. System Relationships
 
 **Questions:**
-- Did we add a new system or Component?
+- Did we add a new system or component?
 - Did we discover connections between systems we didn't know about?
 - Did we modify message flows or event chains?
 - Did any existing system map entries turn out to be wrong?
@@ -108,7 +108,7 @@ If system relationships changed:
 ## [System Name]
 - **Components**: [list]
 - **Systems**: [list]
-- **Messages**: [list with direction: C2G_, G2C_, etc.]
+- **Messages**: [list with direction indicators]
 - **Dependencies**: [other systems this depends on]
 - **Events**: [events published/consumed]
 ```
@@ -126,7 +126,7 @@ Format for new entries:
 - **[Pattern/Pitfall name]** — [One-line description]
 ```
 
-For detailed entries, add to the appropriate `et-*.md` topic file and link from MEMORY.md.
+For detailed entries, add to the appropriate topic file and link from MEMORY.md.
 
 #### Update QX Knowledge Base
 
@@ -173,7 +173,7 @@ Bug fixed → /qx-debug (solution found) ─────────────
 ## Key Principles
 
 - **Verified only** — Don't store unconfirmed patterns
-- **Specific and actionable** — "ETTask cancelation needs ETCancelToken" not "async is tricky"
+- **Specific and actionable** — Concrete descriptions, not vague observations
 - **Right store, right level** — Project-specific → MEMORY.md; Generic → QX knowledge
 - **Concise** — One line where possible, detail files for deep content
 - **Living documents** — Update or remove outdated entries, don't just append

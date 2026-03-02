@@ -37,39 +37,21 @@ BEFORE claiming any status or expressing satisfaction:
 Skip any step = lying, not verifying
 ```
 
-## ET Framework Verification Commands
+## Verification Commands
 
-### Compilation
+> **IMPORTANT:** Read the project's CLAUDE.md for the specific build, test, and verification commands for this project. The commands below are generic patterns — adapt to your project.
+
+### Compilation / Build
 ```bash
-# Full solution build (catches Analyzer errors, type mismatches, assembly violations)
-dotnet build ET.sln
-
+# Build the project (use project-specific command from CLAUDE.md)
 # Expected: Build succeeded. 0 Error(s)
 ```
 
-### Unity Hot-Update Compilation
-```
-# In Unity Editor:
-# F6 — Compile hot-update DLLs (Model + ModelView + Hotfix + HotfixView)
-# Must show: Compile success in Unity Console
-```
-
-### Proto Code Generation
+### Code Generation
 ```bash
-# After any .proto file changes
-dotnet ./Packages/cn.etetet.proto/DotNet~/Exe/ET.Proto2CS.dll ./
-
-# Verify: Generated C# files match proto definitions
-# Then: dotnet build ET.sln (must still pass)
-```
-
-### Excel Config Export
-```bash
-# After any Excel config changes
-dotnet ./Packages/cn.etetet.excel/DotNet~/Exe/ET.ExcelExporter.dll ./
-
-# Verify: Config files generated without errors
-# Then: dotnet build ET.sln (must still pass)
+# If project uses code generation (proto, config export, etc.)
+# Run the generation command from CLAUDE.md after definition changes
+# Then: rebuild to verify generated code compiles
 ```
 
 ### Test Execution
@@ -83,61 +65,55 @@ dotnet test -v n
 # Expected: Passed! X total, X passed, 0 failed
 ```
 
-### Server Startup Verification
+### Smoke Test
 ```bash
-# Quick smoke test — server starts without crash
-dotnet Bin/ET.App.dll --SceneName=StateSync --Process=1 --StartConfig=StartConfig/Localhost --Console=1
-
-# Expected: Server running, no exceptions in first 5 seconds
-# Ctrl+C to stop
+# Quick runtime verification — application starts without crash
+# Use project-specific startup command from CLAUDE.md
 ```
 
 ## Common Failures
 
 | Claim | Requires | Not Sufficient |
 |-------|----------|----------------|
-| Tests pass | `dotnet test` output: 0 failures | Previous run, "should pass" |
-| Code compiles | `dotnet build ET.sln`: 0 errors | Linter passing, "looks right" |
-| F6 compiles | Unity Console: Compile success | dotnet build (different pipeline) |
-| Proto generated | Proto2CS output + build passes | "I updated the proto file" |
-| Config exported | ExcelExporter output + build passes | "I updated the Excel" |
+| Tests pass | Test runner output: 0 failures | Previous run, "should pass" |
+| Code compiles | Build output: 0 errors | Linter passing, "looks right" |
+| Code generated | Generation output + build passes | "I updated the definition file" |
 | Bug fixed | Test original symptom: passes | "Code changed, assumed fixed" |
 | Regression test works | Red-green cycle verified | Test passes once |
 | Agent completed | VCS diff shows correct changes | Agent reports "success" |
 | Requirements met | Line-by-line checklist | "Tests passing" |
-| ET rules followed | `dotnet build` with Analyzers: 0 errors | "I followed the pattern" |
+| Framework rules followed | Build with analyzers: 0 errors | "I followed the pattern" |
 
-## ET-Specific Verification Checklist
+## Framework-Specific Verification
 
-When verifying ET framework code, check ALL applicable items:
+> **IMPORTANT:** Read CLAUDE.md for the complete list of project-specific verification items. Common categories:
 
-### Component/Entity Changes
-- [ ] `dotnet build ET.sln` passes (Analyzer catches rule violations)
-- [ ] `[ComponentOf]` / `[ChildOf]` matches actual parent usage
-- [ ] System class has `[EntitySystemOf]` + `[FriendOf]` + `partial`
-- [ ] No methods in Entity classes
-- [ ] No `new` on Entity types
+### Data Model / Component Changes
+- [ ] Build passes (analyzers catch rule violations)
+- [ ] Ownership declarations match actual usage
+- [ ] Logic module has required annotations and markers
+- [ ] No methods in data-only classes (if project enforces this)
 
-### Message/Handler Changes
-- [ ] Proto2CS run after `.proto` changes
-- [ ] `dotnet build ET.sln` passes after generation
-- [ ] `[MessageHandler(SceneType.X)]` matches receiver scene
-- [ ] Request/Response types linked with `// ResponseType`
+### Message / Handler Changes
+- [ ] Code generation run after definition changes
+- [ ] Build passes after generation
+- [ ] Handler annotations match target context
+- [ ] Request/Response types properly linked
 
-### Config Changes
-- [ ] ExcelExporter run after Excel changes
-- [ ] `dotnet build ET.sln` passes after export
-- [ ] Config values accessible at runtime
+### Config / Data Changes
+- [ ] Export/generation run after source changes
+- [ ] Build passes after export
+- [ ] Values accessible at runtime
 
-### Cross-Fiber Changes
-- [ ] No direct Entity access across Fibers
-- [ ] Actor messages used for cross-Fiber communication
-- [ ] MailBoxComponent added to entities that receive Actor messages
+### Cross-Boundary Changes
+- [ ] No direct access across isolation boundaries
+- [ ] Proper inter-process messaging used
+- [ ] Required infrastructure components present
 
-### Hot-Reload Safety
-- [ ] No static fields without `[StaticField]`
-- [ ] Hotfix assembly has only static classes (or `[EnableClass]`)
-- [ ] F6 compile succeeds in Unity Editor
+### Hot-Reload / Live-Update Safety
+- [ ] No unsafe static state
+- [ ] Logic modules follow required patterns
+- [ ] Live compilation succeeds
 
 ## Red Flags - STOP
 
@@ -156,17 +132,16 @@ When verifying ET framework code, check ALL applicable items:
 | "Should work now" | RUN the verification |
 | "I'm confident" | Confidence is not evidence |
 | "Just this once" | No exceptions |
-| "dotnet build passed" | Build is not test. Run tests too. |
+| "Build passed" | Build is not test. Run tests too. |
 | "Agent said success" | Verify independently |
 | "Partial check is enough" | Partial proves nothing |
-| "I followed the ET pattern" | Analyzers catch what eyes miss. Build it. |
-| "F6 compiled" | F6 is not `dotnet build`. Run both if applicable. |
+| "I followed the pattern" | Analyzers catch what eyes miss. Build it. |
 
 ## Key Patterns
 
 **Tests:**
 ```
-Correct: [Run dotnet test] [See: 34/34 pass] "All tests pass"
+Correct: [Run test command] [See: 34/34 pass] "All tests pass"
 Wrong:   "Should pass now" / "Looks correct"
 ```
 
@@ -178,14 +153,8 @@ Wrong:   "I've written a regression test" (without red-green verification)
 
 **Build:**
 ```
-Correct: [Run dotnet build ET.sln] [See: Build succeeded. 0 Error(s)] "Build passes"
-Wrong:   "Code looks correct" (eyes don't catch Analyzer errors)
-```
-
-**ET Analyzers:**
-```
-Correct: [Run dotnet build] [See 0 warnings from ET Analyzers] "ET rules compliant"
-Wrong:   "I followed the ComponentOf pattern" (without building)
+Correct: [Run build command] [See: Build succeeded. 0 Error(s)] "Build passes"
+Wrong:   "Code looks correct" (eyes don't catch analyzer errors)
 ```
 
 **Requirements:**

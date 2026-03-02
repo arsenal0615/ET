@@ -23,13 +23,13 @@ Different layers catch different cases:
 **Purpose:** Reject obviously invalid input at API boundary
 
 ```csharp
-// Factory method (entry point for creating Units)
-public static Unit CreateUnit(Scene scene, int configId)
+// Factory method (entry point for creating objects)
+public static Player CreatePlayer(GameWorld world, int configId)
 {
-    if (scene == null)
-        throw new ArgumentNullException(nameof(scene));
-    if (scene.SceneType != SceneType.Map)
-        throw new ArgumentException($"Unit must be created in Map scene, got: {scene.SceneType}");
+    if (world == null)
+        throw new ArgumentNullException(nameof(world));
+    if (!world.IsActive)
+        throw new ArgumentException($"Cannot create player in inactive world");
     if (configId <= 0)
         throw new ArgumentException($"Invalid configId: {configId}");
 
@@ -41,14 +41,14 @@ public static Unit CreateUnit(Scene scene, int configId)
 **Purpose:** Ensure data makes sense for this operation
 
 ```csharp
-// System class — validate Component relationships
-public static void AddBuff(this BuffComponent self, int buffConfigId)
+// Validate component relationships
+public static void AddBuff(this BuffManager self, int buffConfigId)
 {
-    if (self.Parent is not Unit)
-        throw new InvalidOperationException("BuffComponent must be on a Unit");
+    if (self.Owner == null)
+        throw new InvalidOperationException("BuffManager must have an owner");
     if (self.HasBuff(buffConfigId))
     {
-        Log.Warning($"Duplicate buff: {buffConfigId} already exists on Unit {self.Parent.Id}");
+        Log.Warning($"Duplicate buff: {buffConfigId} already exists on {self.Owner.Id}");
         return;
     }
     // ... proceed
@@ -59,28 +59,28 @@ public static void AddBuff(this BuffComponent self, int buffConfigId)
 **Purpose:** Prevent dangerous operations in specific contexts
 
 ```csharp
-// Prevent cross-Fiber access
-public static void ValidateSameFiber(this Entity self, Entity other)
+// Prevent cross-context access
+public static void ValidateSameContext(object self, object other)
 {
-    if (self.Fiber().Id != other.Fiber().Id)
+    if (GetContextId(self) != GetContextId(other))
     {
         throw new InvalidOperationException(
-            $"Cross-Fiber access detected: {self.GetType().Name}(Fiber={self.Fiber().Id}) " +
-            $"accessing {other.GetType().Name}(Fiber={other.Fiber().Id}). " +
-            $"Use Actor messages for cross-Fiber communication.");
+            $"Cross-context access detected: {self.GetType().Name} " +
+            $"accessing {other.GetType().Name}. " +
+            $"Use message passing for cross-context communication.");
     }
 }
 
-// Prevent static field abuse in hot-reload context
+// Prevent unsafe state in hot-reload context
 #if DEBUG
-public static void ValidateNoStaticState<T>()
+public static void ValidateNoUnsafeStaticState<T>()
 {
     var fields = typeof(T).GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
     foreach (var field in fields)
     {
-        if (field.GetCustomAttribute<StaticFieldAttribute>() == null)
+        if (!IsMarkedSafe(field))
         {
-            Log.Error($"Static field {typeof(T).Name}.{field.Name} without [StaticField] — unsafe for hot-reload");
+            Log.Error($"Static field {typeof(T).Name}.{field.Name} — unsafe for hot-reload");
         }
     }
 }
@@ -92,12 +92,11 @@ public static void ValidateNoStaticState<T>()
 
 ```csharp
 // Before risky operations
-public static Entity AddComponentWithTrace<T>(this Entity parent) where T : Entity, IAwake, new()
+public static T AddComponentWithTrace<T>(this Container parent) where T : class, new()
 {
     Log.Debug($"AddComponent<{typeof(T).Name}>: " +
               $"parent={parent.GetType().Name}(Id={parent.Id}), " +
-              $"scene={parent.IScene.SceneType}, " +
-              $"fiber={parent.Fiber().Id}");
+              $"context={parent.ContextName}");
 
     return parent.AddComponent<T>();
 }
@@ -112,19 +111,19 @@ When you find a bug:
 3. **Add validation at each layer** - Entry, business, environment, debug
 4. **Test each layer** - Try to bypass layer 1, verify layer 2 catches it
 
-## ET-Specific Example
+## Example: Wrong Parent Type
 
-Bug: Wrong Entity type used as parent for Component
+Bug: Wrong type used as parent for a component
 
 **Data flow:**
 1. Handler receives message → extracts entityId
-2. EntityHelper.Get(scene, entityId) → returns Entity
-3. entity.AddComponent<BuffComponent>() → fails because entity is not a Unit
+2. Looks up entity by ID → returns an object
+3. Adds component to entity → fails because entity is wrong type
 
 **Four layers added:**
-- Layer 1: Handler validates entityId refers to a Unit: `if (entity is not Unit) return error`
-- Layer 2: BuffComponent's [ComponentOf(typeof(Unit))] — Analyzer enforces at compile time
-- Layer 3: AddComponent runtime check validates parent type matches ComponentOf declaration
+- Layer 1: Handler validates entity is the correct type before proceeding
+- Layer 2: Component declaration enforces parent type (compile-time if framework supports it)
+- Layer 3: AddComponent runtime check validates parent type matches declaration
 - Layer 4: Debug logging before AddComponent shows parent type and id
 
 **Result:** Bug caught at compile time (Layer 2), and at runtime if bypassed (Layer 3)
@@ -133,8 +132,8 @@ Bug: Wrong Entity type used as parent for Component
 
 All four layers are often necessary. During development, each layer catches bugs the others miss:
 - Different code paths bypass entry validation
-- Hot-reload can reset state that business logic depends on
-- Cross-Fiber scenarios need environment guards
+- State resets can break business logic assumptions
+- Cross-context scenarios need environment guards
 - Debug logging identifies misuse patterns in production
 
 **Don't stop at one validation point.** Add checks at every layer.

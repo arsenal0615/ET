@@ -9,7 +9,7 @@ Flaky tests and unreliable async code often guess at timing with arbitrary delay
 ## When to Use
 
 **Use when:**
-- Code has arbitrary delays (`await ETTask.CompletedTask` with timer, `Thread.Sleep`)
+- Code has arbitrary delays (`Thread.Sleep`, `Task.Delay`, framework-specific timers)
 - Tests are flaky (pass sometimes, fail under load)
 - Waiting for async operations to complete
 - Polling for state changes
@@ -22,7 +22,7 @@ Flaky tests and unreliable async code often guess at timing with arbitrary delay
 
 ```csharp
 // BAD: Guessing at timing
-await TimerComponent.Instance.WaitAsync(500); // why 500ms?
+await Task.Delay(500); // why 500ms?
 var result = GetResult();
 
 // GOOD: Waiting for condition
@@ -34,74 +34,76 @@ var result = GetResult();
 
 | Scenario | Pattern |
 |----------|---------|
-| Wait for Component | `WaitForCondition(() => entity.GetComponent<T>() != null)` |
+| Wait for component | `WaitForCondition(() => entity.GetComponent<T>() != null)` |
 | Wait for state | `WaitForCondition(() => component.State == TargetState)` |
-| Wait for Actor response | Use `session.Call()` which has built-in timeout |
+| Wait for RPC response | Use built-in RPC timeout mechanisms |
 | Wait for event | `WaitForCondition(() => eventFired)` |
-| Wait for entity count | `WaitForCondition(() => scene.Children.Count >= N)` |
+| Wait for count | `WaitForCondition(() => collection.Count >= N)` |
 
-## Implementation with ETTask
+## Generic Implementation
 
-Generic polling function using ET's async model:
+A polling function that waits for a condition with timeout:
 
 ```csharp
-public static async ETTask WaitForCondition(
+public static async Task WaitForCondition(
     Func<bool> condition,
     string description,
     int timeoutMs = 5000,
     int pollIntervalMs = 50)
 {
-    long startTime = TimeInfo.Instance.ClientNow();
+    var startTime = DateTime.UtcNow;
 
     while (!condition())
     {
-        if (TimeInfo.Instance.ClientNow() - startTime > timeoutMs)
+        if ((DateTime.UtcNow - startTime).TotalMilliseconds > timeoutMs)
         {
             throw new TimeoutException(
                 $"Timeout waiting for {description} after {timeoutMs}ms");
         }
 
-        await TimerComponent.Instance.WaitAsync(pollIntervalMs);
+        await Task.Delay(pollIntervalMs);
     }
 }
 
 // Generic version with return value
-public static async ETTask<T> WaitForCondition<T>(
+public static async Task<T> WaitForCondition<T>(
     Func<T> getter,
     Func<T, bool> predicate,
     string description,
     int timeoutMs = 5000,
     int pollIntervalMs = 50)
 {
-    long startTime = TimeInfo.Instance.ClientNow();
+    var startTime = DateTime.UtcNow;
 
     while (true)
     {
         T value = getter();
         if (predicate(value)) return value;
 
-        if (TimeInfo.Instance.ClientNow() - startTime > timeoutMs)
+        if ((DateTime.UtcNow - startTime).TotalMilliseconds > timeoutMs)
         {
             throw new TimeoutException(
                 $"Timeout waiting for {description} after {timeoutMs}ms");
         }
 
-        await TimerComponent.Instance.WaitAsync(pollIntervalMs);
+        await Task.Delay(pollIntervalMs);
     }
 }
 ```
 
+> **Note:** If your project uses a custom async framework (e.g., custom task types, framework-specific timers), adapt this implementation to use the project's async primitives. Check CLAUDE.md for the correct async patterns.
+
 ## Usage Examples
 
-### Wait for Component to be added
+### Wait for component to be added
 ```csharp
-// Wait for MoveComponent to appear on Unit
+// Wait for a component to appear on an entity
 await WaitForCondition(
-    () => unit.GetComponent<MoveComponent>() != null,
-    $"MoveComponent on Unit {unit.Id}",
+    () => entity.GetComponent<MoveComponent>() != null,
+    $"MoveComponent on entity {entity.Id}",
     timeoutMs: 3000);
 
-var move = unit.GetComponent<MoveComponent>();
+var move = entity.GetComponent<MoveComponent>();
 // Now safe to use
 ```
 
@@ -115,12 +117,12 @@ await WaitForCondition(
     timeoutMs: 5000);
 ```
 
-### Wait for entity count
+### Wait for collection count
 ```csharp
-// Wait for all players to enter the map
+// Wait for all players to join
 await WaitForCondition(
-    () => mapScene.Children.Count >= expectedPlayerCount,
-    $"{expectedPlayerCount} players in map",
+    () => room.Players.Count >= expectedPlayerCount,
+    $"{expectedPlayerCount} players in room",
     timeoutMs: 10000);
 ```
 
@@ -128,28 +130,29 @@ await WaitForCondition(
 
 **Bad: Polling too fast**
 ```csharp
-await TimerComponent.Instance.WaitAsync(1); // wastes CPU cycles
+await Task.Delay(1); // wastes CPU cycles
 ```
 **Fix:** Poll every 50ms for most cases, 10ms only for time-critical operations
 
 **Bad: No timeout**
 ```csharp
-while (!condition()) await TimerComponent.Instance.WaitAsync(50); // infinite loop risk
+while (!condition()) await Task.Delay(50); // infinite loop risk
 ```
 **Fix:** Always include timeout with clear error message
 
 **Bad: Stale data**
 ```csharp
 var comp = entity.GetComponent<T>(); // cached before loop
-while (comp == null) { await ...; } // comp is never re-read!
+while (comp == null) { await Task.Delay(50); } // comp is never re-read!
 ```
 **Fix:** Call getter inside loop for fresh data
 
-**Bad: Using Task instead of ETTask**
-```csharp
-await Task.Delay(500); // WRONG for ET framework
+**Bad: Using wrong async primitive**
 ```
-**Fix:** Use `TimerComponent.Instance.WaitAsync()` or custom ETTask-based waiting
+// If your framework has its own async system, use it instead of standard Task
+// Check CLAUDE.md for the correct async patterns
+```
+**Fix:** Use the project's recommended async/await primitives
 
 ## When Arbitrary Timeout IS Correct
 
@@ -160,7 +163,7 @@ await WaitForCondition(
     "animation started");
 
 // Timing-based wait is justified here — animation has known duration
-await TimerComponent.Instance.WaitAsync(2000);
+await Task.Delay(2000);
 // 2000ms = animation duration — documented and justified
 ```
 
@@ -171,8 +174,8 @@ await TimerComponent.Instance.WaitAsync(2000);
 
 ## Real-World Impact
 
-Applying condition-based waiting in ET projects:
-- Eliminates flaky tests caused by arbitrary `WaitAsync` calls
+Applying condition-based waiting in projects:
+- Eliminates flaky tests caused by arbitrary delays
 - Reduces test execution time (no unnecessary waiting)
 - Makes async behavior deterministic and debuggable
 - Clear timeout messages identify exactly what condition wasn't met

@@ -1,13 +1,13 @@
 ---
 name: qx-code-review
-description: "Use when completing tasks, implementing major features, or before merging to verify work meets requirements. Dispatches multi-dimensional code review with ET framework awareness."
+description: "Use when completing tasks, implementing major features, or before merging to verify work meets requirements. Dispatches multi-dimensional code review with project framework awareness."
 ---
 
 # Code Review
 
 ## Overview
 
-Dispatch code-reviewer subagent (and optionally et-rule-reviewer + security-reviewer) to catch issues before they cascade.
+Dispatch code-reviewer subagent (and optionally security-reviewer) to catch issues before they cascade.
 
 **Core principle:** Review early, review often.
 
@@ -32,25 +32,24 @@ QX code review supports up to three review dimensions:
 
 | Dimension | Agent | When |
 |-----------|-------|------|
-| **Code Quality + Plan Alignment** | `code-reviewer` | Always (mandatory) |
-| **ET Framework Compliance** | `et-rule-reviewer` | When ET code changed (auto-detect) |
+| **Code Quality + Plan Alignment + Framework Compliance** | `code-reviewer` | Always (mandatory) |
 | **Security** | `security-reviewer` | When network/auth/input handling changed |
 
 ### Auto-Detection Rules
 
-**ET Rule Review triggered when changes touch:**
-- Component or Entity definitions
-- System classes (`*System.cs`)
-- Message handlers (`*Handler.cs`)
-- Proto files (`.proto`)
-- Files in `Model/` or `Hotfix/` directories
+**Framework Rule Review triggered when changes touch:**
+- Core framework patterns (read CLAUDE.md for project-specific patterns)
+- Data model definitions or component structures
+- System/logic classes
+- Message handlers or protocol files
+- Files in framework-specific directories
 
 **Security Review triggered when changes touch:**
 - Network message handlers
 - Session management code
-- Actor message routing
+- Inter-process or inter-service messaging
 - Input validation or serialization
-- Cross-Fiber communication
+- Cross-boundary communication
 
 ## How to Request Review
 
@@ -67,9 +66,9 @@ Use Agent tool with `subagent_type: "code-reviewer"`, providing:
 - Plan or requirements reference
 - Git range (BASE_SHA..HEAD_SHA)
 
-**3. Optionally dispatch ET rule reviewer and security reviewer in parallel**
+**3. Optionally dispatch security reviewer in parallel**
 
-Use Agent tool with `subagent_type: "et-rule-reviewer"` and/or `subagent_type: "security-reviewer"`
+Use Agent tool with `subagent_type: "security-reviewer"` when security-sensitive code was changed
 
 **4. Act on feedback:**
 - Fix **Critical** issues immediately
@@ -82,11 +81,13 @@ Use Agent tool with `subagent_type: "et-rule-reviewer"` and/or `subagent_type: "
 When dispatching the code-reviewer agent, provide this context:
 
 ```
-You are reviewing code changes for production readiness in an ET framework Unity/Server project.
+You are reviewing code changes for production readiness.
 
 **What was implemented:** {DESCRIPTION}
 **Requirements/Plan:** {PLAN_REFERENCE}
 **Git range:** {BASE_SHA}..{HEAD_SHA}
+
+IMPORTANT: Read the project's CLAUDE.md for framework-specific rules and conventions.
 
 Review the git diff and check:
 
@@ -99,22 +100,18 @@ Review the git diff and check:
 - DRY principle followed?
 - Edge cases handled?
 
-### ET Framework Compliance
-- Entity classes have no methods (logic in System classes)?
-- Components have correct [ComponentOf] / [ChildOf]?
-- System classes have [EntitySystemOf] + [FriendOf] + partial?
-- No static fields without [StaticField]?
-- Async methods return ETTask (not Task)?
-- No `new` on Entity types (use AddComponent/AddChild)?
-- Hotfix assembly has only static classes?
-- Correct assembly placement (Model vs Hotfix)?
-- Cross-Fiber communication uses Actor messages?
+### Framework Compliance
+- Read CLAUDE.md for project-specific rules
+- All framework coding conventions followed?
+- Correct file/module placement per project architecture?
+- Required attributes/annotations present?
+- Build/compilation verification commands run?
 
 ### Architecture
 - Sound design decisions?
 - Scalability considerations?
 - Performance implications?
-- Fiber scheduling appropriate?
+- Concurrency model appropriate?
 
 ### Testing
 - Tests actually test logic (not mocks)?
@@ -125,8 +122,7 @@ Review the git diff and check:
 - All plan requirements met?
 - Implementation matches spec?
 - No scope creep?
-- Proto2CS run if proto changed?
-- ExcelExporter run if config changed?
+- Code generation steps run if applicable?
 
 ## Output Format
 
@@ -136,7 +132,7 @@ Review the git diff and check:
 ### Issues
 
 #### Critical (Must Fix)
-[Bugs, security issues, data loss risks, broken functionality, ET rule violations]
+[Bugs, security issues, data loss risks, broken functionality, framework rule violations]
 
 #### Important (Should Fix)
 [Architecture problems, missing features, poor error handling, test gaps]
@@ -159,8 +155,8 @@ Review the git diff and check:
 
 | Severity | Examples | Action |
 |----------|----------|--------|
-| **Critical** | Entity has methods, missing ComponentOf, cross-Fiber direct access, security hole, data loss | Must fix before proceeding |
-| **Important** | Missing error handling, test gaps, wrong assembly placement, missing FriendOf | Should fix before merge |
+| **Critical** | Framework rule violations, security holes, data loss risks, broken functionality | Must fix before proceeding |
+| **Important** | Missing error handling, test gaps, wrong module placement, architectural issues | Should fix before merge |
 | **Suggestion** | Naming convention, code organization, documentation | Track for later |
 
 ## Example Workflow
@@ -178,20 +174,14 @@ HEAD_SHA=$(git rev-parse HEAD)
   Plan: docs/changes/buff-system/plan.md, Task 2
   Range: a7981ec..3df7661
 
-[Dispatch et-rule-reviewer agent in parallel]
-  Range: a7981ec..3df7661
-  Focus: Component/System declarations, attribute compliance
-
 [code-reviewer returns]:
-  Strengths: Clean System class separation, proper FriendOf
+  Strengths: Clean separation of data and logic
+  Framework Compliance: All framework rules compliant
   Issues:
-    Important: BuffComponent.Destroy doesn't cancel active timers
-    Suggestion: Consider using NumericComponent for buff stat modifications
+    Important: Destroy handler doesn't cancel active timers
+    Suggestion: Consider using existing numeric system for stat modifications
+    Suggestion: Consider adding lifecycle method annotations
   Assessment: Ready with fixes
-
-[et-rule-reviewer returns]:
-  Pass: All ET rules compliant
-  Note: Consider adding [EntitySystem] to Update method
 
 You: [Fix timer cleanup in Destroy]
 [Continue to Task 3]
@@ -219,7 +209,7 @@ You: [Fix timer cleanup in Destroy]
 - Ignore Critical issues
 - Proceed with unfixed Important issues
 - Argue with valid technical feedback
-- Skip ET rule review when Entity/Component code changed
+- Skip framework rule review when core framework code changed
 
 **If reviewer is wrong:**
 - Push back with technical reasoning

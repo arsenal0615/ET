@@ -1,6 +1,6 @@
 ---
 name: qx-writing-plans
-description: "Use when you have a spec, design, or requirements for a multi-step task, before touching code. Creates bite-sized TDD implementation plans with ET framework awareness."
+description: "Use when you have a spec, design, or requirements for a multi-step task, before touching code. Creates bite-sized TDD implementation plans with project framework awareness."
 ---
 
 # Writing Plans
@@ -9,7 +9,7 @@ description: "Use when you have a spec, design, or requirements for a multi-step
 
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
-Assume they are a skilled developer, but know almost nothing about ET framework or the problem domain. Assume they don't know good test design very well.
+Assume they are a skilled developer, but know almost nothing about the project's framework or the problem domain. Assume they don't know good test design very well.
 
 **Announce at start:** "Using qx-writing-plans to create the implementation plan."
 
@@ -28,6 +28,16 @@ Before writing the plan, detect whether you're working within a change:
 **If no change context (Quick Mode):**
 - Save plans to: `docs/plans/YYYY-MM-DD-<feature-name>.md`
 - Use original task format (see Task Structure below)
+
+## Project Context Loading
+
+**Before writing any plan, read the project's CLAUDE.md and MEMORY.md to understand:**
+- Framework rules and coding conventions
+- Module/assembly organization and placement rules
+- Code generation steps (proto compilation, config export, etc.)
+- Build and verification commands
+- File naming conventions
+- Key patterns and anti-patterns
 
 ## Bite-Sized Task Granularity
 
@@ -51,14 +61,13 @@ Before writing the plan, detect whether you're working within a change:
 
 **Architecture:** [2-3 sentences about approach]
 
-**Tech Stack:** [Key technologies/assemblies affected]
+**Tech Stack:** [Key technologies/modules affected]
 
-**ET Impact:**
-- Assemblies: [Model / ModelView / Hotfix / HotfixView]
-- Proto changes: [Yes/No — if yes, run Proto2CS after]
-- Excel changes: [Yes/No — if yes, run ExcelExporter after]
-- New Components: [List ComponentOf declarations]
-- New Messages: [List proto message types]
+**Impact:**
+- Modules/Assemblies: [list affected modules]
+- Code generation changes: [Yes/No — if yes, which generation steps needed]
+- New data models: [list with ownership declarations]
+- New messages/protocols: [list types]
 
 ---
 ```
@@ -69,8 +78,8 @@ Before writing the plan, detect whether you're working within a change:
 ### Task N: [Component Name]
 
 **Files:**
-- Create: `Packages/cn.etetet.{pkg}/Scripts/Hotfix/Share/{File}.cs`
-- Modify: `Packages/cn.etetet.{pkg}/Scripts/Model/Share/{File}.cs:123-145`
+- Create: `path/to/new/file.cs`
+- Modify: `path/to/existing/file.cs:123-145`
 - Test: `path/to/test/file.cs`
 
 **Step 1: Write the failing test**
@@ -80,7 +89,7 @@ Before writing the plan, detect whether you're working within a change:
 public void TestSpecificBehavior()
 {
     // Arrange
-    var result = MyComponentSystem.Calculate(input);
+    var result = MySystem.Calculate(input);
 
     // Assert
     Assert.AreEqual(expected, result);
@@ -95,12 +104,11 @@ Expected: FAIL with "method not found" or similar
 **Step 3: Write minimal implementation**
 
 ```csharp
-[FriendOf(typeof(MyComponent))]
-public static partial class MyComponentSystem
+public static class MySystem
 {
-    public static int Calculate(this MyComponent self, int input)
+    public static int Calculate(int input)
     {
-        return input * self.Multiplier;
+        return input * multiplier;
     }
 }
 ```
@@ -112,7 +120,7 @@ Expected: PASS
 
 **Step 5: Compile check**
 
-Run: `dotnet build ET.sln`
+Run: [project build command from CLAUDE.md]
 Expected: Build succeeded, 0 errors
 
 **Step 6: Commit**
@@ -133,7 +141,7 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 - [ ] 1.1 [Task description]
 
 **Files:**
-- Create: `Packages/cn.etetet.{pkg}/Scripts/Hotfix/Share/{File}.cs`
+- Create: `path/to/new/file.cs`
 - Test: `path/to/test/file.cs`
 
 **Steps:**
@@ -141,7 +149,7 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 2. Run to verify failure
 3. Implement minimal code
 4. Run to verify pass
-5. Compile check (`dotnet build ET.sln`)
+5. Compile check (project build command)
 6. Commit
 
 - [ ] 1.2 [Next task description]
@@ -159,101 +167,39 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 - Groups are numbered `## N. Group Name`
 - Progress persists across sessions via checkbox state
 
-## ET Framework Plan Awareness
+## Framework-Aware Planning
 
-When writing plans for ET projects, ensure every plan addresses:
+> **IMPORTANT:** Read CLAUDE.md for project-specific rules. Adapt the patterns below to your project's framework.
 
-### Assembly Placement
-For each new file, specify which assembly it belongs to:
-- **ET.Model** — Component/Entity data definitions (fields only, no methods)
-- **ET.ModelView** — Client-only data (Unity-dependent)
-- **ET.Hotfix** — System classes, Handlers, logic (static classes only)
-- **ET.HotfixView** — Client-only view logic
+When writing plans, ensure every plan addresses project-specific concerns:
 
-### Package Path Convention
-Always use full paths:
-```
-Packages/cn.etetet.{package}/Scripts/{Assembly}/{Visibility}/{File}.cs
-```
-Where:
-- `{Assembly}` = `Model` or `Hotfix`
-- `{Visibility}` = `Client`, `Server`, or `Share`
+### Module/Assembly Placement
+For each new file, specify which module or assembly it belongs to based on the project's architecture (read CLAUDE.md for the specific module organization).
 
-### Proto & Config Steps
-If plan involves new messages:
-```markdown
-### Task 0: Proto Definition (before any code)
+### File Path Convention
+Always use full paths following the project's directory structure conventions.
 
-**Step 1: Define proto messages**
-- File: `Packages/cn.etetet.{pkg}/Proto/{Name}_{Direction}_{Opcode}.proto`
+### Code Generation Steps
+If plan involves new protocol/message definitions or config data:
+- Include a task for defining the source (proto files, Excel, etc.)
+- Include a task for running the code generation command
+- Include a verification step to confirm generated code compiles
 
-**Step 2: Generate C# code**
-Run: `dotnet ./Packages/cn.etetet.proto/DotNet~/Exe/ET.Proto2CS.dll ./`
-Expected: Generated files in Proto output directory
-
-**Step 3: Verify compilation**
-Run: `dotnet build ET.sln`
-Expected: 0 errors
-```
-
-If plan involves new Excel configs:
-```markdown
-### Task 0: Excel Config (before dependent code)
-
-**Step 1: Add Excel rows**
-- File: `Packages/cn.etetet.{pkg}/Excel/{ConfigName}.xlsx`
-
-**Step 2: Export configs**
-Run: `dotnet ./Packages/cn.etetet.excel/DotNet~/Exe/ET.ExcelExporter.dll ./`
-
-**Step 3: Verify compilation**
-Run: `dotnet build ET.sln`
-Expected: 0 errors
-```
-
-### Component Declaration Tasks
-When plan creates new Components:
-```markdown
-- [ ] N.1 Create Component data class
-
-**File:** `Packages/cn.etetet.{pkg}/Scripts/Model/Share/{Name}Component.cs`
-
-```csharp
-[ComponentOf(typeof(ParentEntity))]
-public class MyComponent : Entity, IAwake, IDestroy
-{
-    public int MyField;
-}
-```
-
-- [ ] N.2 Create System class
-
-**File:** `Packages/cn.etetet.{pkg}/Scripts/Hotfix/Share/{Name}ComponentSystem.cs`
-
-```csharp
-[EntitySystemOf(typeof(MyComponent))]
-[FriendOf(typeof(MyComponent))]
-public static partial class MyComponentSystem
-{
-    [EntitySystem]
-    private static void Awake(this MyComponent self) { }
-
-    [EntitySystem]
-    private static void Destroy(this MyComponent self) { }
-}
-```
-```
+### Data Model Declaration Tasks
+When plan creates new data models, include tasks for:
+- Creating the data definition with proper ownership annotations
+- Creating the associated logic module with required markers
+- Verifying compilation passes
 
 ## Remember
 
-- Exact file paths always (use ET package path convention)
+- Exact file paths always (follow project path conventions)
 - Complete code in plan (not "add validation")
 - Exact commands with expected output
 - DRY, YAGNI, TDD, frequent commits
-- Every new Component needs both Model + Hotfix files
-- Every proto change needs Proto2CS step
-- Every Excel change needs ExcelExporter step
-- Always include `dotnet build ET.sln` verification step
+- Every new data model needs both definition + logic files
+- Every code generation change needs a generation step
+- Always include build verification step
 
 ## Execution Handoff
 

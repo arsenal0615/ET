@@ -249,7 +249,7 @@ When invoked with `--loop`:
 }
 ```
 
-> **Note:** The `--loop` persistent mode requires the `qx-loop-hook` to be configured (created in B6). Without the hook, `--loop` falls back to single-session execution.
+> **Note:** The `--loop` persistent mode requires the `qx-loop-hook` to be configured. Without the hook, `--loop` falls back to single-session execution.
 
 ## --worktree Mode (Isolated Execution)
 

@@ -1,6 +1,6 @@
 ---
 name: qx-tdd
-description: "Use when implementing any feature or bugfix in the ET/Unity project, before writing implementation code. Enforces test-driven development discipline."
+description: "Use when implementing any feature or bugfix, before writing implementation code. Enforces test-driven development discipline."
 ---
 
 # Test-Driven Development (TDD)
@@ -57,16 +57,14 @@ Write one minimal test showing what should happen.
 <Good>
 ```csharp
 [Test]
-public void NumericComponent_HP_ShouldNotExceedMaxHP()
+public void HealthSystem_Damage_ShouldNotExceedMaxHP()
 {
-    var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
-    var numeric = unit.AddComponent<NumericComponent>();
-    numeric.Set(NumericType.MaxHp, 100);
+    var unit = CreateTestUnit();
+    SetMaxHP(unit, 100);
 
-    numeric.Set(NumericType.Hp, 150); // exceeds max
+    ApplyDamage(unit, 150); // exceeds max
 
-    int actualHp = numeric.GetAsInt(NumericType.Hp);
+    int actualHp = GetHP(unit);
     Assert.LessOrEqual(actualHp, 100, "HP should not exceed MaxHP");
 }
 ```
@@ -76,11 +74,11 @@ Clear name, tests real behavior, one thing
 <Bad>
 ```csharp
 [Test]
-public void TestNumeric()
+public void TestHealth()
 {
-    var mock = new Mock<NumericComponent>();
-    mock.Setup(n => n.GetAsInt(It.IsAny<int>())).Returns(100);
-    Assert.AreEqual(100, mock.Object.GetAsInt(NumericType.Hp));
+    var mock = new Mock<IHealthSystem>();
+    mock.Setup(n => n.GetHP()).Returns(100);
+    Assert.AreEqual(100, mock.Object.GetHP());
 }
 ```
 Vague name, tests mock not code
@@ -96,7 +94,8 @@ Vague name, tests mock not code
 **MANDATORY. Never skip.**
 
 ```bash
-dotnet test --filter "NumericComponent_HP_ShouldNotExceedMaxHP"
+# Run the specific test (adapt command to your project)
+dotnet test --filter "HealthSystem_Damage_ShouldNotExceedMaxHP"
 ```
 
 Confirm:
@@ -114,11 +113,12 @@ Write simplest code to pass the test.
 
 <Good>
 ```csharp
-public static void SetHP(this NumericComponent self, float value)
+public static void ApplyDamage(Unit unit, int damage)
 {
-    float maxHp = self.GetAsFloat(NumericType.MaxHp);
-    if (maxHp > 0) value = Math.Min(value, maxHp);
-    self.Set(NumericType.Hp, value);
+    int maxHp = GetMaxHP(unit);
+    int newHp = GetHP(unit) - damage;
+    if (maxHp > 0) newHp = Math.Max(0, Math.Min(newHp, maxHp));
+    SetHP(unit, newHp);
 }
 ```
 Just enough to pass
@@ -126,9 +126,9 @@ Just enough to pass
 
 <Bad>
 ```csharp
-public static void SetHP(this NumericComponent self, float value,
+public static void ApplyDamage(Unit unit, int damage,
     bool clamp = true, float? overrideMax = null,
-    Action<float> onChanged = null)
+    Action<int> onChanged = null)
 {
     // YAGNI
 }
@@ -237,50 +237,13 @@ TDD IS pragmatic:
 
 **All of these mean: Delete code. Start over with TDD.**
 
-## ET Framework Testing Notes
+## Project-Specific Testing Notes
 
-ET projects have specific testing constraints:
-
-### Entity/Component Testing
-```csharp
-// Correct: create via AddComponent, test lifecycle in mock Scene
-[Test]
-public void XunLuoPathComponent_GetCurrent_ReturnsCorrectPath()
-{
-    var scene = CreateTestScene();
-    var unit = scene.AddChild<Unit>();
-    var path = unit.AddComponent<XunLuoPathComponent>();
-    path.path = new float3[] { new float3(1, 0, 0), new float3(2, 0, 0) };
-    path.Index = 1;
-
-    float3 current = path.GetCurrent();
-
-    Assert.AreEqual(new float3(2, 0, 0), current);
-}
-```
-
-### Core Constraints
-- **No `new` on Entity types** — Must use `AddComponent<T>()` / `AddChild<T>()` (object pool managed)
-- **Async tests must use ETTask** — Never use `Task` or `async void`
-- **Test System extension methods** — Entity classes must not have methods; test the static System class
-- **NumericComponent formula validation** — Input KV pairs → verify computed results
-- **Proto message testing** — Verify serialization/deserialization correctness
-- **Config table testing** — Verify Excel-exported Config data loads correctly
-
-### Test Commands
-```bash
-# Server-side unit tests
-dotnet test
-
-# Compilation check (catches Analyzer errors)
-dotnet build ET.sln
-
-# Unity Test Runner (client-side tests)
-# Unity menu: Window > General > Test Runner
-
-# Compile hot-update DLLs
-# Unity shortcut: F6
-```
+> **IMPORTANT:** Read the project's CLAUDE.md and MEMORY.md for framework-specific testing constraints, conventions, and commands. Each project has its own rules about:
+> - How to create test objects (object pools, factories, etc.)
+> - Async test patterns (project-specific async frameworks)
+> - Where logic belongs (data vs logic separation patterns)
+> - Build/test commands and verification steps
 
 ## Example: Bug Fix
 
@@ -358,8 +321,8 @@ When adding mocks or test utilities, read @testing-anti-patterns.md to avoid com
 - Testing mock behavior instead of real behavior
 - Adding test-only methods to production classes
 - Mocking without understanding dependencies
-- `new` Entity in tests (must use AddComponent)
-- Testing Entity methods directly (must test System extensions)
+- Creating test objects that bypass normal lifecycle
+- Testing data-class methods directly instead of logic-module extensions
 
 ## Final Rule
 

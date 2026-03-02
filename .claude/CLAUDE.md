@@ -21,8 +21,7 @@
 | QA 测试 | `.claude/agents/qa-tester.md` | 测试设计、自动化测试、质量验证 |
 
 **专家 Agent（被 Skills 内部调用）**：
-- `code-reviewer.md` — 代码质量 + 计划对齐审查
-- `et-rule-reviewer.md` — ET 框架规则合规审查
+- `code-reviewer.md` — 代码质量 + 计划对齐 + 框架合规审查
 - `security-reviewer.md` — 安全漏洞审查
 
 ## QX 命令索引
@@ -80,6 +79,7 @@
 | `.claude/qx/knowledge/` | 角色知识库 |
 | `.claude/qx/state/` | 运行时状态（gitignored） |
 | `.claude/qx/hooks/` | Hook 脚本 |
+| `.claude/project-rules/` | 项目框架详细规则（按需加载） |
 | `.claude/qx/checklists/` | 流程检查清单 |
 | `docs/changes/` | 技术变更（活跃 + 归档） |
 | `docs/game-design/` | 策划文档（GDD、叙事等） |

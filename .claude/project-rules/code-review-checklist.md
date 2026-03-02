@@ -1,7 +1,6 @@
 # ET 代码审查检查清单
 
-> 用于 qx-code-review Skill 的 et-rule-reviewer 维度。
-> 项目特定规则请参阅 CLAUDE.md 和 MEMORY.md。
+> 用于 code-reviewer 的框架合规审查维度。
 
 ## 编译期规则（违反即报错）
 
