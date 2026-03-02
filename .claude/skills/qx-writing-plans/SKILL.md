@@ -69,6 +69,12 @@ Before writing the plan, detect whether you're working within a change:
 - New data models: [list with ownership declarations]
 - New messages/protocols: [list types]
 
+**Rules:** [列出本计划涉及的 project-rules 文件名，2-4 个，不含路径前缀]
+- 例：ecs-patterns, code-templates, messaging-network
+
+**Design Ref:** [设计文档路径，如有；无则写 None]
+- 例：docs/changes/battle/design.md
+
 ---
 ```
 
@@ -76,6 +82,11 @@ Before writing the plan, detect whether you're working within a change:
 
 ````markdown
 ### Task N: [Component Name]
+
+**Context:**
+- Depends: [前置任务编号；无依赖则省略此行]
+- Reads: [需要预读的现有文件路径；无则省略此行]
+- Why: [一句话设计意图 — 必填]
 
 **Files:**
 - Create: `path/to/new/file.cs`
@@ -140,6 +151,11 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 
 - [ ] 1.1 [Task description]
 
+**Context:**
+- Depends: [前置任务编号，如 1.0；无依赖则省略此行]
+- Reads: [需要预读的现有文件路径；无则省略此行]
+- Why: [一句话设计意图 — 必填]
+
 **Files:**
 - Create: `path/to/new/file.cs`
 - Test: `path/to/test/file.cs`
@@ -153,11 +169,20 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 6. Commit
 
 - [ ] 1.2 [Next task description]
+
+**Context:**
+- Why: [一句话设计意图]
+
 ...
 
 ## 2. [Next Group]
 
 - [ ] 2.1 [Task description]
+
+**Context:**
+- Depends: 1.1, 1.2
+- Why: [一句话设计意图]
+
 ...
 ````
 
@@ -200,6 +225,10 @@ When plan creates new data models, include tasks for:
 - Every new data model needs both definition + logic files
 - Every code generation change needs a generation step
 - Always include build verification step
+- Every task MUST have a `**Context:**` block with at least `Why`
+- `Depends` only declares direct dependencies (not transitive)
+- `Reads` only lists files truly needed (don't be greedy)
+- Plan header `Rules` should list 2-4 relevant rule files (not all 9)
 
 ## Execution Handoff
 

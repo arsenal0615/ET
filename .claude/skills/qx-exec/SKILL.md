@@ -27,21 +27,28 @@ Execute an approved implementation plan by dispatching fresh sub-agents per task
      ▼
 ┌─ QX Exec ────────────────────────────────────────┐
 │                                                    │
-│  1. Read plan, extract all tasks                   │
-│  2. Detect mode (change vs quick)                  │
-│  3. Create TodoWrite with all tasks                │
-│  4. For each task:                                 │
-│     a. Dispatch implementer sub-agent              │
-│        - Loads project rules (CLAUDE.md, MEMORY)   │
-│        - Follows TDD discipline                    │
-│        - Implements, tests, commits                │
-│     b. Dispatch spec reviewer sub-agent            │
-│        - Verifies code matches plan spec           │
-│     c. Dispatch code quality reviewer sub-agent    │
-│        - Checks quality, patterns, maintainability │
-│     d. Mark task complete (TodoWrite + checkbox)   │
-│  5. After all tasks: dispatch final review         │
-│  6. Offer /qx-finishing                            │
+│  1.  Read plan, extract all tasks                  │
+│  2.  Detect mode (change vs quick)                 │
+│  3.  Create TodoWrite with all tasks               │
+│  1.5 Build static context (plan-level):            │
+│      - Read plan header (goal, arch, tech stack)   │
+│      - Read framework rules (CLAUDE.md + Rules:)   │
+│      - Read design doc (Design Ref:)               │
+│      - Initialize task_outputs = {}                │
+│  4.  For each task:                                │
+│      a. Build task context package:                │
+│         - static_context (reused)                  │
+│         - Depends → inject prior task outputs      │
+│         - Reads → inject file contents             │
+│         - Why → inject design intent               │
+│      b. Dispatch implementer sub-agent             │
+│         (with full pre-loaded context)             │
+│      c. Parse implementer output → task_outputs    │
+│      d. Dispatch spec reviewer (with rules inline) │
+│      e. Dispatch quality reviewer (with rules)     │
+│      f. Mark task complete (TodoWrite + checkbox)  │
+│  5.  After all tasks: dispatch final review        │
+│  6.  Offer /qx-finishing                           │
 │                                                    │
 │  --loop: Keep working until all tasks done         │
 │          (persistent mode via hook)                │
@@ -67,38 +74,145 @@ Execute an approved implementation plan by dispatching fresh sub-agents per task
 5. Create TodoWrite for remaining tasks
 ```
 
+### Step 1.5: Build Static Context (Plan-Level)
+
+Static context is built ONCE and reused across all task dispatches:
+
+```
+1. Read plan header — Extract Goal, Architecture, Tech Stack, Impact
+2. Read framework rules:
+   a. Always include: CLAUDE.md analyzer rules summary (8 rules, ~15 lines)
+   b. If plan header has "Rules:" field:
+      → Read each listed file from .claude/project-rules/
+      → Include their full content as inline context
+   c. If plan header has NO "Rules:" field (backward compat):
+      → Only include CLAUDE.md analyzer rules summary
+      → Do NOT bulk-inject all project-rules (too large)
+3. Read design doc:
+   a. If plan header has "Design Ref:" and it's not "None":
+      → Read the referenced file
+      → Include relevant sections
+4. Store everything as `static_context` for reuse
+```
+
+**What static_context contains:**
+- Plan goal, architecture, tech stack (from header)
+- CLAUDE.md analyzer rules (always)
+- Relevant project-rules content (from header Rules field)
+- Design document excerpts (if Design Ref exists)
+
+Also initialize `task_outputs = {}` — a map to store each task's completion output for dependency resolution.
+
 ### Step 2: Execute Tasks (Per Task)
 
-#### 2a. Dispatch Implementer
+#### 2a. Build Task Context & Dispatch Implementer
 
-Dispatch a sub-agent for each task:
+For each task, build a task-specific context package on top of static_context, then dispatch:
+
+**Context Package Algorithm (per task):**
+
+```
+1. Start with static_context (plan header + framework rules + design doc)
+2. Process task's Context block:
+   a. Depends: For each dependent task ID:
+      - Retrieve task_outputs[dep_id] (summary, files changed, key decisions)
+      - If dependent task created new files important for this task:
+        → Read their current content and include
+   b. Reads: For each file path:
+      - Read the file content (or specified line range if path includes :N-M)
+      - Include in prompt as inline code block
+   c. Why: Include the design intent sentence
+3. Assemble the full prompt from template below
+```
+
+**Implementer Prompt Template:**
 
 ```
 Agent(subagent_type="programmer", prompt="""
-  ## Task: [task title]
+## 你的任务
 
-  [Full task text from plan, verbatim]
+### [task title]
 
-  ## Context
-  - Plan: [plan file path]
-  - This is task [N] of [total]
-  - Previous tasks completed: [list]
+**设计意图:** [Why field from task Context]
 
-  ## Rules
-  1. Read project CLAUDE.md for framework rules
-  2. Follow TDD discipline:
-     - RED: Write a failing test first
-     - GREEN: Write minimum code to pass
-     - REFACTOR: Clean up while tests pass
-  3. Run verification commands after implementation
-  4. Commit your work with a descriptive message
+**进度:** Task [N] of [total]
 
-  ## Output
-  Return:
-  - What you implemented
-  - Test results (pass/fail counts)
-  - Any concerns or questions
-  - Files changed
+### 任务详情
+
+[Full task text from plan, verbatim — including Steps, code snippets, commands]
+
+---
+
+## 预加载上下文（直接使用，无需再读文件）
+
+### 项目框架规则
+
+[CLAUDE.md analyzer rules summary — 8 rules, always included]
+
+[Content from each project-rules file declared in plan header Rules field]
+
+### 计划全局信息
+
+**Goal:** [from plan header]
+**Architecture:** [from plan header]
+**Tech Stack:** [from plan header]
+
+### 设计文档摘要
+
+[Design doc relevant sections — if Design Ref exists; otherwise omit this section]
+
+### 前置任务产出
+
+[For each task in Depends:]
+**Task [dep_id] — [dep_title]:**
+- Files: [created/modified file paths]
+- Summary: [implementation summary from task_outputs]
+- Key decisions: [from task_outputs]
+
+[If a dependent task created files this task needs, include their content:]
+```filepath
+[file content]
+```
+
+[If no Depends: omit this section entirely]
+
+### 现有代码（需要阅读/修改的文件）
+
+[For each file in Reads:]
+```filepath
+[file content or relevant line range]
+```
+
+[If no Reads: omit this section entirely]
+
+---
+
+## 工作纪律
+
+1. **TDD:** RED → GREEN → REFACTOR
+   - 写失败测试 → 运行确认失败 → 写最小实现 → 运行确认通过
+2. **编译验证:** [build command from plan or CLAUDE.md]
+3. **Commit:** 完成后提交，消息描述做了什么
+
+## 输出格式（必须遵守，编排器依赖此格式解析）
+
+完成后，严格按以下格式输出：
+
+### 实现摘要
+[What you implemented, 2-3 sentences]
+
+### 文件变更
+- Created: [file paths, one per line]
+- Modified: [file paths, one per line]
+
+### 测试结果
+[pass/fail counts, specific test names]
+
+### 关键决策
+[Any design decisions made during implementation, or "None"]
+
+### 问题或顾虑
+[Any concerns, or "None"]
 """)
 ```
 
@@ -107,8 +221,27 @@ Agent(subagent_type="programmer", prompt="""
 - Provide additional context if needed
 
 **If implementer fails:**
-- Dispatch a fix agent with specific error context
+- Dispatch a fix agent with specific error context + the same pre-loaded context
 - Don't try to fix manually (context pollution)
+
+#### 2a-post. Parse Implementer Output
+
+After implementer returns, parse its structured output:
+
+```
+1. Extract structured sections from output:
+   - 实现摘要 → task_outputs[task_id].summary
+   - 文件变更 → task_outputs[task_id].files (Created + Modified lists)
+   - 测试结果 → task_outputs[task_id].tests
+   - 关键决策 → task_outputs[task_id].decisions
+   - 问题或顾虑 → task_outputs[task_id].concerns
+2. Store in task_outputs map for:
+   - Feeding to reviewers (this task, immediately)
+   - Feeding to dependent tasks (future tasks via Depends)
+3. If output is unstructured (agent didn't follow format):
+   - Fallback: extract file list from `git diff --name-only` since last commit
+   - Use the full agent output as summary
+```
 
 #### 2b. Dispatch Spec Reviewer
 
@@ -118,18 +251,26 @@ After implementer completes:
 Agent(subagent_type="code-reviewer", prompt="""
   ## Spec Compliance Review
 
-  Review whether the implementation matches the plan specification.
+  ### 设计意图
+  [Why field from task Context — reviewer needs to understand the "why"]
 
-  **Plan task spec:**
+  ### Plan Task Spec
   [Full task text from plan]
 
-  **Files changed:**
-  [List from implementer output]
+  ### 项目框架规则（与本任务相关）
+  [Same framework rules injected to implementer — from static_context]
+
+  ### Files Changed
+  [From implementer structured output — file paths]
+
+  ### Implementer Summary
+  [From implementer structured output — 实现摘要 + 关键决策]
 
   Check:
   1. All requirements in the spec are implemented
   2. Nothing extra was added beyond the spec
-  3. The implementation approach matches what was planned
+  3. Implementation follows framework rules (对照上面注入的规则)
+  4. Design intent is preserved (对照设计意图)
 
   Verdict: PASS / FAIL
   If FAIL: List specific gaps or extras
@@ -137,7 +278,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 ```
 
 **If spec review fails:**
-- Same implementer agent fixes the gaps
+- Same implementer agent fixes the gaps (re-dispatch with same pre-loaded context)
 - Re-run spec review
 - Loop until PASS
 
@@ -149,13 +290,17 @@ After spec review passes:
 Agent(subagent_type="code-reviewer", prompt="""
   ## Code Quality Review
 
-  Review the implementation for code quality.
+  ### 项目框架规则
+  [Same framework rules from static_context — reviewer uses these directly]
 
-  **Files changed:**
-  [List from implementer output]
+  ### Files Changed
+  [From implementer structured output — file paths]
+
+  ### Implementer Summary
+  [From implementer structured output — 实现摘要 + 关键决策]
 
   Check:
-  1. Code follows project conventions (read CLAUDE.md)
+  1. Code follows project conventions (对照上面注入的框架规则)
   2. No anti-patterns or code smells
   3. Error handling is appropriate
   4. Tests are meaningful (not just green)
@@ -170,7 +315,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 ```
 
 **If quality review requests changes:**
-- Implementer fixes the issues
+- Implementer fixes the issues (re-dispatch with same pre-loaded context)
 - Re-run quality review
 - Loop until APPROVE
 
@@ -179,7 +324,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 ```
 1. Update TodoWrite: mark task as completed
 2. If Change Mode: update plan file checkbox (- [ ] → - [x])
-3. Log: "Task N complete. [brief summary]"
+3. Log: "Task N complete. [brief summary from task_outputs]"
 ```
 
 ### Step 3: Final Review
@@ -300,9 +445,29 @@ When invoked with `--worktree`:
 | Build/test fails after task | Investigate before next task |
 | Blocked on unclear requirement | Stop, ask user, resume after answer |
 
+## Backward Compatibility
+
+Plans created before this context-injection update may lack `**Context:**` blocks or header `**Rules:**` fields. Handle gracefully:
+
+**If a task lacks `**Context:**` block:**
+- `Depends`: Infer from task ordering (assume sequential dependency on the previous task)
+- `Reads`: Extract from `**Files:** Modify:` entries (if task modifies existing files, pre-read them)
+- `Why`: Use the task title as fallback design intent
+
+**If plan header lacks `**Rules:**`:**
+- Always include CLAUDE.md analyzer rules summary (8 rules, ~15 lines — always safe)
+- Do NOT bulk-inject all 9 project-rules files (664 lines total — too large)
+- If the task text mentions specific patterns (e.g., "Component", "Proto", "async"), try to infer the relevant rules
+
+**If plan header lacks `**Design Ref:**`:**
+- In Change Mode: check if `docs/changes/<name>/design.md` exists and read it
+- In Quick Mode: omit design context
+
 ## Key Principles
 
+- **Pre-load, don't lazy-load** — Orchestrator reads and injects all context; sub-agents never need to "go read X"
 - **Fresh agent per task** — No context pollution between tasks
+- **Structured output** — Implementer returns parseable output for dependency chain
 - **TDD always** — Red → Green → Refactor for every task
 - **Two-stage review** — Spec compliance first, then code quality
 - **Checkpoint progress** — Update TodoWrite + plan file after each task
@@ -312,6 +477,7 @@ When invoked with `--worktree`:
 ## Red Flags
 
 **Never:**
+- Tell sub-agent to "read CLAUDE.md yourself" — inject rules into prompt instead
 - Skip spec review ("looks good enough")
 - Skip code quality review ("we're in a hurry")
 - Dispatch multiple implementers to the same files in parallel
@@ -320,10 +486,14 @@ When invoked with `--worktree`:
 - Provide only partial task context to implementer (give full text)
 
 **Always:**
+- Pre-read and inject all necessary context into sub-agent prompts
 - Give implementer the FULL task text from the plan
+- Include framework rules inline (from static_context)
+- Include dependent task outputs for tasks with Depends
 - Run reviews in order: spec first, then quality
 - Fix and re-review (don't skip the re-review loop)
 - Track progress in both TodoWrite and plan file (Change Mode)
+- Parse implementer output into task_outputs for dependency chain
 - Offer `/qx-finishing` when all tasks are done
 
 ## Related Skills
