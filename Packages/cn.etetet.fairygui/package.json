@@ -1,0 +1,22 @@
+{
+  "name": "cn.etetet.fairygui",
+  "displayName": "ET.FairyGUI",
+  "version": "3.0.0",
+  "unity": "2022.3",
+  "description": "FairyGUI UI框架，整合到ET包规范",
+  "author": {
+    "name": "FairyGUI",
+    "url": "https://github.com/fairygui/FairyGUI-unity"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fairygui/FairyGUI-unity.git"
+  },
+  "relatedPackages": {},
+  "dependencies": {
+    "com.unity.ugui": "2.0.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/@ET-Packages"
+  }
+}

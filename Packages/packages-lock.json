@@ -42,6 +42,14 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "cn.etetet.fairygui": {
+      "version": "file:cn.etetet.fairygui",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.ugui": "2.0.0"
+      }
+    },
     "cn.etetet.http": {
       "version": "file:cn.etetet.http",
       "depth": 0,
