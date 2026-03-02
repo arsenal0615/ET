@@ -15,6 +15,9 @@ namespace ET.Server
             // 添加 PRNG 组件
             room.AddComponent<DeterministicRngComponent, uint>(seed);
 
+            // 添加回合状态机组件
+            room.AddComponent<RoundFSMComponent>();
+
             return room;
         }
     }

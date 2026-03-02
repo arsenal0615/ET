@@ -102,5 +102,15 @@ namespace ET.Server
             int index = Math.Min(round - 1, table.Length - 1);
             return table[index];
         }
+
+        /// <summary>
+        /// 启动回合循环（协程，不等待）。
+        /// 内部每个阶段会通过 NewContext 注入对应的 CancellationToken。
+        /// </summary>
+        public static void StartRoundLoop(this MatchRoom self)
+        {
+            RoundFSMComponent fsm = self.GetComponent<RoundFSMComponent>();
+            fsm.StartRoundLoopAsync().Coroutine();
+        }
     }
 }
