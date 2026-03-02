@@ -1,8 +1,4 @@
 {
-"enabledPlugins": {
-    "csharp-lsp@claude-plugins-official": true,
-    "oh-my-claudecode@omc": false
-  },
   "permissions": {
     "allow": [
       "Bash(.*)",
@@ -15,5 +11,34 @@
       "mcp__pencil"
     ],
     "deny": []
+  },
+  "enabledPlugins": {
+    "csharp-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-loop-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-guard-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }
