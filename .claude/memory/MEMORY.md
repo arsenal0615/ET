@@ -19,6 +19,7 @@
 |------|------|--------|
 | [et-yooasset.md](et-yooasset.md) | YooAsset 资源管理在 ET 中的封装与用法 | ResourcesComponent, ResourcesLoaderComponent, PlayMode, AB包 |
 | [et-hybridclr.md](et-hybridclr.md) | HybridCLR 热更新在 ET 中的集成与流程 | CodeLoader, AOT元数据, F6编译, F7热重载, 打包 |
+| [et-fairygui.md](et-fairygui.md) | FairyGUI UI 框架在 ET 中的包结构与核心类 | GObject, UIPackage, GRoot, ET.FairyGUI, Runtime/模式 |
 
 ## 快速参考：ET9 核心编码规则
 

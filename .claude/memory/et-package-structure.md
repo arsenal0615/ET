@@ -45,6 +45,7 @@ Packages/cn.etetet.{包名}/
 | aoi | 九宫格 AOI |
 | hybridclr | HybridCLR 热更支持 |
 | yooassets | YooAsset 资源管理 |
+| fairygui | FairyGUI UI 框架（第三方库，Runtime/ 模式） |
 | sourcegenerator | 分析器和代码生成器 |
 
 ## MongoBson 序列化
