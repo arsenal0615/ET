@@ -1,8 +1,8 @@
 # ET 编码模式参考
 
-## Entity-Component Pattern
+## Entity-Component 模式
 
-Entities are pure data containers. Logic is implemented as **static extension methods** in separate System classes.
+Entity 是纯数据容器。逻辑通过独立 System 类中的**静态扩展方法**实现。
 
 ### Component 模板（Model 程序集）
 
@@ -49,33 +49,33 @@ public class HpChange_UpdateUI : AEvent<Scene, HpChangeEvent>
 }
 ```
 
-## Key Attributes
+## 关键属性速查
 
-| Attribute | Purpose |
-|-----------|---------|
-| `[ComponentOf(typeof(Parent))]` | Declares which Entity a Component belongs to |
-| `[ChildOf(typeof(Parent))]` | Declares parent-child Entity relationship |
-| `[FriendOf(typeof(Entity))]` | Grants access to Entity's private fields |
-| `[EntitySystemOf(typeof(Entity))]` | Auto-generates lifecycle System boilerplate |
-| `[EntitySystem]` | Marks Awake/Destroy/Update methods |
-| `[Event(SceneType.X)]` | Event handler registration |
-| `[MessageHandler(SceneType.X)]` | Network message handler |
-| `[MessageSessionHandler(SceneType.X)]` | RPC handler |
-| `[Invoke(SceneType.X)]` | Function-style call with return value |
-| `[EnableMethod]` | Allows methods inside Entity class (exception) |
+| 属性 | 用途 |
+|------|------|
+| `[ComponentOf(typeof(Parent))]` | 声明 Component 所属的 Entity 类型 |
+| `[ChildOf(typeof(Parent))]` | 声明父子 Entity 关系 |
+| `[FriendOf(typeof(Entity))]` | 授予对 Entity 私有字段的访问权限 |
+| `[EntitySystemOf(typeof(Entity))]` | 自动生成生命周期 System 样板代码 |
+| `[EntitySystem]` | 标记 Awake/Destroy/Update 方法 |
+| `[Event(SceneType.X)]` | 事件处理器注册 |
+| `[MessageHandler(SceneType.X)]` | 网络消息处理器 |
+| `[MessageSessionHandler(SceneType.X)]` | RPC 处理器 |
+| `[Invoke(SceneType.X)]` | 带返回值的函数式调用 |
+| `[EnableMethod]` | 允许 Entity 类内定义方法（例外情况） |
 
-## File Naming Conventions
+## 文件命名规范
 
-| Type | Pattern | Example |
-|------|---------|---------|
+| 类型 | 格式 | 示例 |
+|------|------|------|
 | Component | `{Name}Component.cs` | `MoveComponent.cs` |
 | System | `{Component}System.cs` | `MoveComponentSystem.cs` |
-| Message Handler | `{MessageName}Handler.cs` | `C2G_EnterMapHandler.cs` |
-| Event Handler | `{Event}_{Action}.cs` | `ChangePosition_NotifyAOI.cs` |
-| Factory | `{Entity}Factory.cs` | `UnitFactory.cs` |
-| Helper | `{Entity}Helper.cs` | `UnitHelper.cs` |
+| 消息处理器 | `{MessageName}Handler.cs` | `C2G_EnterMapHandler.cs` |
+| 事件处理器 | `{Event}_{Action}.cs` | `ChangePosition_NotifyAOI.cs` |
+| 工厂 | `{Entity}Factory.cs` | `UnitFactory.cs` |
+| 辅助类 | `{Entity}Helper.cs` | `UnitHelper.cs` |
 
-## Constant ID Formulas
+## 常量 ID 公式
 
 - `SceneType = PackageType * 1000 + offset`
 - `TimerInvokeType = PackageType * 1000 + offset`
