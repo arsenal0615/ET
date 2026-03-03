@@ -13,6 +13,7 @@ namespace ET.Server
             self.PopCap = AutoChessDefine.InitialPopCap;
             self.IsAlive = true;
             self.Rank = 0;
+            self.PlayerIndex = 0; // 工厂创建时会覆写为 0-3
         }
 
         [EntitySystem]
