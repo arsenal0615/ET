@@ -1,5 +1,6 @@
 namespace ET
 {
+    [EnableClass]
     public class SynergyEffectParam
     {
         public float Param1;
@@ -7,6 +8,7 @@ namespace ET
         public float Param3;
     }
 
+    [EnableClass]
     public class SynergyDef
     {
         public int Id;

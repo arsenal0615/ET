@@ -5,7 +5,7 @@ namespace ET.Server
     /// </summary>
     [FriendOf(typeof(MatchRoom))]
     [FriendOf(typeof(MatchPlayer))]
-    [Event(SceneType.Server)]
+    [Event(SceneType.Map)]
     public class PhaseChangedEventHandler_Economy : AEvent<Scene, PhaseChangedEvent>
     {
         protected override async ETTask Run(Scene scene, PhaseChangedEvent args)

@@ -1,5 +1,6 @@
 namespace ET
 {
+    [EnableClass]
     public class UnitTemplateDef
     {
         public int Id;

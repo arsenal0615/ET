@@ -43,6 +43,7 @@ namespace ET
         Clone = 10,
     }
 
+    [EnableClass]
     public class SkillEffectData
     {
         public SkillEffectType EffectType;
@@ -51,6 +52,7 @@ namespace ET
         public float Duration;
     }
 
+    [EnableClass]
     public class SkillDefData
     {
         public int Id;
