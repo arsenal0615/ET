@@ -104,6 +104,27 @@ namespace ET.Server
             return templateId;
         }
 
+        /// <summary>
+        /// 出售单位：归还圣水 + 回流卡池（isGift 单位不回流）。
+        /// copiesOfStar 公式：1★→1份 / 2★→2份 / 3★→4份（MergeCount 的幂）
+        /// 注：实际 UnitInstance 移除由 E4 负责，此处只处理经济和卡池。
+        /// </summary>
+        public static void TrySell(MatchPlayer player, int templateId, int starLevel,
+            bool isGift, SharedPoolComponent pool, int round)
+        {
+            int cost = AutoChessConfigLoader.GetUnit(templateId).Cost;
+
+            // 圣水返还
+            EconomyService.GiveSell(player, cost, round);
+
+            // 卡池回流（礼品单位不回流）
+            if (!isGift && templateId > 0 && templateId <= AutoChessDefine.TotalUnitTemplates)
+            {
+                int copies = 1 << (starLevel - 1); // 1★→1, 2★→2, 3★→4
+                pool.Remaining[templateId - 1] += copies;
+            }
+        }
+
         // --- Private helpers ---
 
         private static void ReturnCurrentOffers(ShopComponent shop, SharedPoolComponent pool)
