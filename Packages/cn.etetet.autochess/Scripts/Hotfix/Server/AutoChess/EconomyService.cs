@@ -6,6 +6,7 @@ namespace ET.Server
     /// 圣水经济服务。所有圣水变更必须通过此类——保证 clamp、日志和事件三者联动。
     /// </summary>
     [FriendOf(typeof(MatchPlayer))]
+    [FriendOf(typeof(EconomyLogComponent))]
     public static class EconomyService
     {
         /// <summary>
@@ -18,11 +19,13 @@ namespace ET.Server
 
         /// <summary>
         /// 统帅被动补偿：战败后 +randInt(4,8)。仅对上回合战败玩家调用（round >= 2）。
+        /// 使用 CommanderPassive 子种子，独立于全局 RNG 序列，保证跨回合可重放。
         /// </summary>
         public static void GiveCommanderPassive(MatchPlayer player, DeterministicRngComponent rng, int round)
         {
-            int bonus = rng.NextInt(AutoChessDefine.CommanderPassiveMin,
-                                    AutoChessDefine.CommanderPassiveMax + 1);
+            uint subSeed = rng.DeriveSubSeed(PrngPurpose.CommanderPassive, round);
+            int range = AutoChessDefine.CommanderPassiveMax - AutoChessDefine.CommanderPassiveMin + 1; // 5
+            int bonus = (int)(subSeed % (uint)range) + AutoChessDefine.CommanderPassiveMin; // [4, 8]
             ApplyDelta(player, EconomyDeltaType.CommanderPassive, bonus, round);
         }
 
