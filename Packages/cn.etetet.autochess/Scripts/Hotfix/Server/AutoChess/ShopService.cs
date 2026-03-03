@@ -60,6 +60,50 @@ namespace ET.Server
             ReturnCurrentOffers(shop, pool);
         }
 
+        /// <summary>
+        /// 购买商店指定槽位的单位。
+        /// 成功：扣除圣水 + 全行重刷 + 返回 templateId。
+        /// 失败：返回 -1，状态不变。
+        /// 注：实际 UnitInstance 创建由 E4 负责，此处只返回 templateId。
+        /// </summary>
+        public static int TryBuy(MatchPlayer player, int slotIndex,
+            SharedPoolComponent pool, DeterministicRngComponent rng,
+            RoundPhase currentPhase, int round)
+        {
+            // 阶段门控（内联判断，避免与 RoundFSMComponentSystem 产生循环依赖）
+            // Deployment 阶段全部允许；Battle 阶段允许 Buy；其他阶段禁止
+            bool canBuy = currentPhase == RoundPhase.Deployment ||
+                          currentPhase == RoundPhase.Battle;
+            if (!canBuy)
+                return -1;
+
+            ShopComponent shop = player.GetComponent<ShopComponent>();
+
+            // 槽位合法性
+            if (slotIndex < 0 || slotIndex >= shop.Slots.Length)
+                return -1;
+
+            int templateId = shop.Slots[slotIndex].TemplateId;
+            if (templateId <= 0)
+                return -1; // 空槽
+
+            // 获取单价
+            int cost = AutoChessConfigLoader.GetUnit(templateId).Cost;
+
+            // 扣除圣水（已购买的 Offer 份数之前已预扣，此处不需要再动 pool）
+            bool ok = EconomyService.TryDeductBuy(player, cost, round);
+            if (!ok)
+                return -1;
+
+            // 清空该槽（预扣份数已在生成时扣，不需要归还——该单位被买走了）
+            shop.Slots[slotIndex].TemplateId = -1;
+
+            // 全行重刷（归还剩余 2 槽的预扣 → 生成全新 3 槽）
+            GenerateOffersForPlayer(player, pool, rng);
+
+            return templateId;
+        }
+
         // --- Private helpers ---
 
         private static void ReturnCurrentOffers(ShopComponent shop, SharedPoolComponent pool)
