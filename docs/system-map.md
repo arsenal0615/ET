@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-02
+> 最后更新：2026-03-03
 
 ---
 
@@ -137,6 +137,56 @@
 
 ---
 
+## 自走棋系统（cn.etetet.autochess）
+
+### Entity 树结构
+
+- **MatchComponent** (ComponentOf: Scene，服务端) — 比赛容器，管理所有 MatchRoom
+- **MatchRoom** (ChildOf: MatchComponent) — 一局比赛实体
+  - **DeterministicRngComponent** (ComponentOf: MatchRoom) — xoshiro256** PRNG，保证确定性
+  - **RoundFSMComponent** (ComponentOf: MatchRoom) — 回合状态机（None→RoundStart→Deployment→PreBattle→Battle→RoundEnd）
+  - **MatchPlayer** (ChildOf: MatchRoom) — 玩家实体（Elixir、HP、PopCap、IsAlive 等）
+    - **EconomyLogComponent** (ComponentOf: MatchPlayer) — 圣水流水账（List<EconomyDelta>）
+
+### 经济系统
+
+- **EconomyService** (静态服务类, Hotfix/Server) — 所有圣水变更的唯一入口
+  - `GiveRoundIncome` / `GiveCommanderPassive` / `TryDeductBuy` / `GiveSell` / `GiveMerge`
+  - 私有 `ApplyDelta` — clamp(0, MaxElixir=999) + log → EconomyLogComponent + publish ElixirChangedEvent
+  - `GiveCommanderPassive` 使用 `DeriveSubSeed(PrngPurpose.CommanderPassive, round)` 独立子种子
+- **EconomyDelta** (struct, Model/Share) — 单条流水记录（Type/Amount/Round/Context）
+- **EconomyDeltaType** (enum, Model/Share) — RoundIncome=1, CommanderPassive=2, Buy=3, Sell=4, Merge=5
+
+### 事件
+
+- **PhaseChangedEvent** — RoundFSMComponent 切相时发布；PhaseChangedEventHandler_Economy 订阅 RoundStart 发放收入
+- **ElixirChangedEvent** — EconomyService.ApplyDelta 发布；供 E9 网络层订阅推送客户端
+
+### 关键字段
+
+- **MatchRoom.LastRoundLosers** (List<long>) — E5 战斗结算写入，E2 经济 Handler 读取（统帅被动）；Round 1 为空 → 无被动
+
+### 配置
+
+- **AutoChessConfigLoader** (静态) — 单位(24) / 协同(13) / 技能(16) 配置加载
+- **AutoChessDefine** — 所有魔法数字（BoardWidth=8, BenchSize=5, MaxElixir=999, PopCapByRound[] 等）
+
+### 工厂与辅助
+
+- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + MatchPlayer + 组件初始化
+- **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()、EndMatch()
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy
+
+### SceneType
+
+- `SceneTypeAutoChessMatch = 10030`（含于 AutoChessDefine，Package 10 * 1000 + 30）
+
+### 依赖
+
+- **依赖**: core（Entity/EventSystem/TimerComponent）
+
+---
+
 ## Proto 消息 Opcode 分配
 
 | 范围 | 用途 | 文件 |
@@ -163,12 +213,14 @@ cn.etetet.core（基础设施）
   │     └── cn.etetet.unit
   ├── cn.etetet.login（登录系统）
   │     └── cn.etetet.netinner
-  └── cn.etetet.statesync（状态同步演示）
-        ├── cn.etetet.login
-        ├── cn.etetet.unit
-        ├── cn.etetet.move
-        ├── cn.etetet.aoi
-        └── cn.etetet.ai
+  ├── cn.etetet.statesync（状态同步演示）
+  │     ├── cn.etetet.login
+  │     ├── cn.etetet.unit
+  │     ├── cn.etetet.move
+  │     ├── cn.etetet.aoi
+  │     └── cn.etetet.ai
+  └── cn.etetet.autochess（自走棋）
+        └── cn.etetet.core
 ```
 
 ## 关键业务流程
