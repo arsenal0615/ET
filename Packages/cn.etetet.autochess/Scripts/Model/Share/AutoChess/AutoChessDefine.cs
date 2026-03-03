@@ -37,5 +37,11 @@ namespace ET
 
         // 战斗
         public const int CombatTickRate = 20; // ticks per second
+
+        // 经济
+        public const int RoundBaseIncome = 4;
+        public const int CommanderPassiveMin = 4;
+        public const int CommanderPassiveMax = 8;
+        public const int MergeElixirReturn = 1;
     }
 }
