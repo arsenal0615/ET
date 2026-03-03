@@ -2,13 +2,10 @@ namespace ET.Server
 {
     /// <summary>
     /// 监听 PhaseChangedEvent：当阶段切换到 RoundStart 时发放回合收入和统帅被动。
-    ///
-    /// 注意：[Event(SceneType.Main)] 中的 SceneType 需与 MatchComponent 实际挂载的
-    /// Scene 类型一致。当前先用 SceneType.Main，集成时视服务端 Scene 配置调整。
     /// </summary>
     [FriendOf(typeof(MatchRoom))]
     [FriendOf(typeof(MatchPlayer))]
-    [Event(SceneType.Main)]
+    [Event(SceneType.Server)]
     public class PhaseChangedEventHandler_Economy : AEvent<Scene, PhaseChangedEvent>
     {
         protected override async ETTask Run(Scene scene, PhaseChangedEvent args)
@@ -45,7 +42,7 @@ namespace ET.Server
             }
 
             // 2. 上回合战败者统帅被动（首回合跳过，无战斗结果）
-            if (round > 1 && rng != null && room.LastRoundLosers.Count > 0)
+            if (round > 1 && rng != null)
             {
                 foreach (long loserId in room.LastRoundLosers)
                 {
