@@ -20,5 +20,6 @@ namespace ET.Server
         public int CurrentRound;
         public MatchState MatchState;
         public List<(long PlayerId, int Rank)> FinalResults;
+        public List<long> LastRoundLosers; // 上回合战败的 PlayerId，E5 战斗结算写入
     }
 }

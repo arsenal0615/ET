@@ -15,12 +15,14 @@ namespace ET.Server
             self.CurrentRound = 0;
             self.MatchState = MatchState.Waiting;
             self.FinalResults = new List<(long, int)>();
+            self.LastRoundLosers = new List<long>();
         }
 
         [EntitySystem]
         private static void Destroy(this MatchRoom self)
         {
             self.FinalResults = null;
+            self.LastRoundLosers = null;
         }
 
         public static void Init(this MatchRoom self, uint seed, List<long> playerIds)
@@ -111,6 +113,31 @@ namespace ET.Server
         {
             RoundFSMComponent fsm = self.GetComponent<RoundFSMComponent>();
             fsm.StartRoundLoopAsync().Coroutine();
+        }
+
+        /// <summary>
+        /// 枚举当前所有存活玩家。
+        /// </summary>
+        public static IEnumerable<MatchPlayer> GetAlivePlayers(this MatchRoom self)
+        {
+            foreach (Entity child in self.Children.Values)
+            {
+                if (child is MatchPlayer player && player.IsAlive)
+                    yield return player;
+            }
+        }
+
+        /// <summary>
+        /// 按 PlayerId 查找玩家（不存在返回 null）。
+        /// </summary>
+        public static MatchPlayer FindPlayerById(this MatchRoom self, long playerId)
+        {
+            foreach (Entity child in self.Children.Values)
+            {
+                if (child is MatchPlayer player && player.PlayerId == playerId)
+                    return player;
+            }
+            return null;
         }
     }
 }
