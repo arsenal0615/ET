@@ -6,6 +6,8 @@ namespace ET.Server
     [EntitySystemOf(typeof(MatchRoom))]
     [FriendOf(typeof(MatchRoom))]
     [FriendOf(typeof(MatchPlayer))]
+    [FriendOf(typeof(ShopComponent))]
+    [FriendOf(typeof(SharedPoolComponent))]
     public static partial class MatchRoomSystem
     {
         [EntitySystem]
@@ -91,6 +93,26 @@ namespace ET.Server
                     int aliveCount = self.GetAlivePlayerCount();
                     player.Rank = aliveCount + 1; // 当前存活人数+1 就是这个被淘汰者的排名
                     self.FinalResults.Add((playerId, player.Rank));
+
+                    // 归还该玩家商店 Offer 的预扣份额（内联，避免循环依赖）
+                    SharedPoolComponent pool = self.GetComponent<SharedPoolComponent>();
+                    if (pool != null)
+                    {
+                        ShopComponent shop = player.GetComponent<ShopComponent>();
+                        if (shop != null)
+                        {
+                            for (int i = 0; i < shop.Slots.Length; i++)
+                            {
+                                int tid = shop.Slots[i].TemplateId;
+                                if (tid > 0)
+                                {
+                                    pool.Remaining[tid - 1]++;
+                                    shop.Slots[i].TemplateId = -1;
+                                }
+                            }
+                        }
+                    }
+
                     break;
                 }
             }
