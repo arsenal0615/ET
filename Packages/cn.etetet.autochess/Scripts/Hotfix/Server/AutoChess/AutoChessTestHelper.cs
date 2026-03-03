@@ -18,6 +18,7 @@ namespace ET.Server
             TestPrngDeterminism(scene);
             TestEntityTree(scene);
             TestPhaseGate();
+            TestEconomy(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -169,6 +170,83 @@ namespace ET.Server
             }
 
             Log.Info("[AutoChess] PhaseGate test passed: all phase x operation combinations correct");
+        }
+
+        /// <summary>
+        /// 验证经济系统：5 个收支操作、clamp 边界、日志记录。
+        /// </summary>
+        public static void TestEconomy(Scene scene)
+        {
+            // 建立临时 MatchComponent + MatchRoom（2 玩家，seed=77777）
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 3001, 3002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 77777);
+
+            MatchPlayer p = room.FindPlayerById(3001);
+            if (p == null) throw new Exception("FindPlayerById(3001) returned null");
+
+            // --- GiveRoundIncome: 0 + 4 = 4 ---
+            EconomyService.GiveRoundIncome(p, 1);
+            if (p.Elixir != 4)
+                throw new Exception($"GiveRoundIncome: expected 4, got {p.Elixir}");
+
+            // --- TryDeductBuy: 4 - 3 = 1 ---
+            bool ok = EconomyService.TryDeductBuy(p, 3, 1);
+            if (!ok) throw new Exception("TryDeductBuy should succeed");
+            if (p.Elixir != 1) throw new Exception($"TryDeductBuy: expected 1, got {p.Elixir}");
+
+            // --- TryDeductBuy: insufficient (cost=5, have=1) ---
+            bool fail = EconomyService.TryDeductBuy(p, 5, 1);
+            if (fail) throw new Exception("TryDeductBuy should fail (insufficient)");
+            if (p.Elixir != 1) throw new Exception("Elixir should not change on failed buy");
+
+            // --- GiveSell: +max(3-1,0) = +2 → 3 ---
+            EconomyService.GiveSell(p, 3, 1);
+            if (p.Elixir != 3) throw new Exception($"GiveSell: expected 3, got {p.Elixir}");
+
+            // --- GiveMerge: +1 → 4 ---
+            EconomyService.GiveMerge(p, 1);
+            if (p.Elixir != 4) throw new Exception($"GiveMerge: expected 4, got {p.Elixir}");
+
+            // --- GiveCommanderPassive: +randInt(4,8) ---
+            DeterministicRngComponent rng = room.GetComponent<DeterministicRngComponent>();
+            int before = p.Elixir;
+            EconomyService.GiveCommanderPassive(p, rng, 2);
+            int bonus = p.Elixir - before;
+            if (bonus < 4 || bonus > 8)
+                throw new Exception($"CommanderPassive bonus out of range [4,8]: got {bonus}");
+
+            // --- Clamp: 998 + 4 = 999（不超过 MaxElixir）---
+            p.Elixir = 998;
+            EconomyService.GiveRoundIncome(p, 10);
+            if (p.Elixir != 999)
+                throw new Exception($"Clamp: expected 999, got {p.Elixir}");
+
+            // --- Clamp: cost=1 sell → max(0,0) = 0, Elixir 不变 ---
+            p.Elixir = 0;
+            EconomyService.GiveSell(p, 1, 10); // max(1-1,0)=0，Elixir 不变
+            if (p.Elixir != 0)
+                throw new Exception($"Clamp zero: expected 0, got {p.Elixir}");
+
+            // --- EconomyLog 记录验证 ---
+            EconomyLogComponent log = p.GetComponent<EconomyLogComponent>();
+            if (log == null) throw new Exception("EconomyLogComponent missing on player");
+
+            int round1Count = 0;
+            foreach (EconomyDelta d in log.GetDeltasByRound(1))
+                round1Count++;
+            // Round 1: GiveRoundIncome(1) + TryDeductBuy(ok)(1) + GiveSell(1) + GiveMerge(1) = 4 条
+            if (round1Count != 4)
+                throw new Exception($"Round 1 deltas: expected 4, got {round1Count}");
+
+            // --- LastRoundLosers 初始为空 ---
+            if (room.LastRoundLosers.Count != 0)
+                throw new Exception("LastRoundLosers should be empty at start");
+
+            // 清理
+            scene.RemoveComponent<MatchComponent>();
+
+            Log.Info("[AutoChess] Economy test passed: income/buy/sell/merge/passive/clamp/log all correct");
         }
 
         private static void AssertGate(RoundPhase phase, OperationType op, bool expected, string label)
