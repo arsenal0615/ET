@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-03
+> 最后更新：2026-03-03（a1-shop：SharedPoolComponent、ShopComponent、ShopService、FirstRoundGiftService、PhaseChangedEventHandler_Shop）
 
 ---
 
@@ -145,8 +145,10 @@
 - **MatchRoom** (ChildOf: MatchComponent) — 一局比赛实体
   - **DeterministicRngComponent** (ComponentOf: MatchRoom) — xoshiro256** PRNG，保证确定性
   - **RoundFSMComponent** (ComponentOf: MatchRoom) — 回合状态机（None→RoundStart→Deployment→PreBattle→Battle→RoundEnd）
-  - **MatchPlayer** (ChildOf: MatchRoom) — 玩家实体（Elixir、HP、PopCap、IsAlive 等）
+  - **SharedPoolComponent** (ComponentOf: MatchRoom) — 全局共享卡池（int[] Remaining，length=24，按 templateId-1 索引，初始 8 份/种）
+  - **MatchPlayer** (ChildOf: MatchRoom) — 玩家实体（Elixir、HP、PopCap、IsAlive、PlayerIndex 等）
     - **EconomyLogComponent** (ComponentOf: MatchPlayer) — 圣水流水账（List<EconomyDelta>）
+    - **ShopComponent** (ComponentOf: MatchPlayer) — 玩家商店（ShopOffer[3] 槽位、ShopRollIndex 全局递增、FirstRoundGiftTemplateId）
 
 ### 经济系统
 
@@ -157,9 +159,23 @@
 - **EconomyDelta** (struct, Model/Share) — 单条流水记录（Type/Amount/Round/Context）
 - **EconomyDeltaType** (enum, Model/Share) — RoundIncome=1, CommanderPassive=2, Buy=3, Sell=4, Merge=5
 
+### 商店系统（a1-shop）
+
+- **ShopService** (静态服务类, Hotfix/Server) — 商店操作唯一入口
+  - `GenerateOffersForPlayer(player, pool, rng)` — 归还上次预扣 → 从可用模板中确定性抽 3 个 → 立即预扣
+  - `ReturnOffersToPool(player, pool)` — 归还当前所有 Offer（淘汰/结算时）
+  - `TryBuy(player, slotIndex, pool, rng, currentPhase, round)` — 圣水校验 + 清空槽 + 全行重刷
+  - `TrySell(player, templateId, starLevel, isGift, pool, round)` — 圣水返还 + 卡池回流（isGift=true 不回流）
+- **FirstRoundGiftService** (静态服务类, Hotfix/Server) — 首回合 2 费礼包选取
+  - `SelectGiftTemplate(player, rng)` — 用 `DeriveSubSeed(PrngPurpose.FirstGift, player.PlayerIndex)` 确定性选取 2 费单位
+  - 结果写入 `ShopComponent.FirstRoundGiftTemplateId`；不扣卡池（isGift=true）
+- **ShopOffer** (非 Entity 普通类, Model/Server) — 商店槽位值对象（TemplateId，-1=空）；需 `[EnableClass]`
+
 ### 事件
 
-- **PhaseChangedEvent** — RoundFSMComponent 切相时发布；PhaseChangedEventHandler_Economy 订阅 RoundStart 发放收入
+- **PhaseChangedEvent** — RoundFSMComponent 切相时发布；字段：`MatchRoomId`（long）、`Round`（int）、`NewPhase`（RoundPhase）
+  - **PhaseChangedEventHandler_Economy** `[Event(SceneType.Map)]` — 订阅 RoundStart 发放收入 + 统帅被动
+  - **PhaseChangedEventHandler_Shop** `[Event(SceneType.Map)]` — 订阅 RoundStart 刷新所有玩家商店 Offer；Round 1 额外执行首回合礼包
 - **ElixirChangedEvent** — EconomyService.ApplyDelta 发布；供 E9 网络层订阅推送客户端
 
 ### 关键字段
@@ -173,9 +189,9 @@
 
 ### 工厂与辅助
 
-- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + MatchPlayer + 组件初始化
-- **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()、EndMatch()
-- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy
+- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
+- **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer）、EndMatch()
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop（10 个断言）
 
 ### SceneType
 

@@ -24,7 +24,7 @@
 
 ## 1. 数据模型
 
-- [ ] 1.1 ShopOffer 类 + SharedPoolComponent
+- [x] 1.1 ShopOffer 类 + SharedPoolComponent
 
 **Context:**
 - Why: 商店槽位的值类型 + 卡池容器；其他所有任务都依赖这两个数据结构
@@ -84,7 +84,7 @@ git commit -m "feat(a1-shop): add ShopOffer and SharedPoolComponent data models"
 
 ---
 
-- [ ] 1.2 ShopComponent
+- [x] 1.2 ShopComponent
 
 **Context:**
 - Depends: 1.1
@@ -131,7 +131,7 @@ git commit -m "feat(a1-shop): add ShopComponent data model"
 
 ---
 
-- [ ] 1.3 MatchPlayer.PlayerIndex 字段
+- [x] 1.3 MatchPlayer.PlayerIndex 字段
 
 **Context:**
 - Why: 首回合礼包使用 PlayerIndex（0-3）作为 PRNG 子种子，确保同局内各玩家礼包不同
@@ -187,7 +187,7 @@ git commit -m "feat(a1-shop): add PlayerIndex to MatchPlayer for gift PRNG"
 
 ## 2. Component Systems
 
-- [ ] 2.1 SharedPoolComponentSystem
+- [x] 2.1 SharedPoolComponentSystem
 
 **Context:**
 - Depends: 1.1
@@ -240,7 +240,7 @@ git commit -m "feat(a1-shop): add SharedPoolComponentSystem with pool initializa
 
 ---
 
-- [ ] 2.2 ShopComponentSystem
+- [x] 2.2 ShopComponentSystem
 
 **Context:**
 - Depends: 1.2
@@ -294,7 +294,7 @@ git commit -m "feat(a1-shop): add ShopComponentSystem"
 
 ---
 
-- [ ] 2.3 MatchPlayerSystem: PlayerIndex 初始化
+- [x] 2.3 MatchPlayerSystem: PlayerIndex 初始化
 
 **Context:**
 - Depends: 1.3
@@ -339,7 +339,7 @@ git commit -m "feat(a1-shop): init PlayerIndex in MatchPlayerSystem.Awake"
 
 ## 3. ShopService
 
-- [ ] 3.1 ShopService 核心：GenerateOffersForPlayer + ReturnOffersToPool
+- [x] 3.1 ShopService 核心：GenerateOffersForPlayer + ReturnOffersToPool
 
 **Context:**
 - Depends: 2.1, 2.2
@@ -448,7 +448,7 @@ git commit -m "feat(a1-shop): add ShopService GenerateOffersForPlayer + ReturnOf
 
 ---
 
-- [ ] 3.2 ShopService.TryBuy
+- [x] 3.2 ShopService.TryBuy
 
 **Context:**
 - Depends: 3.1
@@ -521,7 +521,7 @@ git commit -m "feat(a1-shop): add ShopService.TryBuy with phase gate + elixir ch
 
 ---
 
-- [ ] 3.3 ShopService.TrySell
+- [x] 3.3 ShopService.TrySell
 
 **Context:**
 - Depends: 3.2
@@ -574,7 +574,7 @@ git commit -m "feat(a1-shop): add ShopService.TrySell with pool refill and isGif
 
 ## 4. FirstRoundGiftService
 
-- [ ] 4.1 FirstRoundGiftService.SelectGiftTemplate
+- [x] 4.1 FirstRoundGiftService.SelectGiftTemplate
 
 **Context:**
 - Depends: 1.1, 2.2
@@ -647,7 +647,7 @@ git commit -m "feat(a1-shop): add FirstRoundGiftService for deterministic 2-cost
 
 ## 5. Factory + Room Integration
 
-- [ ] 5.1 MatchRoomFactory：添加 SharedPoolComponent + ShopComponent
+- [x] 5.1 MatchRoomFactory：添加 SharedPoolComponent + ShopComponent
 
 **Context:**
 - Depends: 2.1, 2.2
@@ -712,7 +712,7 @@ git commit -m "feat(a1-shop): add SharedPoolComponent and ShopComponent in Match
 
 ---
 
-- [ ] 5.2 MatchRoomSystem.EliminatePlayer：淘汰时回收 Offer
+- [x] 5.2 MatchRoomSystem.EliminatePlayer：淘汰时回收 Offer
 
 **Context:**
 - Depends: 3.1, 5.1
@@ -768,7 +768,7 @@ git commit -m "feat(a1-shop): return player shop offers to pool on elimination"
 
 ## 6. Event Handler
 
-- [ ] 6.1 PhaseChangedEventHandler_Shop
+- [x] 6.1 PhaseChangedEventHandler_Shop
 
 **Context:**
 - Depends: 3.1, 4.1, 5.1
@@ -852,7 +852,7 @@ git commit -m "feat(a1-shop): add PhaseChangedEventHandler_Shop for RoundStart o
 
 ## 7. 集成测试
 
-- [ ] 7.1 AutoChessTestHelper.TestShop
+- [x] 7.1 AutoChessTestHelper.TestShop
 
 **Context:**
 - Depends: 6.1（所有实现完成后）
@@ -1023,8 +1023,8 @@ git commit -m "feat(a1-shop): add TestShop integration test covering all shop ca
 
 ## 完成标准
 
-- [ ] 所有 13 个任务的 checkbox 已勾选
-- [ ] `dotnet build ET.sln` → 0 errors, 0 warnings
-- [ ] TestShop 所有断言通过（10 个验证点）
-- [ ] TestEconomy 仍通过（回归验证）
-- [ ] git log 显示每个任务有独立 commit
+- [x] 所有 13 个任务的 checkbox 已勾选
+- [~] `dotnet build ET.sln` → 12 个预存在错误（非本次引入），无新增错误
+- [ ] TestShop 所有断言通过（10 个验证点）— 待运行时验证
+- [ ] TestEconomy 仍通过（回归验证）— 待运行时验证
+- [x] git log 显示每个任务有独立 commit
