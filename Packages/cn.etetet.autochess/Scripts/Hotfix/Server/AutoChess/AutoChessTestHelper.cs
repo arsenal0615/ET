@@ -7,6 +7,10 @@ namespace ET.Server
     /// 自走棋基础系统集成验证。
     /// 在服务端启动后可手动调用各验证方法。
     /// </summary>
+    [FriendOf(typeof(MatchPlayer))]
+    [FriendOf(typeof(MatchRoom))]
+    [FriendOf(typeof(ShopComponent))]
+    [FriendOf(typeof(SharedPoolComponent))]
     public static class AutoChessTestHelper
     {
         /// <summary>
@@ -19,6 +23,7 @@ namespace ET.Server
             TestEntityTree(scene);
             TestPhaseGate();
             TestEconomy(scene);
+            TestShop(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -254,6 +259,129 @@ namespace ET.Server
             bool actual = RoundFSMComponentSystem.CanOperate(phase, op);
             if (actual != expected)
                 throw new Exception($"PhaseGate {label}: expected {expected}, got {actual}");
+        }
+
+        /// <summary>
+        /// 验证商店与共享卡池：初始化、Offer 生成、购买、出售、礼包。
+        /// </summary>
+        public static void TestShop(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 5001, 5002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 99999);
+            room.StartMatch();
+
+            SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
+            DeterministicRngComponent rng = room.GetComponent<DeterministicRngComponent>();
+
+            if (pool == null) throw new Exception("SharedPoolComponent missing on room");
+
+            // --- 1. 卡池初始化：24 种各 8 份 ---
+            for (int i = 0; i < AutoChessDefine.TotalUnitTemplates; i++)
+            {
+                if (pool.Remaining[i] != AutoChessDefine.CopiesPerUnit)
+                    throw new Exception($"Pool init: template {i + 1} expected {AutoChessDefine.CopiesPerUnit}, got {pool.Remaining[i]}");
+            }
+
+            // --- 2. ShopComponent 存在，PlayerIndex 正确 ---
+            MatchPlayer p1 = room.FindPlayerById(5001);
+            MatchPlayer p2 = room.FindPlayerById(5002);
+            ShopComponent shop1 = p1.GetComponent<ShopComponent>();
+            if (shop1 == null) throw new Exception("ShopComponent missing on player 5001");
+            if (p1.PlayerIndex != 0) throw new Exception($"PlayerIndex p1 expected 0, got {p1.PlayerIndex}");
+            if (p2.PlayerIndex != 1) throw new Exception($"PlayerIndex p2 expected 1, got {p2.PlayerIndex}");
+
+            // --- 3. 生成 Offer：3 槽非空、无重复、来自 remaining>0 的模板 ---
+            ShopService.GenerateOffersForPlayer(p1, pool, rng);
+            int[] offerIds = new int[3];
+            for (int i = 0; i < 3; i++)
+            {
+                offerIds[i] = shop1.Slots[i].TemplateId;
+                if (offerIds[i] <= 0) throw new Exception($"Slot {i} is empty after GenerateOffers");
+            }
+            if (offerIds[0] == offerIds[1] || offerIds[1] == offerIds[2] || offerIds[0] == offerIds[2])
+                throw new Exception("Offer slots contain duplicate templateIds");
+
+            // --- 4. 预扣验证：3 个模板的 Remaining 各减了 1 ---
+            foreach (int tid in offerIds)
+            {
+                int expected = AutoChessDefine.CopiesPerUnit - 1;
+                if (pool.Remaining[tid - 1] != expected)
+                    throw new Exception($"Pre-deduct: template {tid} expected {expected}, got {pool.Remaining[tid - 1]}");
+            }
+
+            // --- 5. 购买：圣水减少，全行重刷，旧 Offer 归还（除被买走的那个） ---
+            p1.Elixir = 10;
+            int slot0Template = shop1.Slots[0].TemplateId;
+            int slot0Cost = AutoChessConfigLoader.GetUnit(slot0Template).Cost;
+            int buyResult = ShopService.TryBuy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
+            if (buyResult != slot0Template)
+                throw new Exception($"TryBuy: expected templateId {slot0Template}, got {buyResult}");
+            if (p1.Elixir != 10 - slot0Cost)
+                throw new Exception($"TryBuy: elixir expected {10 - slot0Cost}, got {p1.Elixir}");
+            // 买完后全行刷新，slot0Template 被消耗，其余两个旧 Offer 已归还
+            if (pool.Remaining[slot0Template - 1] != AutoChessDefine.CopiesPerUnit - 1)
+                throw new Exception($"After buy: bought template pool should be CopiesPerUnit-1");
+
+            // --- 6. 购买失败：圣水不足 ---
+            p1.Elixir = 0;
+            int failResult = ShopService.TryBuy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
+            if (failResult != -1) throw new Exception("TryBuy should fail when elixir=0");
+            if (p1.Elixir != 0) throw new Exception("Elixir should not change on failed buy");
+
+            // --- 7. 出售：圣水返还，卡池回流（1★） ---
+            p1.Elixir = 0;
+            int sellTemplateId = shop1.Slots[0].TemplateId; // 当前 slot 0 的模板
+            if (sellTemplateId <= 0) sellTemplateId = 1; // fallback（测试用）
+            int beforeRemaining = pool.Remaining[sellTemplateId - 1];
+            int sellCost = AutoChessConfigLoader.GetUnit(sellTemplateId).Cost;
+            ShopService.TrySell(p1, sellTemplateId, 1, false, pool, 1);
+            int expectedRefund = Math.Max(sellCost - 1, 0);
+            if (p1.Elixir != expectedRefund)
+                throw new Exception($"TrySell: elixir expected {expectedRefund}, got {p1.Elixir}");
+            if (pool.Remaining[sellTemplateId - 1] != beforeRemaining + 1)
+                throw new Exception($"TrySell: pool not refilled for 1-star unit");
+
+            // --- 8. 礼品出售不回流 ---
+            int giftTemplate = 1;
+            int beforeGiftRemaining = pool.Remaining[giftTemplate - 1];
+            ShopService.TrySell(p1, giftTemplate, 1, true, pool, 1);
+            if (pool.Remaining[giftTemplate - 1] != beforeGiftRemaining)
+                throw new Exception("TrySell: gift unit should NOT refill pool");
+
+            // --- 9. 首回合礼包：2 费单位，不扣卡池 ---
+            int poolTotalBefore = 0;
+            for (int i = 0; i < AutoChessDefine.TotalUnitTemplates; i++)
+                poolTotalBefore += pool.Remaining[i];
+
+            FirstRoundGiftService.SelectGiftTemplate(p1, rng);
+            ShopComponent shop = p1.GetComponent<ShopComponent>();
+            int giftId = shop.FirstRoundGiftTemplateId;
+            if (giftId <= 0) throw new Exception("FirstRoundGift templateId should be > 0");
+            if (AutoChessConfigLoader.GetUnit(giftId).Cost != 2)
+                throw new Exception($"FirstRoundGift should be cost-2, got cost={AutoChessConfigLoader.GetUnit(giftId).Cost}");
+
+            int poolTotalAfter = 0;
+            for (int i = 0; i < AutoChessDefine.TotalUnitTemplates; i++)
+                poolTotalAfter += pool.Remaining[i];
+            if (poolTotalAfter != poolTotalBefore)
+                throw new Exception("FirstRoundGift should NOT deduct pool");
+
+            // --- 10. 淘汰时归还 Offer ---
+            // p2 生成 Offer 后淘汰，验证预扣被归还
+            ShopService.GenerateOffersForPlayer(p2, pool, rng);
+            ShopComponent shop2 = p2.GetComponent<ShopComponent>();
+            int p2Offer0 = shop2.Slots[0].TemplateId;
+            int beforeElimRemaining = pool.Remaining[p2Offer0 - 1];
+            room.EliminatePlayer(5002);
+            if (pool.Remaining[p2Offer0 - 1] != beforeElimRemaining + 1)
+                throw new Exception("EliminatePlayer should return p2's pre-deducted offers to pool");
+
+            scene.RemoveComponent<MatchComponent>();
+
+            Log.Info("[AutoChess] Shop test passed: pool init / offer generation / buy / sell / gift / elimination all correct");
         }
     }
 }
