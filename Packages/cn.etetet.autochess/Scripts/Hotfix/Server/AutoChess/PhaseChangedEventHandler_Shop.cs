@@ -48,7 +48,11 @@ namespace ET.Server
 
                 // 首回合礼包
                 if (isFirstRound)
+                {
                     FirstRoundGiftService.SelectGiftTemplate(player, rng);
+                    // 创建赠送单位入板凳
+                    UnitService.CreateFirstRoundGift(player);
+                }
             }
 
             await ETTask.CompletedTask;
