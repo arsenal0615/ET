@@ -30,6 +30,7 @@ namespace ET.Server
             TestMerge(scene);
             TestPreBattle(scene);
             TestUnitService(scene);
+            TestEliminationRecovery(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -732,6 +733,49 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] UnitService test passed: buy/sell integration correct");
+        }
+
+        /// <summary>
+        /// 验证淘汰时回收棋盘/板凳单位到卡池。
+        /// </summary>
+        public static void TestEliminationRecovery(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 11001, 11002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 44444);
+            room.StartMatch();
+
+            MatchPlayer p2 = room.FindPlayerById(11002);
+            SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
+
+            // 给 p2 放几个单位
+            UnitInfo b1 = RosterService.AddToBench(p2, 1, 1, false);  // 1★ → 回流 1 份
+            UnitInfo b2 = RosterService.AddToBench(p2, 2, 2, false);  // 2★ → 回流 2 份
+            UnitInfo gift = RosterService.AddToBench(p2, 3, 1, true); // gift → 不回流
+
+            int pool1Before = pool.Remaining[0]; // templateId=1
+            int pool2Before = pool.Remaining[1]; // templateId=2
+            int pool3Before = pool.Remaining[2]; // templateId=3
+
+            room.EliminatePlayer(11002);
+
+            // 验证回收
+            if (pool.Remaining[0] != pool1Before + 1)
+                throw new Exception("1★ unit should return 1 copy");
+            if (pool.Remaining[1] != pool2Before + 2)
+                throw new Exception("2★ unit should return 2 copies");
+            if (pool.Remaining[2] != pool3Before)
+                throw new Exception("Gift unit should NOT return to pool");
+
+            // Roster 应该清空
+            RosterComponent roster = p2.GetComponent<RosterComponent>();
+            if (roster.Units.Count != 0)
+                throw new Exception("Roster should be empty after elimination");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] Elimination recovery test passed: roster units returned to pool correctly");
         }
     }
 }

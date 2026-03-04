@@ -111,6 +111,9 @@ namespace ET.Server
                                 }
                             }
                         }
+
+                        // 回收棋盘+板凳所有单位到卡池
+                        RosterService.RecoverAllToPool(player, pool);
                     }
 
                     break;
