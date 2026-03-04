@@ -25,6 +25,7 @@ namespace ET.Server
             TestEconomy(scene);
             TestShop(scene);
             TestRoster(scene);
+            TestPlacement(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -449,6 +450,76 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] Roster test passed: add/remove/find/stats all correct");
+        }
+
+        /// <summary>
+        /// 验证摆位操作：Place/Move/Swap + 门控 + 校验。
+        /// </summary>
+        public static void TestPlacement(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 7001, 7002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 55555);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(7001);
+            int popCap = room.GetPopCap(); // Round 1 → 3
+
+            // 准备：板凳放 3 个单位
+            UnitInfo u1 = RosterService.AddToBench(p1, 1, 1, false);
+            UnitInfo u2 = RosterService.AddToBench(p1, 2, 1, false);
+            UnitInfo u3 = RosterService.AddToBench(p1, 3, 1, false);
+
+            // --- 1. PlaceToBoard: 板凳→棋盘 ---
+            bool ok = PlacementService.TryPlaceToBoard(p1, u1.InstId, 0, 0, popCap);
+            if (!ok) throw new Exception("PlaceToBoard should succeed");
+            if (u1.Row != 0 || u1.Col != 0) throw new Exception("u1 should be at (0,0)");
+            if (RosterService.GetPopUsed(p1) != 1) throw new Exception("PopUsed should be 1");
+
+            // --- 2. PlaceToBoard: 超人口失败 ---
+            PlacementService.TryPlaceToBoard(p1, u2.InstId, 1, 0, popCap);
+            PlacementService.TryPlaceToBoard(p1, u3.InstId, 2, 0, popCap);
+            UnitInfo u4 = RosterService.AddToBench(p1, 4, 1, false);
+            if (u4 == null) throw new Exception("AddToBench for u4 should succeed");
+            bool overPop = PlacementService.TryPlaceToBoard(p1, u4.InstId, 3, 0, popCap);
+            if (overPop) throw new Exception("PlaceToBoard should fail (popCap exceeded)");
+
+            // --- 3. PlaceToBoard: 目标格被占 ---
+            bool occupied = PlacementService.TryPlaceToBoard(p1, u4.InstId, 0, 0, 10); // popCap 放开
+            if (occupied) throw new Exception("PlaceToBoard should fail (target occupied)");
+
+            // --- 4. MoveOnBoard: 棋盘内移动 ---
+            bool moveOk = PlacementService.TryMoveOnBoard(p1, u1.InstId, 4, 2);
+            if (!moveOk) throw new Exception("MoveOnBoard should succeed");
+            if (u1.Col != 4 || u1.Row != 2) throw new Exception("u1 should be at (4,2)");
+
+            // --- 5. MoveOnBoard: 非棋盘单位失败 ---
+            bool moveBench = PlacementService.TryMoveOnBoard(p1, u4.InstId, 5, 0);
+            if (moveBench) throw new Exception("MoveOnBoard should fail (unit on bench)");
+
+            // --- 6. Swap: 棋盘↔棋盘 ---
+            bool swapOk = PlacementService.TrySwap(p1, u1.InstId, u2.InstId);
+            if (!swapOk) throw new Exception("Swap board↔board should succeed");
+            // u1 was at (4,2), u2 was at (1,0) → swapped
+            if (u1.Col != 1 || u1.Row != 0) throw new Exception("u1 should be at u2's old pos");
+            if (u2.Col != 4 || u2.Row != 2) throw new Exception("u2 should be at u1's old pos");
+
+            // --- 7. Swap: 棋盘↔板凳 ---
+            bool swapMixed = PlacementService.TrySwap(p1, u1.InstId, u4.InstId);
+            if (!swapMixed) throw new Exception("Swap board↔bench should succeed");
+
+            // --- 8. Swap: 同一个单位失败 ---
+            bool swapSelf = PlacementService.TrySwap(p1, u1.InstId, u1.InstId);
+            if (swapSelf) throw new Exception("Swap same unit should fail");
+
+            // --- 9. 坐标越界失败 ---
+            bool outOfBounds = PlacementService.TryPlaceToBoard(p1, u1.InstId, 10, 10, 10);
+            if (outOfBounds) throw new Exception("PlaceToBoard out of bounds should fail");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] Placement test passed: place/move/swap/validation all correct");
         }
     }
 }
