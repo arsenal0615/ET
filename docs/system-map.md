@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-03（a1-shop：SharedPoolComponent、ShopComponent、ShopService、FirstRoundGiftService、PhaseChangedEventHandler_Shop）
+> 最后更新：2026-03-04（a1-unit：RosterComponent、UnitInfo、RosterService、PlacementService、MergeService、PreBattleService、UnitService、PhaseChangedEventHandler_Unit）
 
 ---
 
@@ -149,6 +149,7 @@
   - **MatchPlayer** (ChildOf: MatchRoom) — 玩家实体（Elixir、HP、PopCap、IsAlive、PlayerIndex 等）
     - **EconomyLogComponent** (ComponentOf: MatchPlayer) — 圣水流水账（List<EconomyDelta>）
     - **ShopComponent** (ComponentOf: MatchPlayer) — 玩家商店（ShopOffer[3] 槽位、ShopRollIndex 全局递增、FirstRoundGiftTemplateId）
+    - **RosterComponent** (ComponentOf: MatchPlayer) — 单位列表（List\<UnitInfo\> Units、NextInstId 自增）
 
 ### 经济系统
 
@@ -171,11 +172,36 @@
   - 结果写入 `ShopComponent.FirstRoundGiftTemplateId`；不扣卡池（isGift=true）
 - **ShopOffer** (非 Entity 普通类, Model/Server) — 商店槽位值对象（TemplateId，-1=空）；需 `[EnableClass]`
 
+### 单位系统（a1-unit）
+
+- **UnitInfo** (纯 C# 类, Model/Server, `[EnableClass]`) — 单位实例数据（InstId、TemplateId、Star、IsGift、Col、Row）；Row=-1 表示板凳，Row>=0 表示棋盘
+- **RosterService** (静态服务类, Hotfix/Server) — 单位增删查统计
+  - `AddToBench(player, templateId, star, isGift)` — 分配 InstId，自动找最小空板凳列
+  - `Remove(player, unit)` — 从 Units 列表移除
+  - `FindAt(player, col, row)` / `FindByInstId(player, instId)` — 查找
+  - `GetPopUsed(player)` / `GetBenchUsed(player)` — 棋盘人口 / 板凳占用统计
+  - `RecoverAllToPool(player, pool)` — 淘汰时回收所有单位到卡池（1<<(star-1) 份/个，isGift 跳过）
+- **PlacementService** (静态服务类, Hotfix/Server) — 摆位操作
+  - `TryPlaceToBoard(player, instId, col, row, popCap)` — 板凳→棋盘（校验人口、坐标、目标空闲）
+  - `TryMoveOnBoard(player, instId, col, row)` — 棋盘内移动（校验目标空闲）
+  - `TrySwap(player, instIdA, instIdB)` — 任意两单位交换坐标
+- **MergeService** (静态服务类, Hotfix/Server) — 确定性合成
+  - `RunMergeChain(player, round)` — while 循环找同模板同星级对 → 升星 + GiveMerge(+1圣水) → 返回合成次数
+  - 排序：star ASC → templateId ASC → locationPriority(board<bench) ASC → row ASC → col ASC → instId ASC
+- **PreBattleService** (静态服务类, Hotfix/Server) — 战前校验与自动修正
+  - `ValidateAndFix(player, pool, popCap, round)` — 超人口单位按 retain 优先级降序移到板凳，板凳满则强制出售
+  - Retain 优先级：star DESC → cost DESC → row ASC → col ASC → instId ASC
+- **UnitService** (门面类, Hotfix/Server) — 单位操作统一入口
+  - `Buy(player, slotIndex, pool, rng, currentPhase, round)` — ShopService.TryBuy + AddToBench + RunMergeChain
+  - `Sell(player, unit, pool, round)` — Remove + ShopService.TrySell
+  - `CreateFirstRoundGift(player)` — 读取 FirstRoundGiftTemplateId → AddToBench(isGift=true)
+
 ### 事件
 
 - **PhaseChangedEvent** — RoundFSMComponent 切相时发布；字段：`MatchRoomId`（long）、`Round`（int）、`NewPhase`（RoundPhase）
   - **PhaseChangedEventHandler_Economy** `[Event(SceneType.Map)]` — 订阅 RoundStart 发放收入 + 统帅被动
-  - **PhaseChangedEventHandler_Shop** `[Event(SceneType.Map)]` — 订阅 RoundStart 刷新所有玩家商店 Offer；Round 1 额外执行首回合礼包
+  - **PhaseChangedEventHandler_Shop** `[Event(SceneType.Map)]` — 订阅 RoundStart 刷新所有玩家商店 Offer；Round 1 额外执行首回合礼包 + UnitService.CreateFirstRoundGift
+  - **PhaseChangedEventHandler_Unit** `[Event(SceneType.Map)]` — 订阅 Deployment（MergeService.RunMergeChain）+ PreBattle（PreBattleService.ValidateAndFix）
 - **ElixirChangedEvent** — EconomyService.ApplyDelta 发布；供 E9 网络层订阅推送客户端
 
 ### 关键字段
@@ -189,9 +215,9 @@
 
 ### 工厂与辅助
 
-- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
-- **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer）、EndMatch()
-- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop（10 个断言）
+- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + RosterComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
+- **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer + RosterService.RecoverAllToPool）、EndMatch()
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery（12 个测试）
 
 ### SceneType
 
