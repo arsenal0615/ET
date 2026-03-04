@@ -28,6 +28,7 @@ namespace ET.Server
             TestRoster(scene);
             TestPlacement(scene);
             TestMerge(scene);
+            TestPreBattle(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -599,6 +600,83 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] Merge test passed: basic/chain/maxStar/position all correct");
+        }
+
+        /// <summary>
+        /// 验证 PreBattle 校验：超人口修正、板凳满强制出售。
+        /// </summary>
+        public static void TestPreBattle(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 9001, 9002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 77777);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(9001);
+            SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
+            p1.Elixir = 100;
+            int popCap = 2; // 强制低人口上限以测试
+
+            // --- 1. 超人口修正：3 个棋盘单位，popCap=2，应移 1 个到板凳 ---
+            UnitInfo u1 = RosterService.AddToBench(p1, 1, 2, false); // 2★ cost-2 (高优先)
+            u1.Col = 0; u1.Row = 0;
+            UnitInfo u2 = RosterService.AddToBench(p1, 8, 1, false); // 1★ cost-3 (中优先)
+            u2.Col = 1; u2.Row = 0;
+            UnitInfo u3 = RosterService.AddToBench(p1, 2, 1, false); // 1★ cost-2 (低优先)
+            u3.Col = 2; u3.Row = 0;
+            // 手动修正 Row（AddToBench 设为 -1，需要模拟棋盘状态）
+            // 注意：上面用了 AddToBench 然后手动设了 Row >= 0 来模拟棋盘单位
+
+            PreBattleService.ValidateAndFix(p1, pool, popCap, 1);
+            int boardCount = RosterService.GetPopUsed(p1);
+            if (boardCount != popCap)
+                throw new Exception($"After PreBattle fix: expected {popCap} on board, got {boardCount}");
+
+            // u3 应该被移到板凳（最低优先级：1★ cost-2）
+            if (u3.Row != -1)
+                throw new Exception("Lowest priority unit should be moved to bench");
+
+            // --- 2. 板凳满 + 超人口 → 强制出售 ---
+            RosterComponent roster = p1.GetComponent<RosterComponent>();
+            roster.Units.Clear();
+            p1.Elixir = 0;
+
+            // 棋盘放 3 个，板凳放满 5 个
+            for (int i = 0; i < 3; i++)
+            {
+                UnitInfo bu = RosterService.AddToBench(p1, i + 1, 1, false);
+                bu.Col = i; bu.Row = 0; // 放到棋盘
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                RosterService.AddToBench(p1, i + 10, 1, false);
+            }
+
+            int poolTotalBefore = 0;
+            for (int k = 0; k < AutoChessDefine.TotalUnitTemplates; k++)
+                poolTotalBefore += pool.Remaining[k];
+
+            PreBattleService.ValidateAndFix(p1, pool, popCap, 1);
+
+            // 棋盘应该只有 popCap 个
+            if (RosterService.GetPopUsed(p1) != popCap)
+                throw new Exception($"After forced sell: expected {popCap} on board");
+
+            // 强制出售的单位应该回流了卡池
+            int poolTotalAfter = 0;
+            for (int k = 0; k < AutoChessDefine.TotalUnitTemplates; k++)
+                poolTotalAfter += pool.Remaining[k];
+            if (poolTotalAfter <= poolTotalBefore)
+                throw new Exception("Forced sell should return units to pool");
+
+            // 强制出售应该给了圣水
+            if (p1.Elixir <= 0)
+                throw new Exception("Forced sell should give elixir refund");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] PreBattle test passed: over-pop fix / forced sell all correct");
         }
     }
 }
