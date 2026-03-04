@@ -724,12 +724,22 @@ namespace ET.Server
             if (p1.Elixir <= elixirBefore) throw new Exception("Sell should refund elixir");
             if (pool.Remaining[bought.TemplateId - 1] != poolBefore + 1) throw new Exception("Sell should return 1 copy to pool");
 
-            // --- 3. Buy 失败不创建 UnitInfo ---
+            // --- 3. Buy 失败：圣水不足 ---
             p1.Elixir = 0;
             ShopService.GenerateOffersForPlayer(p1, pool, rng);
             bool buyFail = UnitService.Buy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
             if (buyFail) throw new Exception("UnitService.Buy should fail when no elixir");
             if (RosterService.GetBenchUsed(p1) != 0) throw new Exception("No unit should be created on failed buy");
+
+            // --- 4. Buy 失败：板凳满（5 个）---
+            p1.Elixir = 50;
+            for (int i = 0; i < 5; i++)
+                RosterService.AddToBench(p1, i + 1, 1, false);
+            ShopService.GenerateOffersForPlayer(p1, pool, rng);
+            int elixirBeforeFull = p1.Elixir;
+            bool buyFullBench = UnitService.Buy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
+            if (buyFullBench) throw new Exception("UnitService.Buy should fail when bench full");
+            if (p1.Elixir != elixirBeforeFull) throw new Exception("Elixir should not change when bench full");
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] UnitService test passed: buy/sell integration correct");

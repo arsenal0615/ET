@@ -30,9 +30,6 @@ namespace ET.Server
                 return;
             }
 
-            SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
-            int popCap = room.GetPopCap();
-
             if (args.NewPhase == RoundPhase.Deployment)
             {
                 // Deployment 阶段：触发合成链
@@ -44,6 +41,8 @@ namespace ET.Server
             else if (args.NewPhase == RoundPhase.PreBattle)
             {
                 // PreBattle 阶段：校验 + 自动修正
+                SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
+                int popCap = room.GetPopCap();
                 foreach (MatchPlayer player in room.GetAlivePlayers())
                 {
                     PreBattleService.ValidateAndFix(player, pool, popCap, args.Round);

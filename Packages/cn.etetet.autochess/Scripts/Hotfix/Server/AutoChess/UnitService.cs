@@ -11,16 +11,14 @@ namespace ET.Server
             SharedPoolComponent pool, DeterministicRngComponent rng,
             RoundPhase currentPhase, int round)
         {
+            // 先检查板凳是否有空位，避免购买后因板凳满导致经济损耗
+            if (RosterService.GetBenchUsed(player) >= AutoChessDefine.BenchSize)
+                return false;
+
             int templateId = ShopService.TryBuy(player, slotIndex, pool, rng, currentPhase, round);
             if (templateId <= 0) return false;
 
-            UnitInfo unit = RosterService.AddToBench(player, templateId, 1, false);
-            if (unit == null)
-            {
-                // 板凳满，退回购买（回流圣水和卡池）
-                ShopService.TrySell(player, templateId, 1, false, pool, round);
-                return false;
-            }
+            RosterService.AddToBench(player, templateId, 1, false);
 
             // Deployment 阶段触发合成
             if (currentPhase == RoundPhase.Deployment)

@@ -139,9 +139,10 @@ namespace ET.Server
             roster.Units.Clear();
         }
 
-        // --- Private helpers ---
-
-        private static int FindFreeBenchCol(RosterComponent roster)
+        /// <summary>
+        /// 查找板凳最小空列。满则返回 -1。
+        /// </summary>
+        public static int FindFreeBenchCol(RosterComponent roster)
         {
             bool[] occupied = new bool[AutoChessDefine.BenchSize];
             foreach (UnitInfo u in roster.Units)

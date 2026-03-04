@@ -32,7 +32,7 @@ namespace ET.Server
                 UnitInfo victim = boardUnits[i];
 
                 // 尝试移到板凳
-                int freeCol = FindFreeBenchCol(roster);
+                int freeCol = RosterService.FindFreeBenchCol(roster);
                 if (freeCol >= 0)
                 {
                     victim.Col = freeCol;
@@ -74,19 +74,5 @@ namespace ET.Server
             return a.InstId.CompareTo(b.InstId);
         }
 
-        private static int FindFreeBenchCol(RosterComponent roster)
-        {
-            bool[] occupied = new bool[AutoChessDefine.BenchSize];
-            foreach (UnitInfo u in roster.Units)
-            {
-                if (u.Row == -1 && u.Col >= 0 && u.Col < AutoChessDefine.BenchSize)
-                    occupied[u.Col] = true;
-            }
-            for (int i = 0; i < AutoChessDefine.BenchSize; i++)
-            {
-                if (!occupied[i]) return i;
-            }
-            return -1;
-        }
     }
 }
