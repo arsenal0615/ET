@@ -11,6 +11,7 @@ namespace ET.Server
     [FriendOf(typeof(MatchRoom))]
     [FriendOf(typeof(ShopComponent))]
     [FriendOf(typeof(SharedPoolComponent))]
+    [FriendOf(typeof(RosterComponent))]
     public static class AutoChessTestHelper
     {
         /// <summary>
@@ -26,6 +27,7 @@ namespace ET.Server
             TestShop(scene);
             TestRoster(scene);
             TestPlacement(scene);
+            TestMerge(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -520,6 +522,83 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] Placement test passed: place/move/swap/validation all correct");
+        }
+
+        /// <summary>
+        /// 验证合成：基础合成、连锁合成、圣水返还、星级上限、确定性。
+        /// </summary>
+        public static void TestMerge(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 8001, 8002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 66666);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(8001);
+            p1.Elixir = 0;
+
+            // --- 1. 基础合成：2 个 1★ 同模板 → 1 个 2★ ---
+            UnitInfo a1 = RosterService.AddToBench(p1, 1, 1, false);
+            UnitInfo a2 = RosterService.AddToBench(p1, 1, 1, false);
+            int merges = MergeService.RunMergeChain(p1, 1);
+            if (merges != 1) throw new Exception($"Expected 1 merge, got {merges}");
+
+            // primary（先扫到的，InstId 较小）保留，star=2
+            RosterComponent roster = p1.GetComponent<RosterComponent>();
+            if (roster.Units.Count != 1) throw new Exception($"Expected 1 unit after merge, got {roster.Units.Count}");
+            UnitInfo merged = roster.Units[0];
+            if (merged.Star != 2) throw new Exception($"Merged unit should be 2★, got {merged.Star}");
+            if (merged.InstId != a1.InstId) throw new Exception("Primary (lower InstId) should survive");
+
+            // 圣水 +1
+            if (p1.Elixir != 1) throw new Exception($"Elixir should be 1 after merge, got {p1.Elixir}");
+
+            // --- 2. 不同模板不合成 ---
+            RosterService.AddToBench(p1, 2, 1, false);
+            RosterService.AddToBench(p1, 3, 1, false);
+            int noMerge = MergeService.RunMergeChain(p1, 1);
+            if (noMerge != 0) throw new Exception("Different templates should not merge");
+
+            // --- 3. 连锁合成：4 个 1★ → 2 个 2★ → 不合成（已有一个2★=3个） ---
+            // 清空
+            roster.Units.Clear();
+            p1.Elixir = 0;
+
+            // 已有 1 个 2★（from test 1 scenario, 重建）
+            UnitInfo b1 = RosterService.AddToBench(p1, 5, 1, false);
+            UnitInfo b2 = RosterService.AddToBench(p1, 5, 1, false);
+            UnitInfo b3 = RosterService.AddToBench(p1, 5, 1, false);
+            UnitInfo b4 = RosterService.AddToBench(p1, 5, 1, false);
+
+            int chainMerges = MergeService.RunMergeChain(p1, 1);
+            // 4 个 1★ → 第一对合成为 2★ (+1圣水) → 第二对合成为 2★ (+1圣水)
+            // → 2 个 2★ → 合成为 3★ (+1圣水) = 共 3 次合成
+            if (chainMerges != 3) throw new Exception($"Chain merge: expected 3 merges, got {chainMerges}");
+            if (roster.Units.Count != 1) throw new Exception($"Chain merge: expected 1 unit, got {roster.Units.Count}");
+            if (roster.Units[0].Star != 3) throw new Exception($"Chain merge: expected 3★, got {roster.Units[0].Star}");
+            if (p1.Elixir != 3) throw new Exception($"Chain merge: expected 3 elixir, got {p1.Elixir}");
+
+            // --- 4. MaxStarLevel 限制：3★ 不再合成 ---
+            roster.Units.Clear();
+            RosterService.AddToBench(p1, 10, 3, false);
+            RosterService.AddToBench(p1, 10, 3, false);
+            int maxMerge = MergeService.RunMergeChain(p1, 1);
+            if (maxMerge != 0) throw new Exception("3★ units should not merge further");
+
+            // --- 5. 合成保持位置（primary 位置不变）---
+            roster.Units.Clear();
+            UnitInfo boardUnit = RosterService.AddToBench(p1, 8, 1, false);
+            boardUnit.Col = 3; boardUnit.Row = 2; // 模拟放到棋盘
+            UnitInfo benchUnit = RosterService.AddToBench(p1, 8, 1, false);
+            MergeService.RunMergeChain(p1, 1);
+            UnitInfo survivor = roster.Units[0];
+            if (survivor.Col != 3 || survivor.Row != 2)
+                throw new Exception("Primary should keep its position after merge");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] Merge test passed: basic/chain/maxStar/position all correct");
         }
     }
 }
