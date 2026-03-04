@@ -29,6 +29,7 @@ namespace ET.Server
             TestPlacement(scene);
             TestMerge(scene);
             TestPreBattle(scene);
+            TestUnitService(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -677,6 +678,60 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] PreBattle test passed: over-pop fix / forced sell all correct");
+        }
+
+        /// <summary>
+        /// 验证 UnitService 门面：Buy 创建 UnitInfo + Sell 移除 UnitInfo。
+        /// </summary>
+        public static void TestUnitService(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 10001, 10002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 11111);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(10001);
+            SharedPoolComponent pool = room.GetComponent<SharedPoolComponent>();
+            DeterministicRngComponent rng = room.GetComponent<DeterministicRngComponent>();
+            p1.Elixir = 50;
+
+            // 生成商店 Offer
+            ShopService.GenerateOffersForPlayer(p1, pool, rng);
+            ShopComponent shop = p1.GetComponent<ShopComponent>();
+            int slot0Template = shop.Slots[0].TemplateId;
+
+            // --- 1. Buy：创建 UnitInfo 入板凳 ---
+            bool buyOk = UnitService.Buy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
+            if (!buyOk) throw new Exception("UnitService.Buy should succeed");
+            if (RosterService.GetBenchUsed(p1) != 1) throw new Exception("Should have 1 bench unit after buy");
+
+            // 验证 UnitInfo 属性
+            RosterComponent roster = p1.GetComponent<RosterComponent>();
+            UnitInfo bought = roster.Units[0];
+            if (bought.TemplateId != slot0Template) throw new Exception("Bought unit templateId mismatch");
+            if (bought.Star != 1) throw new Exception("Bought unit should be 1★");
+            if (bought.IsGift) throw new Exception("Bought unit should not be gift");
+            if (bought.Row != -1) throw new Exception("Bought unit should be on bench");
+
+            // --- 2. Sell：移除 UnitInfo + 经济/卡池处理 ---
+            int elixirBefore = p1.Elixir;
+            int poolBefore = pool.Remaining[bought.TemplateId - 1];
+            UnitService.Sell(p1, bought, pool, 1);
+            if (RosterService.GetBenchUsed(p1) != 0) throw new Exception("Should have 0 bench units after sell");
+            if (p1.Elixir <= elixirBefore) throw new Exception("Sell should refund elixir");
+            if (pool.Remaining[bought.TemplateId - 1] != poolBefore + 1) throw new Exception("Sell should return 1 copy to pool");
+
+            // --- 3. Buy 失败不创建 UnitInfo ---
+            p1.Elixir = 0;
+            ShopService.GenerateOffersForPlayer(p1, pool, rng);
+            bool buyFail = UnitService.Buy(p1, 0, pool, rng, RoundPhase.Deployment, 1);
+            if (buyFail) throw new Exception("UnitService.Buy should fail when no elixir");
+            if (RosterService.GetBenchUsed(p1) != 0) throw new Exception("No unit should be created on failed buy");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] UnitService test passed: buy/sell integration correct");
         }
     }
 }
