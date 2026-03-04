@@ -24,6 +24,7 @@ namespace ET.Server
             TestPhaseGate();
             TestEconomy(scene);
             TestShop(scene);
+            TestRoster(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -382,6 +383,72 @@ namespace ET.Server
             scene.RemoveComponent<MatchComponent>();
 
             Log.Info("[AutoChess] Shop test passed: pool init / offer generation / buy / sell / gift / elimination all correct");
+        }
+
+        /// <summary>
+        /// 验证单位 Roster 管理：添加、移除、查找、统计。
+        /// </summary>
+        public static void TestRoster(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 6001, 6002 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 88888);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(6001);
+            RosterComponent roster = p1.GetComponent<RosterComponent>();
+            if (roster == null) throw new Exception("RosterComponent missing on player");
+
+            // --- 1. AddToBench: 添加到板凳最小空位 ---
+            UnitInfo u1 = RosterService.AddToBench(p1, 1, 1, false);   // templateId=1, star=1
+            if (u1 == null) throw new Exception("AddToBench returned null");
+            if (u1.InstId != 1) throw new Exception($"First unit InstId should be 1, got {u1.InstId}");
+            if (u1.Row != -1) throw new Exception("Bench unit Row should be -1");
+            if (u1.Col != 0) throw new Exception("First bench unit Col should be 0");
+
+            UnitInfo u2 = RosterService.AddToBench(p1, 2, 1, false);
+            if (u2.Col != 1) throw new Exception("Second bench unit Col should be 1");
+
+            // --- 2. 板凳满（5 个）后添加失败 ---
+            RosterService.AddToBench(p1, 3, 1, false); // col=2
+            RosterService.AddToBench(p1, 4, 1, false); // col=3
+            RosterService.AddToBench(p1, 5, 1, false); // col=4
+            UnitInfo overflow = RosterService.AddToBench(p1, 6, 1, false);
+            if (overflow != null) throw new Exception("AddToBench should return null when bench full");
+
+            // --- 3. 查找 ---
+            UnitInfo found = RosterService.FindAt(p1, 0, -1);  // bench col=0
+            if (found != u1) throw new Exception("FindAt bench(0,-1) should return u1");
+
+            UnitInfo byId = RosterService.FindByInstId(p1, 2);
+            if (byId != u2) throw new Exception("FindByInstId(2) should return u2");
+
+            // --- 4. 统计 ---
+            if (RosterService.GetPopUsed(p1) != 0)
+                throw new Exception("PopUsed should be 0 (all on bench)");
+            if (RosterService.GetBenchUsed(p1) != 5)
+                throw new Exception("BenchUsed should be 5");
+
+            // --- 5. Remove ---
+            RosterService.Remove(p1, u1);
+            if (RosterService.FindByInstId(p1, 1) != null)
+                throw new Exception("u1 should be removed");
+            if (RosterService.GetBenchUsed(p1) != 4)
+                throw new Exception("BenchUsed should be 4 after remove");
+
+            // --- 6. AddToBench 填补空位（col=0 空出来了）---
+            UnitInfo u6 = RosterService.AddToBench(p1, 6, 1, false);
+            if (u6.Col != 0) throw new Exception($"Should fill col=0 gap, got col={u6.Col}");
+
+            // --- 7. isGift 标记保留 ---
+            RosterService.Remove(p1, u6);  // 清出空位
+            UnitInfo gift = RosterService.AddToBench(p1, 7, 1, true);
+            if (!gift.IsGift) throw new Exception("Gift unit IsGift should be true");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] Roster test passed: add/remove/find/stats all correct");
         }
     }
 }
