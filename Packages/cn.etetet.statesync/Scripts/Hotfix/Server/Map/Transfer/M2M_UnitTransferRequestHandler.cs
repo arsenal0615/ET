@@ -34,7 +34,7 @@ namespace ET.Server
 
             // 通知客户端创建My Unit
             M2C_CreateMyUnit m2CCreateUnits = M2C_CreateMyUnit.Create();
-            m2CCreateUnits.Unit = UnitHelper.CreateUnitInfo(unit);
+            m2CCreateUnits.Unit = UnitHelper.CreateUnitInfo(unit);  // returns global::ET.UnitInfo (Proto)
             MapMessageHelper.SendToClient(unit, m2CCreateUnits);
 
             // 加入aoi

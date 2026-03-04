@@ -7,9 +7,9 @@ namespace ET.Server
     [FriendOf(typeof(NumericComponent))]
     public static partial class UnitHelper
     {
-        public static UnitInfo CreateUnitInfo(Unit unit)
+        public static global::ET.UnitInfo CreateUnitInfo(Unit unit)
         {
-            UnitInfo unitInfo = UnitInfo.Create();
+            global::ET.UnitInfo unitInfo = global::ET.UnitInfo.Create();
             NumericComponent nc = unit.GetComponent<NumericComponent>();
             unitInfo.UnitId = unit.Id;
             unitInfo.ConfigId = unit.ConfigId;
@@ -22,7 +22,7 @@ namespace ET.Server
             {
                 if (!moveComponent.IsArrived())
                 {
-                    unitInfo.MoveInfo = MoveInfo.Create();
+                    unitInfo.MoveInfo = global::ET.MoveInfo.Create();
                     unitInfo.MoveInfo.Points.Add(unit.Position);
                     for (int i = moveComponent.N; i < moveComponent.Targets.Count; ++i)
                     {

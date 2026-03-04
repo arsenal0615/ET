@@ -22,6 +22,7 @@ namespace ET.Server
                     player.PlayerIndex = playerIndex++;
                     player.AddComponent<EconomyLogComponent>();
                     player.AddComponent<ShopComponent>();
+                    player.AddComponent<RosterComponent>();
                 }
             }
 
