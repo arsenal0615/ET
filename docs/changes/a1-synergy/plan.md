@@ -214,7 +214,7 @@
 
 ## 4. 阶段事件处理器
 
-- [ ] 4.1 创建 PhaseChangedEventHandler_Synergy
+- [x] 4.1 创建 PhaseChangedEventHandler_Synergy
 
 **Context:**
 - Depends: 2.2, 3.1
