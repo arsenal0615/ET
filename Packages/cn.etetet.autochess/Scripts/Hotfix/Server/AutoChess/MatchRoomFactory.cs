@@ -23,6 +23,7 @@ namespace ET.Server
                     player.AddComponent<EconomyLogComponent>();
                     player.AddComponent<ShopComponent>();
                     player.AddComponent<RosterComponent>();
+                    player.AddComponent<SynergyComponent>();
                 }
             }
 

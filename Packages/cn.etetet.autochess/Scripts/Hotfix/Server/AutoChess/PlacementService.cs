@@ -25,6 +25,7 @@ namespace ET.Server
 
             unit.Col = targetCol;
             unit.Row = targetRow;
+            SynergyService.Recalculate(player);
             return true;
         }
 
@@ -46,6 +47,7 @@ namespace ET.Server
 
             unit.Col = targetCol;
             unit.Row = targetRow;
+            SynergyService.Recalculate(player);
             return true;
         }
 
@@ -63,6 +65,13 @@ namespace ET.Server
             // 交换坐标
             (u1.Col, u2.Col) = (u2.Col, u1.Col);
             (u1.Row, u2.Row) = (u2.Row, u1.Row);
+
+            // 涉及棋盘的交换需要重新统计羁绊
+            if (u1.Row >= 0 || u2.Row >= 0)
+            {
+                SynergyService.Recalculate(player);
+            }
+
             return true;
         }
     }

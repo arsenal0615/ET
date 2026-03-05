@@ -59,7 +59,7 @@
 4. 编译检查
 5. 提交
 
-- [ ] 1.3 创建 SynergyComponent
+- [x] 1.3 创建 SynergyComponent
 
 **Context:**
 - Depends: 1.2
@@ -78,7 +78,7 @@
 2. 编译检查
 3. 提交
 
-- [ ] 1.4 校准 SynergyDef 参数并设置 SynergyType
+- [x] 1.4 校准 SynergyDef 参数并设置 SynergyType
 
 **Context:**
 - Depends: 1.1
@@ -107,7 +107,7 @@
 3. 编译检查
 4. 提交
 
-- [ ] 1.5 添加 FrontRowMax 常量
+- [x] 1.5 添加 FrontRowMax 常量
 
 **Context:**
 - Reads: `Packages/cn.etetet.autochess/Scripts/Model/Share/AutoChess/AutoChessDefine.cs`
@@ -125,7 +125,7 @@
 
 ## 2. 核心逻辑：SynergyService
 
-- [ ] 2.1 实现 SynergyService.Recalculate
+- [x] 2.1 实现 SynergyService.Recalculate
 
 **Context:**
 - Depends: 1.3, 1.4
@@ -149,7 +149,7 @@
 3. 编译检查
 4. 提交
 
-- [ ] 2.2 实现 SynergyService.GenerateSnapshot
+- [x] 2.2 实现 SynergyService.GenerateSnapshot
 
 **Context:**
 - Depends: 2.1
@@ -182,7 +182,7 @@
 
 ## 3. Goblin 经济羁绊
 
-- [ ] 3.1 实现 GoblinGiftService
+- [x] 3.1 实现 GoblinGiftService
 
 **Context:**
 - Depends: 1.3, 1.4
@@ -240,7 +240,7 @@
 
 ## 5. 集成：工厂 + 实时追踪
 
-- [ ] 5.1 MatchRoomFactory 添加 SynergyComponent
+- [x] 5.1 MatchRoomFactory 添加 SynergyComponent
 
 **Context:**
 - Depends: 1.3
@@ -255,7 +255,7 @@
 2. 编译检查
 3. 提交
 
-- [ ] 5.2 PlacementService 集成 Recalculate
+- [x] 5.2 PlacementService 集成 Recalculate
 
 **Context:**
 - Depends: 2.1
@@ -273,7 +273,7 @@
 4. 编译检查
 5. 提交
 
-- [ ] 5.3 UnitService 集成 Recalculate
+- [x] 5.3 UnitService 集成 Recalculate
 
 **Context:**
 - Depends: 2.1

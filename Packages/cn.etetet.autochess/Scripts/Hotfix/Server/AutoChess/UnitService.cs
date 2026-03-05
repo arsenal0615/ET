@@ -24,6 +24,7 @@ namespace ET.Server
             if (currentPhase == RoundPhase.Deployment)
             {
                 MergeService.RunMergeChain(player, round);
+                SynergyService.Recalculate(player);
             }
 
             return true;
@@ -39,8 +40,15 @@ namespace ET.Server
             int star = unit.Star;
             bool isGift = unit.IsGift;
 
+            bool wasOnBoard = unit.Row >= 0;
+
             RosterService.Remove(player, unit);
             ShopService.TrySell(player, templateId, star, isGift, pool, round);
+
+            if (wasOnBoard)
+            {
+                SynergyService.Recalculate(player);
+            }
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace ET.Server
@@ -6,6 +7,122 @@ namespace ET.Server
     [FriendOf(typeof(RosterComponent))]
     public static class SynergyService
     {
+        /// <summary>
+        /// PreBattle 时基于 LiveSynergies 生成冻结快照。
+        /// 计算静态效果写入 UnitBattleModifiers，标记动态效果，更新 LastGoblinLevel。
+        /// </summary>
+        public static void GenerateSnapshot(MatchPlayer player)
+        {
+            // 1. 确保 LiveSynergies 最新
+            Recalculate(player);
+
+            SynergyComponent synergy = player.GetComponent<SynergyComponent>();
+            RosterComponent roster = player.GetComponent<RosterComponent>();
+
+            // 2. 创建快照，复制激活的羁绊（level > 0）
+            TraitSnapshot snapshot = new TraitSnapshot();
+            foreach (SynergyEntry entry in synergy.LiveSynergies)
+            {
+                if (entry.Level > 0)
+                {
+                    snapshot.ActiveSynergies.Add(new SynergyEntry
+                    {
+                        Tag = entry.Tag,
+                        Count = entry.Count,
+                        Level = entry.Level,
+                        Type = entry.Type,
+                    });
+                }
+            }
+
+            // 3. 构建 ActiveSynergies 的 tag 索引，便于查找
+            Dictionary<string, SynergyEntry> activeMap = new Dictionary<string, SynergyEntry>();
+            foreach (SynergyEntry entry in snapshot.ActiveSynergies)
+            {
+                activeMap[entry.Tag] = entry;
+            }
+
+            // 4. 遍历棋盘单位，为每个 instId 构建 UnitSynergyMap
+            foreach (UnitInfo unit in roster.Units)
+            {
+                if (unit.Row < 0) continue; // 板凳上的不参与
+
+                UnitTemplateDef unitDef = AutoChessConfigLoader.GetUnit(unit.TemplateId);
+                List<SynergyEntry> unitSynergies = new List<SynergyEntry>();
+
+                foreach (string tag in unitDef.Tags)
+                {
+                    if (activeMap.TryGetValue(tag, out SynergyEntry activeEntry))
+                    {
+                        unitSynergies.Add(activeEntry);
+                    }
+                }
+
+                snapshot.UnitSynergyMap[unit.InstId] = unitSynergies;
+
+                // 5. 对每个单位调 ApplyStaticEffects 生成 UnitBattleModifiers
+                UnitBattleModifiers mods = new UnitBattleModifiers();
+                ApplyStaticEffects(unit, unitSynergies, mods);
+                snapshot.UnitModifiers[unit.InstId] = mods;
+            }
+
+            // 6. 更新 LastGoblinLevel
+            synergy.LastGoblinLevel = 0;
+            foreach (SynergyEntry entry in snapshot.ActiveSynergies)
+            {
+                if (entry.Tag == "Goblin")
+                {
+                    synergy.LastGoblinLevel = entry.Level;
+                    break;
+                }
+            }
+
+            // 7. 赋值快照
+            synergy.Snapshot = snapshot;
+        }
+
+        /// <summary>
+        /// 对单位应用静态羁绊效果，将结果写入 UnitBattleModifiers。
+        /// </summary>
+        private static void ApplyStaticEffects(UnitInfo unit, List<SynergyEntry> unitSynergies, UnitBattleModifiers mods)
+        {
+            foreach (SynergyEntry entry in unitSynergies)
+            {
+                if (entry.Type != SynergyType.Static) continue;
+                if (entry.Level <= 0) continue;
+
+                SynergyDef def = AutoChessConfigLoader.GetSynergy(entry.Tag);
+                SynergyEffectParam effect = def.Effects[entry.Level - 1];
+
+                switch (entry.Tag)
+                {
+                    case "Brawler":
+                        mods.HpMultiplier *= (1f + effect.Param1);
+                        break;
+                    case "Giant":
+                        mods.DamageReduction = Math.Max(mods.DamageReduction, effect.Param1);
+                        break;
+                    case "Noble":
+                        if (unit.Row <= AutoChessDefine.FrontRowMax)
+                        {
+                            mods.DamageReduction = Math.Max(mods.DamageReduction, effect.Param1);
+                        }
+                        else
+                        {
+                            mods.DamageMultiplier *= (1f + effect.Param1);
+                        }
+                        break;
+                    case "Blaster":
+                        mods.RangeBonus += (int)effect.Param2;
+                        mods.DistanceDamagePerHex = effect.Param1;
+                        break;
+                    case "Brutalist":
+                        mods.AtkSpeedMultiplier *= (1f - effect.Param1);
+                        break;
+                }
+            }
+        }
+
         /// <summary>
         /// 遍历棋盘单位统计标签 count，按阈值计算 level，更新 LiveSynergies。
         /// 有变化则发布 SynergyChangedEvent。
