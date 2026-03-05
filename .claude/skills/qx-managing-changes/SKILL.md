@@ -384,6 +384,18 @@ Status: <active/archived>
    - 如果未完成：警告并要求确认
    - "还有 3 个任务未完成。仍然归档吗？"
 
+1.5. **检查技术债务**
+
+检查 `docs/changes/<name>/tech-debt.md` 是否存在：
+- 如果存在且有未处理的 Important 问题：
+  - 列出所有问题
+  - 使用 AskUserQuestion 让用户确认每组问题的处置：
+    - "已修复（本次或后续 PR 中）"
+    - "确认推迟到后续迭代"
+    - "不再相关（删除）"
+  - 更新 tech-debt.md 的处置记录
+- 如果不存在或为空：跳过
+
 2. **检查增量 specs**
    - 查找 `docs/changes/<name>/specs/` 目录
    - 如果存在增量 specs：

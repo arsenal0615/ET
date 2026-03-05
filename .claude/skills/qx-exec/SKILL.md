@@ -336,6 +336,20 @@ Agent(subagent_type="code-reviewer", prompt="""
 - 重新运行质量审查
 - 循环直到 APPROVE
 
+**Important 问题追踪：**
+
+质量审查 APPROVE 后，如果报告中包含 Important 级别问题（未被要求修复），将其记录到 `important_issues` 累积列表：
+
+```
+important_issues.push({
+  task_id: current_task_id,
+  task_title: current_task_title,
+  issues: [extracted Important issues from quality review output]
+})
+```
+
+> **注意：** 只有 APPROVE 后的未修复 Important 问题才追踪。如果 REQUEST CHANGES 触发了修复循环，修复后重新审查中仍标注为 Important 的问题才需要追踪。
+
 #### 2d. 标记任务完成
 
 ```
@@ -370,12 +384,44 @@ Agent(subagent_type="code-reviewer", prompt="""
 
 ### 步骤 4：完成
 
+**写入技术债务记录（如有）：**
+
+如果 `important_issues` 列表不为空（即执行过程中有未修复的 Important 问题），生成 tech-debt 文件：
+
+```
+如果是 Change Mode:
+  写入: docs/changes/<name>/tech-debt.md
+
+格式:
+  # 技术债务 — [变更名称]
+
+  > 以下 Important 级别问题在代码审查中被发现但未修复。
+  > 请在后续迭代中处理，或在 archive 时确认。
+
+  ## 未修复的 Important 问题
+
+  ### Task [id] — [title]
+  - **[I1]** [问题描述] （来自质量审查）
+  - **[I2]** [问题描述]
+
+  ### Task [id] — [title]
+  - **[I1]** [问题描述]
+```
+
+然后在完成摘要中增加一行：
+```
+技术债务: [N] 个 Important 问题待处理 → 详见 docs/changes/<name>/tech-debt.md
+```
+
+**完成摘要：**
+
 ```
 计划执行完成 — [plan name]
 
 任务: [N/N] 完成
 审查: 全部通过
 最终审查: APPROVED
+技术债务: [N] 个 Important 问题待处理（如有）
 
 后续步骤:
 1. /qx-verify — 在宣称完成前运行完整验证
