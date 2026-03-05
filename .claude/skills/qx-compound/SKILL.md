@@ -1,108 +1,108 @@
 ---
 name: qx-compound
-description: "Use after completing a feature, fixing a bug, or finishing a sprint to extract learnings and update knowledge bases. Implements compound accumulation — each piece of work makes the next one easier."
+description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，提取经验并更新知识库。实现复合积累 — 每次工作让下一次更轻松。"
 ---
 
 # 复合积累（Compound Accumulation）
 
-## Overview
+## 概述
 
-After completing a piece of work, extract the learnings and feed them back into the project's knowledge systems. This creates a compound effect — each feature, bugfix, or sprint makes the next one faster and higher quality.
+完成一项工作后，提取其中的经验教训并回馈到项目的知识系统中。这会产生复合效应 — 每次功能开发、Bug 修复或 Sprint 都让下一次更快、质量更高。
 
-**Core principle:** Every completed task is a learning opportunity. Capture it, or lose it.
+**核心原则：** 每个完成的任务都是学习机会。抓住它，否则就失去它。
 
-**Announce at start:** "Using qx-compound to extract learnings from [completed work]."
+**启动时宣告：** "正在使用 qx-compound 从 [已完成的工作] 中提取经验。"
 
-## When to Use
+## 何时使用
 
-- After a change is verified and archived (`/qx-change archive`)
-- After a sprint retrospective
-- After debugging a tricky issue
-- After discovering a new pattern or anti-pattern
-- When `/qx-finishing` or `/qx-retro` suggests it
+- 变更验证并归档后（`/qx-change archive`）
+- Sprint 回顾后
+- 调试棘手问题后
+- 发现新模式或反模式后
+- `/qx-finishing` 或 `/qx-retro` 建议时
 
-## What Gets Updated
+## 更新哪些知识库
 
-| Knowledge Store | What Goes There | How to Update |
-|----------------|-----------------|---------------|
-| **System Map** (`docs/system-map.md`) | System relationships, component/message/event connections | Add new systems, update changed connections |
-| **MEMORY.md** (`~/.claude/projects/.../memory/MEMORY.md`) | Code patterns, common pitfalls, debugging insights | Add verified patterns, update outdated entries |
-| **Memory topic files** (`~/.claude/projects/.../memory/*.md`) | Detailed per-topic knowledge | Add deep-dive findings |
-| **QX Knowledge Base** (`qx/knowledge/*.md`) | Generic methodology improvements | Update process insights (rare) |
-| **Sprint data** (`docs/sprints/`) | Velocity, estimation accuracy | Updated by `/qx-sprint retro` |
+| 知识库 | 存放内容 | 如何更新 |
+|--------|----------|----------|
+| **系统关系图** (`docs/system-map.md`) | 系统关系、组件/消息/事件连接 | 添加新系统，更新变更的连接 |
+| **MEMORY.md** (`~/.claude/projects/.../memory/MEMORY.md`) | 代码模式、常见陷阱、调试经验 | 添加已验证的模式，更新过时条目 |
+| **记忆主题文件** (`~/.claude/projects/.../memory/*.md`) | 按主题的详细知识 | 添加深度发现 |
+| **QX 知识库** (`qx/knowledge/*.md`) | 通用方法论改进 | 更新流程洞察（少见） |
+| **Sprint 数据** (`docs/sprints/`) | 速度、估算准确度 | 由 `/qx-sprint retro` 更新 |
 
-## The Process
+## 流程
 
-### Step 1: Identify the Completed Work
+### 步骤 1：确认已完成的工作
 
-Determine what was just completed:
-- Read the change directory (`docs/changes/[name]/`) if in change lifecycle
-- Read recent git history for the relevant commits
-- Read the sprint plan if in sprint context
-- Ask the user if context is unclear
+确定刚刚完成了什么：
+- 如果在变更生命周期中，读取变更目录（`docs/changes/[name]/`）
+- 读取相关提交的 git 历史
+- 如果在 Sprint 上下文中，读取 Sprint 计划
+- 上下文不清楚时询问用户
 
-### Step 2: Extract Learnings
+### 步骤 2：提取经验
 
-For each category, ask: "Did this work teach us anything new?"
+对每个类别，问："这次工作教会了我们什么新东西？"
 
-#### 2a. System Relationships
+#### 2a. 系统关系
 
-**Questions:**
-- Did we add a new system or component?
-- Did we discover connections between systems we didn't know about?
-- Did we modify message flows or event chains?
-- Did any existing system map entries turn out to be wrong?
+**问题：**
+- 是否添加了新系统或组件？
+- 是否发现了之前不知道的系统间连接？
+- 是否修改了消息流或事件链？
+- 现有系统关系图中是否有错误的条目？
 
-**If yes:** Prepare system map updates.
+**如果是：** 准备系统关系图更新。
 
-#### 2b. Code Patterns
+#### 2b. 代码模式
 
-**Questions:**
-- Did we find a pattern that worked well? (Reusable for future work)
-- Did we hit a pitfall that others should avoid?
-- Did we discover something about the framework that isn't documented?
-- Did any existing MEMORY.md entries need correction?
+**问题：**
+- 是否发现了有效的模式？（可在未来工作中复用）
+- 是否踩到了别人应该避免的坑？
+- 是否发现了框架中未被文档记录的特性？
+- 现有 MEMORY.md 条目是否需要修正？
 
-**If yes:** Prepare MEMORY.md updates.
+**如果是：** 准备 MEMORY.md 更新。
 
-#### 2c. Process Insights
+#### 2c. 流程洞察
 
-**Questions:**
-- Did our estimation match reality? (For sprint velocity calibration)
-- Did the implementation plan work well, or did we deviate?
-- Did a specific QX skill help or hinder? How could it improve?
-- Did we discover a better workflow pattern?
+**问题：**
+- 我们的估算是否与实际匹配？（用于 Sprint 速度校准）
+- 实施计划是否顺利执行，还是有偏离？
+- 某个 QX Skill 是帮助了还是阻碍了工作？如何改进？
+- 是否发现了更好的工作流模式？
 
-**If yes:** Note for retrospective or QX knowledge base.
+**如果是：** 记录用于回顾或 QX 知识库。
 
-#### 2d. Test Insights
+#### 2d. 测试洞察
 
-**Questions:**
-- Did we discover new test strategies that worked?
-- Did we find edge cases we should always test for?
-- Did a specific test approach save us from a bug?
+**问题：**
+- 是否发现了有效的新测试策略？
+- 是否发现了应该始终测试的边界情况？
+- 某种测试方法是否帮助我们避免了一个 Bug？
 
-**If yes:** Prepare QA knowledge base updates.
+**如果是：** 准备 QA 知识库更新。
 
-### Step 3: Validate Before Writing
+### 步骤 3：写入前验证
 
-**For each proposed update, verify:**
-- Is this a confirmed pattern (not a one-off observation)?
-- Does it contradict any existing knowledge? If so, which is correct?
-- Is this specific enough to be actionable?
-- Is this the right knowledge store for this information?
+**对每个拟更新的条目，验证：**
+- 这是已确认的模式（而非一次性观察）吗？
+- 是否与现有知识矛盾？如果是，哪个正确？
+- 是否足够具体、可操作？
+- 是否放在了正确的知识库中？
 
-**Validation rules:**
-- System map updates: Only after code is merged and tested
-- MEMORY.md updates: Only for patterns confirmed across 2+ interactions
-- QX knowledge base: Only for generic methodology (not project-specific)
-- Exception: User explicitly asks to remember something → save immediately
+**验证规则：**
+- 系统关系图更新：仅在代码合并并测试通过后
+- MEMORY.md 更新：仅限在 2 次以上交互中确认的模式
+- QX 知识库：仅限通用方法论（非项目特定）
+- 例外：用户明确要求记住某件事 → 立即保存
 
-### Step 4: Apply Updates
+### 步骤 4：应用更新
 
-#### Update System Map
+#### 更新系统关系图
 
-If system relationships changed:
+如果系统关系发生了变化：
 
 ```markdown
 ## [System Name]
@@ -113,75 +113,75 @@ If system relationships changed:
 - **Events**: [events published/consumed]
 ```
 
-Read `docs/system-map.md`, find the relevant section, update or add entries.
+读取 `docs/system-map.md`，找到相关章节，更新或添加条目。
 
-#### Update MEMORY.md
+#### 更新 MEMORY.md
 
-If code patterns or pitfalls discovered:
+如果发现了代码模式或陷阱：
 
-Read current MEMORY.md. Find the appropriate section. Add the new entry, keeping the file concise (< 200 lines for the main file; use topic files for details).
+读取当前 MEMORY.md。找到合适的章节。添加新条目，保持文件精简（主文件 < 200 行；详细内容使用主题文件）。
 
-Format for new entries:
+新条目格式：
 ```markdown
-- **[Pattern/Pitfall name]** — [One-line description]
+- **[模式/陷阱名称]** — [一行描述]
 ```
 
-For detailed entries, add to the appropriate topic file and link from MEMORY.md.
+对于详细条目，添加到相应的主题文件并从 MEMORY.md 链接。
 
-#### Update QX Knowledge Base
+#### 更新 QX 知识库
 
-Only for generic methodology improvements (not project-specific):
+仅限通用方法论改进（非项目特定）：
 
-Read the relevant `qx/knowledge/*.md` file. Add the process insight.
+读取相关的 `qx/knowledge/*.md` 文件。添加流程洞察。
 
-### Step 5: Report
-
-```
-Compound Accumulation Complete — [Work Name]
-
-Updates applied:
-  System Map: [N changes / no changes]
-  MEMORY.md: [N entries added/updated / no changes]
-  Knowledge Base: [N updates / no changes]
-
-Key learnings captured:
-1. [Learning 1]
-2. [Learning 2]
-```
-
-## What NOT to Store
-
-- **Session-specific context** — Current task details, temporary state
-- **Unverified observations** — One-off behavior that might not reproduce
-- **Project-agnostic methodology in MEMORY.md** — Goes in QX knowledge base
-- **Project-specific tech in QX knowledge base** — Goes in MEMORY.md
-- **Duplicates** — Check existing entries first
-
-## Integration with QX Workflow
+### 步骤 5：报告
 
 ```
-Feature complete → /qx-change verify → /qx-change archive → /qx-compound
-                                                              ↓
-Sprint complete → /qx-sprint retro ─────────────────────→ /qx-compound
-                                                              ↓
-Bug fixed → /qx-debug (solution found) ────────────────→ /qx-compound
-                                                              ↓
-                                                     Updates knowledge stores
-                                                     Next work starts faster
+复合积累完成 — [工作名称]
+
+已应用更新：
+  系统关系图: [N 处变更 / 无变更]
+  MEMORY.md: [N 条添加/更新 / 无变更]
+  知识库: [N 处更新 / 无变更]
+
+已捕获的关键经验：
+1. [经验 1]
+2. [经验 2]
 ```
 
-## Key Principles
+## 不应存储的内容
 
-- **Verified only** — Don't store unconfirmed patterns
-- **Specific and actionable** — Concrete descriptions, not vague observations
-- **Right store, right level** — Project-specific → MEMORY.md; Generic → QX knowledge
-- **Concise** — One line where possible, detail files for deep content
-- **Living documents** — Update or remove outdated entries, don't just append
-- **Compound effect** — Each update makes the next developer (human or AI) more effective
+- **会话特定上下文** — 当前任务细节、临时状态
+- **未验证的观察** — 一次性行为，可能无法复现
+- **MEMORY.md 中的项目无关方法论** — 应放入 QX 知识库
+- **QX 知识库中的项目特定技术** — 应放入 MEMORY.md
+- **重复内容** — 先检查现有条目
 
-## Related Skills
+## 与 QX 工作流的集成
 
-- **qx-managing-changes** — Archive phase triggers compound accumulation
-- **qx-sprint** — Retro phase suggests compound accumulation
-- **qx-debugging** — Debugging insights feed into compound accumulation
-- **qx-system-analysis** — System map is a key compound accumulation target
+```
+功能完成 → /qx-change verify → /qx-change archive → /qx-compound
+                                                       ↓
+Sprint 完成 → /qx-sprint retro ──────────────────→ /qx-compound
+                                                       ↓
+Bug 修复 → /qx-debug（找到解决方案）──────────────→ /qx-compound
+                                                       ↓
+                                                  更新知识库
+                                                  下次工作更快启动
+```
+
+## 关键原则
+
+- **仅存储已验证的** — 不存储未确认的模式
+- **具体且可操作** — 具体描述，而非模糊观察
+- **正确的位置，正确的层级** — 项目特定 → MEMORY.md；通用 → QX 知识库
+- **精简** — 尽可能一行，详细内容放在专题文件中
+- **活的文档** — 更新或删除过时条目，而非只追加
+- **复合效应** — 每次更新都让下一个开发者（人类或 AI）更高效
+
+## 相关 Skills
+
+- **qx-managing-changes** — 归档阶段触发复合积累
+- **qx-sprint** — 回顾阶段建议复合积累
+- **qx-debugging** — 调试经验注入复合积累
+- **qx-system-analysis** — 系统关系图是复合积累的关键目标

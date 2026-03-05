@@ -1,25 +1,25 @@
 ---
 name: qx-exec
-description: "Use when you have an approved implementation plan to execute. Reads the plan, dispatches sub-agents per task with TDD discipline, runs two-stage review (spec + code quality), and tracks progress. Supports --loop for persistent execution."
+description: "在有已批准的实施计划时使用。读取计划，按任务分派子 Agent 并遵循 TDD 纪律，运行两阶段审查（规格合规 + 代码质量），并跟踪进度。支持 --loop 持久化执行。"
 ---
 
 # 多 Agent 执行计划（Multi-Agent Plan Execution）
 
-## Overview
+## 概述
 
-Execute an approved implementation plan by dispatching fresh sub-agents per task. Each task follows TDD discipline, gets two-stage review (spec compliance + code quality), and progress is tracked via both TodoWrite and plan file checkboxes.
+通过为每个任务分派全新的子 Agent 来执行已批准的实施计划。每个任务遵循 TDD 纪律，接受两阶段审查（规格合规 + 代码质量），进度通过 TodoWrite 和计划文件复选框双重跟踪。
 
-**Core principle:** Fresh agent per task + TDD + two-stage review = high quality, fast iteration.
+**核心原则：** 每个任务一个全新 Agent + TDD + 两阶段审查 = 高质量、快速迭代。
 
-**Announce at start:** "Using qx-exec to execute the plan at [plan path]."
+**启动时宣告：** "正在使用 qx-exec 执行位于 [plan path] 的计划。"
 
-## When to Use
+## 何时使用
 
-- You have an approved plan file (from `/qx-plan` or `/qx-change design`)
-- Tasks are mostly independent (can be worked on by separate agents)
-- You want systematic execution with quality gates
+- 你有一个已批准的计划文件（来自 `/qx-plan` 或 `/qx-change design`）
+- 任务大多独立（可由不同 Agent 分别处理）
+- 你希望有系统化的执行和质量关卡
 
-## Architecture
+## 架构
 
 ```
 /qx-exec "docs/changes/feature/plan.md"
@@ -27,105 +27,105 @@ Execute an approved implementation plan by dispatching fresh sub-agents per task
      ▼
 ┌─ QX Exec ────────────────────────────────────────┐
 │                                                    │
-│  1.  Read plan, extract all tasks                  │
-│  2.  Detect mode (change vs quick)                 │
-│  3.  Create TodoWrite with all tasks               │
-│  1.5 Build static context (plan-level):            │
-│      - Read plan header (goal, arch, tech stack)   │
-│      - Read framework rules (CLAUDE.md + Rules:)   │
-│      - Read design doc (Design Ref:)               │
-│      - Initialize task_outputs = {}                │
-│  4.  For each task:                                │
-│      a. Build task context package:                │
-│         - static_context (reused)                  │
-│         - Depends → inject prior task outputs      │
-│         - Reads → inject file contents             │
-│         - Why → inject design intent               │
-│      b. Dispatch implementer sub-agent             │
-│         (with full pre-loaded context)             │
-│      c. Parse implementer output → task_outputs    │
-│      d. Dispatch spec reviewer (with rules inline) │
-│      e. Dispatch quality reviewer (with rules)     │
-│      f. Mark task complete (TodoWrite + checkbox)  │
-│  5.  After all tasks: dispatch final review        │
-│  6.  Offer /qx-finishing                           │
+│  1.  读取计划，提取所有任务                         │
+│  2.  检测模式（change vs quick）                    │
+│  3.  创建 TodoWrite 包含所有任务                    │
+│  1.5 构建静态上下文（计划级别）：                    │
+│      - 读取计划头部（目标、架构、技术栈）            │
+│      - 读取框架规则（CLAUDE.md + Rules:）           │
+│      - 读取设计文档（Design Ref:）                  │
+│      - 初始化 task_outputs = {}                    │
+│  4.  对每个任务：                                   │
+│      a. 构建任务上下文包：                          │
+│         - static_context（复用）                    │
+│         - Depends → 注入前置任务输出               │
+│         - Reads → 注入文件内容                     │
+│         - Why → 注入设计意图                       │
+│      b. 分派实现者子 Agent                         │
+│         （附带完整预加载上下文）                     │
+│      c. 解析实现者输出 → task_outputs              │
+│      d. 分派规格审查员（附带内联规则）              │
+│      e. 分派质量审查员（附带规则）                  │
+│      f. 标记任务完成（TodoWrite + 复选框）          │
+│  5.  所有任务完成后：分派最终审查                    │
+│  6.  提供 /qx-finishing 选项                       │
 │                                                    │
-│  --loop: Keep working until all tasks done         │
-│          (persistent mode via hook)                │
+│  --loop: 持续工作直到所有任务完成                    │
+│          （通过 hook 实现持久化模式）                │
 └────────────────────────────────────────────────────┘
 ```
 
-## The Process
+## 流程
 
-### Step 1: Load and Validate Plan
-
-```
-1. Read the plan file
-2. Determine mode:
-   - Change Mode: plan at docs/changes/<name>/plan.md
-     → checkbox tracking enabled (- [ ] → - [x])
-     → check for existing progress (resume from last incomplete)
-   - Quick Mode: plan at docs/plans/*.md
-     → TodoWrite tracking only
-3. Extract all tasks with full text
-4. Check for progress (Change Mode):
-   - Count - [x] vs - [ ] checkboxes
-   - If progress exists: "N/M tasks complete, resuming from task K"
-5. Create TodoWrite for remaining tasks
-```
-
-### Step 1.5: Build Static Context (Plan-Level)
-
-Static context is built ONCE and reused across all task dispatches:
+### 步骤 1：加载并验证计划
 
 ```
-1. Read plan header — Extract Goal, Architecture, Tech Stack, Impact
-2. Read framework rules:
-   a. Always include: CLAUDE.md analyzer rules summary (8 rules, ~15 lines)
-   b. If plan header has "Rules:" field:
-      → Read each listed file from .claude/project-rules/
-      → Include their full content as inline context
-   c. If plan header has NO "Rules:" field (backward compat):
-      → Only include CLAUDE.md analyzer rules summary
-      → Do NOT bulk-inject all project-rules (too large)
-3. Read design doc:
-   a. If plan header has "Design Ref:" and it's not "None":
-      → Read the referenced file
-      → Include relevant sections
-4. Store everything as `static_context` for reuse
+1. 读取计划文件
+2. 确定模式：
+   - Change Mode: 计划位于 docs/changes/<name>/plan.md
+     → 启用复选框跟踪（- [ ] → - [x]）
+     → 检查现有进度（从上次未完成处恢复）
+   - Quick Mode: 计划位于 docs/plans/*.md
+     → 仅使用 TodoWrite 跟踪
+3. 提取所有任务的完整文本
+4. 检查进度（Change Mode）：
+   - 统计 - [x] vs - [ ] 复选框
+   - 如果有进度："N/M 个任务已完成，从任务 K 恢复"
+5. 为剩余任务创建 TodoWrite
 ```
 
-**What static_context contains:**
-- Plan goal, architecture, tech stack (from header)
-- CLAUDE.md analyzer rules (always)
-- Relevant project-rules content (from header Rules field)
-- Design document excerpts (if Design Ref exists)
+### 步骤 1.5：构建静态上下文（计划级别）
 
-Also initialize `task_outputs = {}` — a map to store each task's completion output for dependency resolution.
-
-### Step 2: Execute Tasks (Per Task)
-
-#### 2a. Build Task Context & Dispatch Implementer
-
-For each task, build a task-specific context package on top of static_context, then dispatch:
-
-**Context Package Algorithm (per task):**
+静态上下文只构建一次，在所有任务分派中复用：
 
 ```
-1. Start with static_context (plan header + framework rules + design doc)
-2. Process task's Context block:
-   a. Depends: For each dependent task ID:
-      - Retrieve task_outputs[dep_id] (summary, files changed, key decisions)
-      - If dependent task created new files important for this task:
-        → Read their current content and include
-   b. Reads: For each file path:
-      - Read the file content (or specified line range if path includes :N-M)
-      - Include in prompt as inline code block
-   c. Why: Include the design intent sentence
-3. Assemble the full prompt from template below
+1. 读取计划头部 — 提取 Goal、Architecture、Tech Stack、Impact
+2. 读取框架规则：
+   a. 始终包含：CLAUDE.md 分析器规则摘要（8 条规则，约 15 行）
+   b. 如果计划头部有 "Rules:" 字段：
+      → 从 .claude/project-rules/ 读取每个列出的文件
+      → 将其完整内容作为内联上下文包含
+   c. 如果计划头部没有 "Rules:" 字段（向后兼容）：
+      → 仅包含 CLAUDE.md 分析器规则摘要
+      → 不要批量注入所有 project-rules（太大）
+3. 读取设计文档：
+   a. 如果计划头部有 "Design Ref:" 且不是 "None"：
+      → 读取引用的文件
+      → 包含相关章节
+4. 将所有内容存储为 `static_context` 以供复用
 ```
 
-**Implementer Prompt Template:**
+**static_context 包含：**
+- 计划目标、架构、技术栈（来自头部）
+- CLAUDE.md 分析器规则（始终包含）
+- 相关 project-rules 内容（来自头部 Rules 字段）
+- 设计文档摘录（如果 Design Ref 存在）
+
+同时初始化 `task_outputs = {}` — 一个映射，存储每个任务的完成输出以用于依赖解析。
+
+### 步骤 2：执行任务（逐任务）
+
+#### 2a. 构建任务上下文并分派实现者
+
+对每个任务，在 static_context 基础上构建任务特定的上下文包，然后分派：
+
+**上下文包构建算法（逐任务）：**
+
+```
+1. 以 static_context 为基础（计划头部 + 框架规则 + 设计文档）
+2. 处理任务的 Context 块：
+   a. Depends: 对每个依赖的任务 ID：
+      - 检索 task_outputs[dep_id]（摘要、变更文件、关键决策）
+      - 如果依赖任务创建了对当前任务重要的新文件：
+        → 读取其当前内容并包含
+   b. Reads: 对每个文件路径：
+      - 读取文件内容（如果路径包含 :N-M 则读取指定行范围）
+      - 作为内联代码块包含在 prompt 中
+   c. Why: 包含设计意图句子
+3. 从下面的模板组装完整 prompt
+```
+
+**实现者 Prompt 模板：**
 
 ```
 Agent(subagent_type="programmer", prompt="""
@@ -216,170 +216,170 @@ Agent(subagent_type="programmer", prompt="""
 """)
 ```
 
-**If implementer asks questions:**
-- Answer clearly before letting them proceed
-- Provide additional context if needed
+**如果实现者提问：**
+- 在让他们继续之前清楚回答
+- 如需要提供额外上下文
 
-**If implementer fails:**
-- Dispatch a fix agent with specific error context + the same pre-loaded context
-- Don't try to fix manually (context pollution)
+**如果实现者失败：**
+- 用具体的错误上下文 + 相同的预加载上下文分派修复 Agent
+- 不要手动修复（避免上下文污染）
 
-#### 2a-post. Parse Implementer Output
+#### 2a-post. 解析实现者输出
 
-After implementer returns, parse its structured output:
+实现者返回后，解析其结构化输出：
 
 ```
-1. Extract structured sections from output:
+1. 从输出中提取结构化章节：
    - 实现摘要 → task_outputs[task_id].summary
    - 文件变更 → task_outputs[task_id].files (Created + Modified lists)
    - 测试结果 → task_outputs[task_id].tests
    - 关键决策 → task_outputs[task_id].decisions
    - 问题或顾虑 → task_outputs[task_id].concerns
-2. Store in task_outputs map for:
-   - Feeding to reviewers (this task, immediately)
-   - Feeding to dependent tasks (future tasks via Depends)
-3. If output is unstructured (agent didn't follow format):
-   - Fallback: extract file list from `git diff --name-only` since last commit
-   - Use the full agent output as summary
+2. 存储到 task_outputs 映射，用于：
+   - 提供给审查员（当前任务，立即）
+   - 提供给依赖任务（后续任务通过 Depends）
+3. 如果输出无结构（Agent 未遵循格式）：
+   - 降级方案：从上次提交以来的 `git diff --name-only` 提取文件列表
+   - 使用完整 Agent 输出作为摘要
 ```
 
-#### 2b. Dispatch Spec Reviewer
+#### 2b. 分派规格审查员
 
-After implementer completes:
+实现者完成后：
 
 ```
 Agent(subagent_type="code-reviewer", prompt="""
-  ## Spec Compliance Review
+  ## 规格合规审查
 
   ### 设计意图
-  [Why field from task Context — reviewer needs to understand the "why"]
+  [Why field from task Context — 审查员需要理解"为什么"]
 
-  ### Plan Task Spec
+  ### 计划任务规格
   [Full task text from plan]
 
   ### 项目框架规则（与本任务相关）
   [Same framework rules injected to implementer — from static_context]
 
-  ### Files Changed
+  ### 变更的文件
   [From implementer structured output — file paths]
 
-  ### Implementer Summary
+  ### 实现者摘要
   [From implementer structured output — 实现摘要 + 关键决策]
 
-  Check:
-  1. All requirements in the spec are implemented
-  2. Nothing extra was added beyond the spec
-  3. Implementation follows framework rules (对照上面注入的规则)
-  4. Design intent is preserved (对照设计意图)
+  检查：
+  1. 规格中的所有需求已实现
+  2. 没有超出规格的额外内容
+  3. 实现遵循框架规则（对照上面注入的规则）
+  4. 设计意图被保留（对照设计意图）
 
-  Verdict: PASS / FAIL
-  If FAIL: List specific gaps or extras
+  裁定: PASS / FAIL
+  如果 FAIL: 列出具体的缺口或多余内容
 """)
 ```
 
-**If spec review fails:**
-- Same implementer agent fixes the gaps (re-dispatch with same pre-loaded context)
-- Re-run spec review
-- Loop until PASS
+**如果规格审查失败：**
+- 同一实现者 Agent 修复缺口（用相同的预加载上下文重新分派）
+- 重新运行规格审查
+- 循环直到 PASS
 
-#### 2c. Dispatch Code Quality Reviewer
+#### 2c. 分派代码质量审查员
 
-After spec review passes:
+规格审查通过后：
 
 ```
 Agent(subagent_type="code-reviewer", prompt="""
-  ## Code Quality Review
+  ## 代码质量审查
 
   ### 项目框架规则
-  [Same framework rules from static_context — reviewer uses these directly]
+  [Same framework rules from static_context — 审查员直接使用]
 
-  ### Files Changed
+  ### 变更的文件
   [From implementer structured output — file paths]
 
-  ### Implementer Summary
+  ### 实现者摘要
   [From implementer structured output — 实现摘要 + 关键决策]
 
-  Check:
-  1. Code follows project conventions (对照上面注入的框架规则)
-  2. No anti-patterns or code smells
-  3. Error handling is appropriate
-  4. Tests are meaningful (not just green)
+  检查：
+  1. 代码遵循项目约定（对照上面注入的框架规则）
+  2. 无反模式或代码异味
+  3. 错误处理恰当
+  4. 测试有意义（不是仅仅能通过）
 
-  Classify issues:
-  - **Critical** — Must fix
-  - **Important** — Should fix
-  - **Suggestion** — Nice to have
+  问题分级：
+  - **Critical** — 必须修复
+  - **Important** — 应当修复
+  - **Suggestion** — 最好能改
 
-  Verdict: APPROVE / REQUEST CHANGES
+  裁定: APPROVE / REQUEST CHANGES
 """)
 ```
 
-**If quality review requests changes:**
-- Implementer fixes the issues (re-dispatch with same pre-loaded context)
-- Re-run quality review
-- Loop until APPROVE
+**如果质量审查要求修改：**
+- 实现者修复问题（用相同的预加载上下文重新分派）
+- 重新运行质量审查
+- 循环直到 APPROVE
 
-#### 2d. Mark Task Complete
+#### 2d. 标记任务完成
 
 ```
-1. Update TodoWrite: mark task as completed
-2. If Change Mode: update plan file checkbox (- [ ] → - [x])
-3. Log: "Task N complete. [brief summary from task_outputs]"
+1. 更新 TodoWrite：标记任务为已完成
+2. 如果 Change Mode：更新计划文件复选框（- [ ] → - [x]）
+3. 记录："任务 N 完成。[来自 task_outputs 的简要摘要]"
 ```
 
-### Step 3: Final Review
+### 步骤 3：最终审查
 
-After all tasks complete:
+所有任务完成后：
 
 ```
 Agent(subagent_type="code-reviewer", prompt="""
-  ## Final Implementation Review
+  ## 最终实现审查
 
-  All [N] tasks from the plan have been implemented.
-  Review the ENTIRE implementation holistically.
+  计划中的所有 [N] 个任务已全部实现。
+  从整体角度审查完整实现。
 
-  **Plan:** [plan file path]
-  **All files changed:** [aggregate list]
+  **计划:** [plan file path]
+  **所有变更文件:** [aggregate list]
 
-  Check:
-  1. All plan tasks are implemented
-  2. Tasks integrate correctly with each other
-  3. No missing connections between components
-  4. Overall architecture is sound
+  检查：
+  1. 所有计划任务已实现
+  2. 任务之间正确集成
+  3. 组件之间没有缺失的连接
+  4. 整体架构合理
 
-  Verdict: APPROVE / REQUEST CHANGES
+  裁定: APPROVE / REQUEST CHANGES
 """)
 ```
 
-### Step 4: Complete
+### 步骤 4：完成
 
 ```
-Plan Execution Complete — [plan name]
+计划执行完成 — [plan name]
 
-Tasks: [N/N] complete
-Reviews: All passed
-Final review: APPROVED
+任务: [N/N] 完成
+审查: 全部通过
+最终审查: APPROVED
 
-Next steps:
-1. /qx-verify — Run full verification before claiming done
-2. /qx-finishing — Merge, PR, or keep branch
+后续步骤:
+1. /qx-verify — 在宣称完成前运行完整验证
+2. /qx-finishing — 合并、PR 或保留分支
 ```
 
-## --loop Mode (Persistent Execution)
+## --loop 模式（持久化执行）
 
-When invoked with `--loop`:
+使用 `--loop` 调用时：
 
 ```
 /qx-exec --loop "docs/changes/feature/plan.md"
 ```
 
-**Behavior:**
-- Creates a state file at `.claude/qx/state/exec.json`
-- Works continuously until all tasks are done or blocked
-- If session ends, next session can resume from state file
-- Stop with `/qx-stop`
+**行为：**
+- 在 `.claude/qx/state/exec.json` 创建状态文件
+- 持续工作直到所有任务完成或被阻塞
+- 如果会话结束，下次会话可从状态文件恢复
+- 使用 `/qx-stop` 停止
 
-**State file format:**
+**状态文件格式：**
 ```json
 {
   "active": true,
@@ -394,113 +394,113 @@ When invoked with `--loop`:
 }
 ```
 
-> **Note:** The `--loop` persistent mode requires the `qx-loop-hook` to be configured. Without the hook, `--loop` falls back to single-session execution.
+> **注意：** `--loop` 持久化模式需要配置 `qx-loop-hook`。没有 hook 时，`--loop` 降级为单会话执行。
 
-## --worktree Mode (Isolated Execution)
+## --worktree 模式（隔离执行）
 
-When invoked with `--worktree`:
+使用 `--worktree` 调用时：
 
 ```
 /qx-exec --worktree "docs/changes/feature/plan.md"
 ```
 
-**Behavior:**
-- Before executing tasks, creates an isolated git worktree via `EnterWorktree`
-- All implementer sub-agents work in the worktree (no changes to main workspace)
-- On completion, user chooses to merge or discard via `/qx-finishing`
+**行为：**
+- 执行任务前，通过 `EnterWorktree` 创建隔离的 git worktree
+- 所有实现者子 Agent 在 worktree 中工作（不影响主工作区）
+- 完成后，用户通过 `/qx-finishing` 选择合并或丢弃
 
-**When to use:**
-- Large or risky changes that might break the main workspace
-- Experimental features you might want to discard
-- Parallel development: main workspace stays clean for other work
+**何时使用：**
+- 可能破坏主工作区的大型或高风险变更
+- 可能想要丢弃的实验性功能
+- 并行开发：主工作区保持干净以进行其他工作
 
-**When NOT to use:**
-- Small, safe changes (worktree overhead not worth it)
-- Quick fixes that you want applied immediately
+**何时不使用：**
+- 小型、安全的变更（worktree 开销不值得）
+- 想要立即应用的快速修复
 
-**Agent isolation:** Individual implementer sub-agents can also use `isolation: "worktree"` for per-task isolation. This is heavier but prevents tasks from interfering with each other. Use when tasks modify overlapping files.
+**Agent 隔离：** 单个实现者子 Agent 也可以使用 `isolation: "worktree"` 进行逐任务隔离。这更重但能防止任务间相互干扰。当任务修改重叠文件时使用。
 
-## Parallel vs Sequential Execution
+## 并行 vs 顺序执行
 
-**Default: Sequential** — One task at a time, in plan order.
+**默认：顺序执行** — 按计划顺序一次一个任务。
 
-**When to parallelize:**
-- Plan explicitly marks tasks as parallelizable
-- Tasks have no shared files or dependencies
-- Use `Agent` tool with `run_in_background: true` for parallel dispatch
-- Consider `isolation: "worktree"` for parallel tasks that might conflict
+**何时并行化：**
+- 计划明确标记任务可并行
+- 任务没有共享文件或依赖
+- 使用 `Agent` 工具的 `run_in_background: true` 进行并行分派
+- 对可能冲突的并行任务考虑 `isolation: "worktree"`
 
-**When NOT to parallelize:**
-- Tasks modify the same files
-- Later tasks depend on earlier task output
-- Task order matters for integration
+**何时不并行化：**
+- 任务修改相同文件
+- 后续任务依赖前序任务的输出
+- 任务顺序对集成有影响
 
-## Error Handling
+## 错误处理
 
-| Situation | Action |
-|-----------|--------|
-| Implementer fails a task | Dispatch fix agent with error context |
-| Spec review fails 3 times | Stop, report to user, ask for plan clarification |
-| Quality review finds Critical issues | Must fix before proceeding |
-| Build/test fails after task | Investigate before next task |
-| Blocked on unclear requirement | Stop, ask user, resume after answer |
+| 情况 | 处理方式 |
+|------|----------|
+| 实现者任务失败 | 用错误上下文分派修复 Agent |
+| 规格审查连续失败 3 次 | 停止，报告给用户，请求计划澄清 |
+| 质量审查发现 Critical 问题 | 必须修复后才能继续 |
+| 任务后构建/测试失败 | 在下一个任务前调查 |
+| 被不清楚的需求阻塞 | 停止，询问用户，回答后恢复 |
 
-## Backward Compatibility
+## 向后兼容
 
-Plans created before this context-injection update may lack `**Context:**` blocks or header `**Rules:**` fields. Handle gracefully:
+在此上下文注入更新之前创建的计划可能缺少 `**Context:**` 块或头部 `**Rules:**` 字段。优雅地处理：
 
-**If a task lacks `**Context:**` block:**
-- `Depends`: Infer from task ordering (assume sequential dependency on the previous task)
-- `Reads`: Extract from `**Files:** Modify:` entries (if task modifies existing files, pre-read them)
-- `Why`: Use the task title as fallback design intent
+**如果任务缺少 `**Context:**` 块：**
+- `Depends`：从任务顺序推断（假设对前一个任务有顺序依赖）
+- `Reads`：从 `**Files:** Modify:` 条目提取（如果任务修改现有文件，预读它们）
+- `Why`：使用任务标题作为降级的设计意图
 
-**If plan header lacks `**Rules:**`:**
-- Always include CLAUDE.md analyzer rules summary (8 rules, ~15 lines — always safe)
-- Do NOT bulk-inject all 9 project-rules files (664 lines total — too large)
-- If the task text mentions specific patterns (e.g., "Component", "Proto", "async"), try to infer the relevant rules
+**如果计划头部缺少 `**Rules:**`：**
+- 始终包含 CLAUDE.md 分析器规则摘要（8 条规则，约 15 行 — 始终安全）
+- 不要批量注入所有 9 个 project-rules 文件（共 664 行 — 太大）
+- 如果任务文本提到特定模式（如 "Component"、"Proto"、"async"），尝试推断相关规则
 
-**If plan header lacks `**Design Ref:**`:**
-- In Change Mode: check if `docs/changes/<name>/design.md` exists and read it
-- In Quick Mode: omit design context
+**如果计划头部缺少 `**Design Ref:**`：**
+- Change Mode：检查 `docs/changes/<name>/design.md` 是否存在并读取
+- Quick Mode：省略设计上下文
 
-## Key Principles
+## 关键原则
 
-- **Pre-load, don't lazy-load** — Orchestrator reads and injects all context; sub-agents never need to "go read X"
-- **Fresh agent per task** — No context pollution between tasks
-- **Structured output** — Implementer returns parseable output for dependency chain
-- **TDD always** — Red → Green → Refactor for every task
-- **Two-stage review** — Spec compliance first, then code quality
-- **Checkpoint progress** — Update TodoWrite + plan file after each task
-- **Stop when blocked** — Don't guess, ask
-- **Resume gracefully** — Change Mode checkboxes enable cross-session resume
+- **预加载，而非延迟加载** — 编排器读取并注入所有上下文；子 Agent 永远不需要"去读 X"
+- **每个任务一个全新 Agent** — 任务间无上下文污染
+- **结构化输出** — 实现者返回可解析的输出用于依赖链
+- **始终 TDD** — 每个任务都是 Red → Green → Refactor
+- **两阶段审查** — 先规格合规，再代码质量
+- **检查点进度** — 每个任务后更新 TodoWrite + 计划文件
+- **阻塞时停止** — 不要猜测，去问
+- **优雅恢复** — Change Mode 复选框支持跨会话恢复
 
-## Red Flags
+## 危险信号
 
-**Never:**
-- Tell sub-agent to "read CLAUDE.md yourself" — inject rules into prompt instead
-- Skip spec review ("looks good enough")
-- Skip code quality review ("we're in a hurry")
-- Dispatch multiple implementers to the same files in parallel
-- Proceed after a failed review without fixing issues
-- Start implementation on the main branch without user consent
-- Provide only partial task context to implementer (give full text)
+**绝不：**
+- 告诉子 Agent "自己去读 CLAUDE.md" — 将规则注入到 prompt 中
+- 跳过规格审查（"看起来差不多了"）
+- 跳过代码质量审查（"我们赶时间"）
+- 将多个实现者并行分派到相同文件
+- 在审查失败后不修复就继续
+- 未经用户同意在主分支上开始实现
+- 只提供部分任务上下文给实现者（给出完整文本）
 
-**Always:**
-- Pre-read and inject all necessary context into sub-agent prompts
-- Give implementer the FULL task text from the plan
-- Include framework rules inline (from static_context)
-- Include dependent task outputs for tasks with Depends
-- Run reviews in order: spec first, then quality
-- Fix and re-review (don't skip the re-review loop)
-- Track progress in both TodoWrite and plan file (Change Mode)
-- Parse implementer output into task_outputs for dependency chain
-- Offer `/qx-finishing` when all tasks are done
+**始终：**
+- 预读并将所有必要上下文注入子 Agent 的 prompt
+- 给实现者计划中的完整任务文本
+- 内联包含框架规则（来自 static_context）
+- 对有 Depends 的任务包含依赖任务的输出
+- 按顺序运行审查：先规格，再质量
+- 修复后重新审查（不要跳过重新审查循环）
+- 在 TodoWrite 和计划文件中双重跟踪进度（Change Mode）
+- 将实现者输出解析到 task_outputs 中用于依赖链
+- 所有任务完成时提供 `/qx-finishing` 选项
 
-## Related Skills
+## 相关 Skills
 
-- **qx-writing-plans** — Creates the plans this skill executes
-- **qx-tdd** — TDD discipline that implementer agents follow
-- **qx-code-review** — Review methodology used by reviewer agents
-- **qx-verification** — Full verification after all tasks complete
-- **qx-finishing** — Branch completion after execution is done
-- **qx-managing-changes** — Change lifecycle that wraps plan execution
+- **qx-writing-plans** — 创建本 Skill 执行的计划
+- **qx-tdd** — 实现者 Agent 遵循的 TDD 纪律
+- **qx-code-review** — 审查员 Agent 使用的审查方法论
+- **qx-verification** — 所有任务完成后的完整验证
+- **qx-finishing** — 执行完成后的分支收尾
+- **qx-managing-changes** — 包装计划执行的变更生命周期

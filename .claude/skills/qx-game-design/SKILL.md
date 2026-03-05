@@ -1,189 +1,189 @@
 ---
 name: qx-game-design
-description: "Use when creating or editing Game Design Documents (GDD) or narrative design docs. Facilitates collaborative step-by-step game design through structured discovery."
+description: "用于创建或编辑游戏设计文档（GDD）或叙事设计文档。通过结构化探索推动协作式逐步游戏设计。"
 ---
 
-# Game Design Document Creation
+# 游戏设计文档创建
 
-## Overview
+## 概述
 
-Create comprehensive Game Design Documents through collaborative step-by-step discovery. You are a veteran game designer facilitator working as an equal partner with the user — they bring game vision, you bring structured design thinking.
+通过协作式逐步探索创建全面的游戏设计文档（GDD）。你是一位资深游戏设计引导者，与用户作为平等伙伴协作 — 他们带来游戏愿景，你带来结构化的设计思维。
 
-**Core principle:** Collaborative discovery, not content generation. Ask, don't assume.
+**核心原则：** 协作式探索，而非内容生成。主动提问，不要假设。
 
-**Announce at start:** "Using qx-game-design to create/edit the game design document."
+**开始时宣告：** "正在使用 qx-game-design 来创建/编辑游戏设计文档。"
 
-## When to Use
+## 适用场景
 
-- Creating a new GDD from scratch
-- Editing/expanding an existing GDD
-- Creating a narrative design document
-- Integrating brainstorm results into formal design
+- 从零开始创建新的 GDD
+- 编辑/扩展现有 GDD
+- 创建叙事设计文档
+- 将头脑风暴成果整合到正式设计中
 
-## Preflight
+## 预检
 
-Before starting, check for existing context:
-1. Check `docs/game-design/` for existing design documents
-2. Check for brainstorm output from `qx-brainstorm`
-3. Read CLAUDE.md for project architecture awareness
-4. Ask user what scope this GDD covers (full game? single system? expansion?)
+开始之前，检查现有上下文：
+1. 检查 `docs/game-design/` 中是否有现有设计文档
+2. 检查 `qx-brainstorm` 的头脑风暴输出
+3. 阅读 CLAUDE.md 了解项目架构
+4. 询问用户本次 GDD 的范围（整个游戏？单个系统？扩展内容？）
 
-## GDD Creation Process
+## GDD 创建流程
 
-### Phase 1: Vision & Context
+### 阶段 1：愿景与背景
 
-**Goal:** Establish the game's core identity.
+**目标：** 确立游戏的核心身份。
 
-**Collaborative questions (one at a time):**
-- What is this game in one sentence? (The "elevator pitch")
-- What existing games are closest to your vision? What's different?
-- Who is the target player? What are they looking for?
-- What is the core emotion you want players to feel?
+**协作提问（一次一个）：**
+- 用一句话描述这个游戏是什么？（"电梯演讲"）
+- 哪些现有游戏最接近你的愿景？有什么不同？
+- 目标玩家是谁？他们在寻找什么？
+- 你希望玩家感受到的核心情感是什么？
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Game Overview
-### Vision Statement
-### Target Audience
-### Reference Games & Differentiation
-### Core Pillars (3-5 design principles that guide all decisions)
+## 游戏概述
+### 愿景陈述
+### 目标受众
+### 参考游戏与差异化
+### 核心支柱（3-5 条指导所有决策的设计原则）
 ```
 
-**Present to user for approval before continuing.**
+**展示给用户审批后再继续。**
 
-### Phase 2: Core Gameplay
+### 阶段 2：核心玩法
 
-**Goal:** Define what players DO moment-to-moment.
+**目标：** 定义玩家每时每刻在做什么。
 
-**Collaborative questions:**
-- What is the core loop? (What do players repeat?)
-- What are the primary player verbs? (Move, attack, build, trade...)
-- How does the player interact with the world?
-- What makes the moment-to-moment gameplay fun?
+**协作提问：**
+- 核心循环是什么？（玩家重复做什么？）
+- 主要的玩家动词是什么？（移动、攻击、建造、交易……）
+- 玩家如何与世界互动？
+- 是什么让每一刻的玩法都有趣？
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Core Gameplay
-### Core Loop
-### Primary Mechanics
-### Player Controls & Interactions
-### Game Feel & Feedback
+## 核心玩法
+### 核心循环
+### 主要机制
+### 玩家操控与交互
+### 游戏手感与反馈
 ```
 
-### Phase 3: Systems Design
+### 阶段 3：系统设计
 
-**Goal:** Define interconnected game systems.
+**目标：** 定义相互关联的游戏系统。
 
-**For each major system, cover:**
-- Purpose: What player need does this serve?
-- Inputs/Outputs: What goes in, what comes out?
-- Interactions: How does this connect to other systems?
-- Progression: How does this evolve over play time?
+**对每个主要系统，覆盖以下内容：**
+- 目的：它满足了玩家的什么需求？
+- 输入/输出：什么进去，什么出来？
+- 交互：它如何与其他系统连接？
+- 进阶：它如何随游戏时间演进？
 
-**Common systems to consider:**
-- Combat / Interaction system
-- Progression / Leveling
-- Economy (resources, currency)
-- Inventory / Equipment
-- AI / NPC behavior
-- Social / Multiplayer
-- Save / Persistence
+**需要考虑的常见系统：**
+- 战斗/交互系统
+- 进度/等级
+- 经济（资源、货币）
+- 背包/装备
+- AI/NPC 行为
+- 社交/多人
+- 存档/持久化
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Game Systems
-### [System Name]
-#### Purpose
-#### Mechanics
-#### Interactions with Other Systems
-#### Progression
+## 游戏系统
+### [系统名称]
+#### 目的
+#### 机制
+#### 与其他系统的交互
+#### 进阶
 ```
 
-### Phase 4: Content & Progression
+### 阶段 4：内容与进度
 
-**Goal:** Define what content exists and how players access it.
+**目标：** 定义存在什么内容以及玩家如何获取。
 
-**Collaborative questions:**
-- How does the game world/content unlock?
-- What's the difficulty curve?
-- How long is a typical play session? Full playthrough?
-- What motivates players to keep playing?
+**协作提问：**
+- 游戏世界/内容如何解锁？
+- 难度曲线是怎样的？
+- 典型的游戏时长是多少？完整通关呢？
+- 什么驱动玩家持续游玩？
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Content & Progression
-### World Structure / Level Design
-### Progression System
-### Difficulty Curve
-### Content Matrix (what content at each stage)
-### Session Design (typical play session flow)
+## 内容与进度
+### 世界结构 / 关卡设计
+### 进度系统
+### 难度曲线
+### 内容矩阵（各阶段对应的内容）
+### 会话设计（典型游戏过程流程）
 ```
 
-### Phase 5: Narrative (if applicable)
+### 阶段 5：叙事（如适用）
 
-**Goal:** Define story, characters, and world-building.
+**目标：** 定义故事、角色和世界观。
 
-**Collaborative questions:**
-- What's the story in one paragraph?
-- Who are the key characters? What do they want?
-- How is story delivered? (Cutscenes, environmental, dialogue, gameplay?)
-- How much player agency in the story?
+**协作提问：**
+- 用一段话概述故事？
+- 关键角色是谁？他们想要什么？
+- 故事如何传递？（过场动画、环境叙事、对话、玩法？）
+- 玩家在故事中有多大的自主权？
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Narrative Design
-### Story Overview
-### Key Characters
-### Story Delivery Methods
-### Player Agency in Narrative
-### Environmental Storytelling
-### Dialogue System
+## 叙事设计
+### 故事概述
+### 关键角色
+### 故事传递方式
+### 玩家在叙事中的自主权
+### 环境叙事
+### 对话系统
 ```
 
-### Phase 6: Technical Flagging
+### 阶段 6：技术标记
 
-**Goal:** Identify technical concerns for programmer handoff.
+**目标：** 识别技术关注点以便交接给程序员。
 
-**DO NOT prescribe framework-specific solutions.** Instead, flag:
-- Which systems need server authority?
-- Which systems are performance-critical?
-- What data needs persistence?
-- What needs network synchronization?
-- What needs hot-update capability?
+**不要给出框架级别的具体方案。** 而是标记：
+- 哪些系统需要服务端权威？
+- 哪些系统对性能敏感？
+- 哪些数据需要持久化？
+- 哪些需要网络同步？
+- 哪些需要热更新能力？
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Technical Considerations
-### Server Authority Requirements
-### Performance-Critical Systems
-### Data Persistence Needs
-### Network Synchronization
-### Iteration/Hot-Update Priorities
+## 技术考量
+### 服务端权威需求
+### 性能敏感系统
+### 数据持久化需求
+### 网络同步
+### 迭代/热更新优先级
 ```
 
-> **Note:** Technical implementation details are resolved by the programmer role reading project documentation (CLAUDE.md), not embedded in the GDD.
+> **注意：** 技术实现细节由程序员角色阅读项目文档（CLAUDE.md）来解决，不应嵌入 GDD 中。
 
-### Phase 7: Scope & Prioritization
+### 阶段 7：范围与优先级
 
-**Goal:** Define what's in MVP vs future.
+**目标：** 定义 MVP（最小可行产品）与未来版本的内容。
 
-**Output section:**
+**输出章节：**
 ```markdown
-## Scope
-### MVP Features (must-have for first playable)
-### Phase 2 Features (post-MVP)
-### Nice-to-Have (if time allows)
-### Explicitly Out of Scope
+## 范围
+### MVP 功能（首个可玩版本必须包含的）
+### 第二阶段功能（MVP 之后）
+### 锦上添花（时间允许的话）
+### 明确不包含的内容
 ```
 
-## Document Output
+## 文档输出
 
-Save the complete GDD to: `docs/game-design/gdd.md`
+将完整的 GDD 保存到：`docs/game-design/gdd.md`
 
-For large GDDs, consider sharding:
+对于大型 GDD，考虑拆分：
 ```
 docs/game-design/gdd/
-├── index.md          (overview + links)
+├── index.md          （概述 + 链接）
 ├── core-gameplay.md
 ├── systems.md
 ├── content.md
@@ -191,24 +191,24 @@ docs/game-design/gdd/
 └── technical.md
 ```
 
-## After the GDD
+## GDD 完成后
 
-**Present transition options:**
-1. **Story breakdown:** Use `/qx-stories` to break GDD into Epics and Stories
-2. **Three-party review:** Use `/qx-review` for multi-perspective review
-3. **Technical design:** Hand off to programmer for system architecture
-4. **Prototype planning:** Use `qx-writing-plans` for rapid prototype plan
+**展示过渡选项：**
+1. **Story 拆分：** 使用 `/qx-stories` 将 GDD 拆分为 Epic 和 Story
+2. **三方评审：** 使用 `/qx-review` 进行多角度评审
+3. **技术设计：** 交接给程序员进行系统架构设计
+4. **原型规划：** 使用 `qx-writing-plans` 制定快速原型计划
 
-## Key Principles
+## 关键原则
 
-- **One section at a time** — Present each phase, get approval, then continue
-- **Collaborative, not generative** — Ask questions, don't fill in answers
-- **Player experience anchored** — Every system section links back to player feel
-- **Flag, don't solve** — Flag technical concerns, let programmers solve them
-- **Living document** — GDD evolves; mark sections as "Draft" vs "Approved"
+- **一次一节** — 展示每个阶段，获得批准后再继续
+- **协作而非生成** — 提问，不要自己填答案
+- **以玩家体验为锚点** — 每个系统章节都要关联到玩家感受
+- **标记而非解决** — 标记技术关注点，让程序员来解决
+- **活文档** — GDD 会持续演进；将章节标记为"草稿"或"已批准"
 
-## Related Skills
+## 相关 Skills
 
-- **qx-brainstorm** — For initial ideation before GDD creation
-- **qx-sprint** — For sprint planning after GDD is complete
-- **qx-writing-plans** — For implementation plan creation
+- **qx-brainstorm** — 用于 GDD 创建前的初始构思
+- **qx-sprint** — 用于 GDD 完成后的 Sprint 规划
+- **qx-writing-plans** — 用于创建实施计划

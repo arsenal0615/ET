@@ -1,224 +1,224 @@
 ---
 name: qx-code-review
-description: "Use when completing tasks, implementing major features, or before merging to verify work meets requirements. Dispatches multi-dimensional code review with project framework awareness."
+description: "在完成任务、实现重大功能或合并前使用，验证工作是否满足需求。调度多维度代码审查，具备项目框架感知能力。"
 ---
 
-# Code Review
+# 代码审查（Code Review）
 
-## Overview
+## 概述
 
-Dispatch code-reviewer subagent (and optionally security-reviewer) to catch issues before they cascade.
+调度 code-reviewer 子 Agent（以及可选的 security-reviewer）在问题扩散之前发现它们。
 
-**Core principle:** Review early, review often.
+**核心原则：** 早审查，勤审查。
 
-**Announce at start:** "Using qx-code-review to review the implementation."
+**启动时宣告：** "正在使用 qx-code-review 审查实现。"
 
-## When to Request Review
+## 何时请求审查
 
-**Mandatory:**
-- After completing a major feature or plan task group
-- Before merge to main branch
-- After completing a change (`/qx-change verify` triggers this)
+**必须：**
+- 完成重大功能或计划任务组后
+- 合并到主分支前
+- 完成变更后（`/qx-change verify` 会触发此操作）
 
-**Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
-- After each task in multi-agent execution
+**可选但有价值：**
+- 卡住时（换个视角）
+- 重构前（基线检查）
+- 修复复杂 Bug 后
+- 多 Agent 执行中每个任务完成后
 
-## Review Dimensions
+## 审查维度
 
-QX code review supports up to three review dimensions:
+QX 代码审查最多支持三个审查维度：
 
-| Dimension | Agent | When |
-|-----------|-------|------|
-| **Code Quality + Plan Alignment + Framework Compliance** | `code-reviewer` | Always (mandatory) |
-| **Security** | `security-reviewer` | When network/auth/input handling changed |
+| 维度 | Agent | 何时 |
+|------|-------|------|
+| **代码质量 + 计划对齐 + 框架合规** | `code-reviewer` | 始终（必须） |
+| **安全** | `security-reviewer` | 当网络/认证/输入处理发生变更时 |
 
-### Auto-Detection Rules
+### 自动检测规则
 
-**Framework Rule Review triggered when changes touch:**
-- Core framework patterns (read CLAUDE.md for project-specific patterns)
-- Data model definitions or component structures
-- System/logic classes
-- Message handlers or protocol files
-- Files in framework-specific directories
+**框架规则审查在以下变更时触发：**
+- 核心框架模式（阅读 CLAUDE.md 了解项目特定模式）
+- 数据模型定义或组件结构
+- 系统/逻辑类
+- 消息处理器或协议文件
+- 框架特定目录中的文件
 
-**Security Review triggered when changes touch:**
-- Network message handlers
-- Session management code
-- Inter-process or inter-service messaging
-- Input validation or serialization
-- Cross-boundary communication
+**安全审查在以下变更时触发：**
+- 网络消息处理器
+- 会话管理代码
+- 进程间或服务间通信
+- 输入验证或序列化
+- 跨边界通信
 
-## How to Request Review
+## 如何请求审查
 
-**1. Get git SHAs:**
+**1. 获取 git SHA：**
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or merge-base with main
+BASE_SHA=$(git rev-parse HEAD~1)  # 或与 main 的 merge-base
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-**2. Dispatch code-reviewer agent:**
+**2. 调度 code-reviewer Agent：**
 
-Use Agent tool with `subagent_type: "code-reviewer"`, providing:
-- What was implemented (description)
-- Plan or requirements reference
-- Git range (BASE_SHA..HEAD_SHA)
+使用 Agent 工具，`subagent_type: "code-reviewer"`，提供：
+- 实现了什么（描述）
+- 计划或需求引用
+- Git 范围（BASE_SHA..HEAD_SHA）
 
-**3. Optionally dispatch security reviewer in parallel**
+**3. 可选地并行调度安全审查员**
 
-Use Agent tool with `subagent_type: "security-reviewer"` when security-sensitive code was changed
+当安全敏感代码发生变更时，使用 Agent 工具，`subagent_type: "security-reviewer"`
 
-**4. Act on feedback:**
-- Fix **Critical** issues immediately
-- Fix **Important** issues before proceeding
-- Note **Suggestion** issues for later
-- Push back if reviewer is wrong (with reasoning)
+**4. 根据反馈采取行动：**
+- 立即修复 **Critical（严重）** 问题
+- 在继续之前修复 **Important（重要）** 问题
+- 记录 **Suggestion（建议）** 问题留待后续处理
+- 如果审查员判断有误，用理由反驳
 
-## Code Review Template
+## 代码审查模板
 
-When dispatching the code-reviewer agent, provide this context:
-
-```
-You are reviewing code changes for production readiness.
-
-**What was implemented:** {DESCRIPTION}
-**Requirements/Plan:** {PLAN_REFERENCE}
-**Git range:** {BASE_SHA}..{HEAD_SHA}
-
-IMPORTANT: Read the project's CLAUDE.md for framework-specific rules and conventions.
-
-Review the git diff and check:
-
-## Review Checklist
-
-### Code Quality
-- Clean separation of concerns?
-- Proper error handling?
-- Type safety?
-- DRY principle followed?
-- Edge cases handled?
-
-### Framework Compliance
-- Read CLAUDE.md for project-specific rules
-- All framework coding conventions followed?
-- Correct file/module placement per project architecture?
-- Required attributes/annotations present?
-- Build/compilation verification commands run?
-
-### Architecture
-- Sound design decisions?
-- Scalability considerations?
-- Performance implications?
-- Concurrency model appropriate?
-
-### Testing
-- Tests actually test logic (not mocks)?
-- Edge cases covered?
-- All tests passing?
-
-### Requirements
-- All plan requirements met?
-- Implementation matches spec?
-- No scope creep?
-- Code generation steps run if applicable?
-
-## Output Format
-
-### Strengths
-[What's well done? Be specific with file:line references.]
-
-### Issues
-
-#### Critical (Must Fix)
-[Bugs, security issues, data loss risks, broken functionality, framework rule violations]
-
-#### Important (Should Fix)
-[Architecture problems, missing features, poor error handling, test gaps]
-
-#### Suggestion (Nice to Have)
-[Code style, optimization, documentation improvements]
-
-**For each issue:**
-- File:line reference
-- What's wrong
-- Why it matters
-- How to fix (if not obvious)
-
-### Assessment
-**Ready to merge?** [Yes / No / With fixes]
-**Reasoning:** [1-2 sentences]
-```
-
-## Issue Severity Guide
-
-| Severity | Examples | Action |
-|----------|----------|--------|
-| **Critical** | Framework rule violations, security holes, data loss risks, broken functionality | Must fix before proceeding |
-| **Important** | Missing error handling, test gaps, wrong module placement, architectural issues | Should fix before merge |
-| **Suggestion** | Naming convention, code organization, documentation | Track for later |
-
-## Example Workflow
+调度 code-reviewer Agent 时，提供以下上下文：
 
 ```
-[Just completed Task 2: Add BuffComponent System]
+你正在审查代码变更以确保生产就绪。
 
-You: Let me request code review.
+**实现内容:** {DESCRIPTION}
+**需求/计划:** {PLAN_REFERENCE}
+**Git 范围:** {BASE_SHA}..{HEAD_SHA}
+
+重要: 阅读项目的 CLAUDE.md 了解框架特定的规则和约定。
+
+审查 git diff 并检查：
+
+## 审查清单
+
+### 代码质量
+- 关注点分离是否清晰？
+- 错误处理是否恰当？
+- 类型安全？
+- 是否遵循 DRY（不重复）原则？
+- 边界情况是否处理？
+
+### 框架合规
+- 阅读 CLAUDE.md 了解项目特定规则
+- 是否遵循所有框架编码约定？
+- 文件/模块放置是否符合项目架构？
+- 是否有必需的属性/注解？
+- 是否运行了构建/编译验证命令？
+
+### 架构
+- 设计决策是否合理？
+- 是否考虑了可扩展性？
+- 性能影响如何？
+- 并发模型是否合适？
+
+### 测试
+- 测试是否真正测试了逻辑（而非只是 mock）？
+- 是否覆盖了边界情况？
+- 所有测试是否通过？
+
+### 需求
+- 是否满足所有计划需求？
+- 实现是否匹配规格？
+- 是否有范围蔓延？
+- 如适用，是否运行了代码生成步骤？
+
+## 输出格式
+
+### 优点
+[哪些做得好？用 file:line 引用具体说明。]
+
+### 问题
+
+#### Critical（严重 - 必须修复）
+[Bug、安全问题、数据丢失风险、功能损坏、框架规则违反]
+
+#### Important（重要 - 应当修复）
+[架构问题、缺失功能、错误处理不当、测试缺口]
+
+#### Suggestion（建议 - 最好能改）
+[代码风格、优化、文档改进]
+
+**每个问题包含：**
+- File:line 引用
+- 问题所在
+- 为何重要
+- 如何修复（如果不明显）
+
+### 评估
+**是否可以合并？** [是 / 否 / 修复后可以]
+**理由：** [1-2 句话]
+```
+
+## 问题严重级别指南
+
+| 严重级别 | 示例 | 处理方式 |
+|----------|------|----------|
+| **Critical** | 框架规则违反、安全漏洞、数据丢失风险、功能损坏 | 必须在继续之前修复 |
+| **Important** | 缺少错误处理、测试缺口、模块放置错误、架构问题 | 应在合并前修复 |
+| **Suggestion** | 命名约定、代码组织、文档 | 记录留待后续 |
+
+## 工作流示例
+
+```
+[刚完成任务 2: 添加 BuffComponent System]
+
+你: 让我请求代码审查。
 
 BASE_SHA=$(git merge-base HEAD main)
 HEAD_SHA=$(git rev-parse HEAD)
 
-[Dispatch code-reviewer agent]
-  Description: BuffComponent with add/remove/query and duration timer
-  Plan: docs/changes/buff-system/plan.md, Task 2
-  Range: a7981ec..3df7661
+[调度 code-reviewer Agent]
+  描述: BuffComponent，含添加/移除/查询和持续时间计时器
+  计划: docs/changes/buff-system/plan.md, Task 2
+  范围: a7981ec..3df7661
 
-[code-reviewer returns]:
-  Strengths: Clean separation of data and logic
-  Framework Compliance: All framework rules compliant
-  Issues:
-    Important: Destroy handler doesn't cancel active timers
-    Suggestion: Consider using existing numeric system for stat modifications
-    Suggestion: Consider adding lifecycle method annotations
-  Assessment: Ready with fixes
+[code-reviewer 返回]:
+  优点: 数据和逻辑分离清晰
+  框架合规: 所有框架规则均符合
+  问题:
+    Important: Destroy 处理器未取消活跃计时器
+    Suggestion: 考虑使用现有 numeric 系统进行属性修改
+    Suggestion: 考虑添加生命周期方法注解
+  评估: 修复后可合并
 
-You: [Fix timer cleanup in Destroy]
-[Continue to Task 3]
+你: [修复 Destroy 中的计时器清理]
+[继续任务 3]
 ```
 
-## Integration with Workflows
+## 与工作流的集成
 
-**Multi-Agent Execution (`/qx-exec`):**
-- Review after EACH task group
-- Catch issues before they compound
-- Fix before moving to next group
+**多 Agent 执行（`/qx-exec`）：**
+- 每个任务组后审查
+- 在问题复合之前发现它们
+- 在进入下一组之前修复
 
-**Change Lifecycle (`/qx-change verify`):**
-- Full three-dimension review
-- Part of verification phase
+**变更生命周期（`/qx-change verify`）：**
+- 完整的三维度审查
+- 作为验证阶段的一部分
 
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
+**临时开发：**
+- 合并前审查
+- 卡住时审查
 
-## Red Flags
+## 危险信号
 
-**Never:**
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
-- Argue with valid technical feedback
-- Skip framework rule review when core framework code changed
+**绝不：**
+- 因为"很简单"就跳过审查
+- 忽视 Critical 问题
+- 在 Important 问题未修复的情况下继续
+- 与合理的技术反馈争论
+- 在核心框架代码变更时跳过框架规则审查
 
-**If reviewer is wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
+**如果审查员判断有误：**
+- 用技术理由反驳
+- 展示证明其有效的代码/测试
+- 请求澄清
 
-## Related Skills
+## 相关 Skills
 
-- **qx-verification** — Verification before claiming completion
-- **qx-managing-changes** — Change lifecycle (verify phase triggers review)
-- **qx-debugging** — When review reveals bugs needing investigation
-- **qx-tdd** — For writing tests to cover gaps found in review
+- **qx-verification** — 在宣称完成前的验证
+- **qx-managing-changes** — 变更生命周期（验证阶段触发审查）
+- **qx-debugging** — 当审查发现需要调查的 Bug 时
+- **qx-tdd** — 编写测试以覆盖审查中发现的缺口

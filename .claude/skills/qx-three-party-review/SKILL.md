@@ -1,73 +1,73 @@
 ---
 name: qx-three-party-review
-description: "Use when a design document, GDD, proposal, or plan needs multi-perspective review before proceeding. Orchestrates a structured review with 3 role-based reviewers providing diverse expert feedback."
+description: "在设计文档、GDD、提案或计划需要多角度评审后再继续时使用。编排结构化评审，由 3 个基于角色的评审者提供多元化专家反馈。"
 ---
 
 # 开三方评审（Three-Party Review）
 
-## Overview
+## 概述
 
-Orchestrate a structured multi-perspective review of design documents, proposals, or plans. Three role-based reviewers each bring a different lens — strategic, technical, and adversarial — to surface blind spots before committing to implementation.
+编排对设计文档、提案或计划的结构化多角度评审。三个基于角色的评审者各自带来不同的视角 -- 战略、技术和对抗 -- 在进入实现之前暴露盲点。
 
-**Core principle:** Three lenses catch what one misses. Strategic + Technical + Adversarial = comprehensive review.
+**核心原则：** 三个视角能发现一个视角遗漏的问题。战略 + 技术 + 对抗 = 全面评审。
 
-**Announce at start:** "Using qx-three-party-review to conduct a three-party review of [document]."
+**启动时宣布：** "正在使用 qx-three-party-review 对 [文档] 进行三方评审。"
 
-## When to Use
+## 适用场景
 
-- GDD or feature design is complete and needs validation before story breakdown
-- Technical proposal or spec needs cross-role review
-- UX design needs feedback from non-UX perspectives
-- Any significant document before it becomes the basis for implementation work
-- Sprint plan needs validation before commitment
+- GDD 或功能设计已完成，需要在 Story 拆分前进行验证
+- 技术提案或规格需要跨角色评审
+- UX 设计需要非 UX 角度的反馈
+- 任何重要文档在成为实现基础之前
+- Sprint 计划需要在承诺前进行验证
 
-## Preflight
+## 前置条件
 
-1. Identify the document to review (must exist as a file)
-2. Read the document fully
-3. Determine the document type to select appropriate reviewer perspectives
+1. 确定待评审的文档（必须作为文件存在）
+2. 完整阅读文档
+3. 根据文档类型选择适当的评审者视角
 
-## The Process
+## 流程
 
-### Step 1: Select Three Reviewers
+### 步骤 1：选择三位评审者
 
-Based on document type, select 3 reviewers from the QX role pool:
+根据文档类型，从 QX 角色池中选择 3 位评审者：
 
-**For Game Design Documents (GDD):**
+**游戏设计文档（GDD）：**
 
-| Reviewer | Role | Lens |
-|----------|------|------|
-| **Strategic** | game-designer | Player experience, market fit, fun factor |
-| **Technical** | programmer | Feasibility, performance, architecture implications |
-| **Adversarial** | qa-tester | Edge cases, exploits, what could go wrong |
+| 评审者 | 角色 | 视角 |
+|--------|------|------|
+| **战略** | game-designer | 玩家体验、市场契合度、趣味性 |
+| **技术** | programmer | 可行性、性能、架构影响 |
+| **对抗** | qa-tester | 边界情况、可利用漏洞、可能出错的地方 |
 
-**For Technical Proposals / Specs:**
+**技术提案/规格：**
 
-| Reviewer | Role | Lens |
-|----------|------|------|
-| **Strategic** | game-designer | Does this serve the game vision? |
-| **Technical** | programmer | Architecture, patterns, maintainability |
-| **Adversarial** | qa-tester | Testability, failure modes, missing requirements |
+| 评审者 | 角色 | 视角 |
+|--------|------|------|
+| **战略** | game-designer | 这是否服务于游戏愿景？ |
+| **技术** | programmer | 架构、模式、可维护性 |
+| **对抗** | qa-tester | 可测试性、失败模式、遗漏的需求 |
 
-**For UX Design:**
+**UX 设计：**
 
-| Reviewer | Role | Lens |
-|----------|------|------|
-| **Strategic** | game-designer | Player needs, game flow impact |
-| **Technical** | programmer | Implementation feasibility, platform constraints |
-| **User Advocate** | artist-ux | Accessibility, consistency, interaction quality |
+| 评审者 | 角色 | 视角 |
+|--------|------|------|
+| **战略** | game-designer | 玩家需求、游戏流程影响 |
+| **技术** | programmer | 实现可行性、平台约束 |
+| **用户代言** | artist-ux | 无障碍性、一致性、交互质量 |
 
-**For Sprint Plans:**
+**Sprint 计划：**
 
-| Reviewer | Role | Lens |
-|----------|------|------|
-| **Strategic** | game-designer | Priority alignment with game vision |
-| **Technical** | programmer | Estimate accuracy, dependency risks |
-| **Quality** | qa-tester | Test coverage gaps, risk areas |
+| 评审者 | 角色 | 视角 |
+|--------|------|------|
+| **战略** | game-designer | 优先级是否与游戏愿景对齐 |
+| **技术** | programmer | 估算准确性、依赖风险 |
+| **质量** | qa-tester | 测试覆盖缺口、风险领域 |
 
-### Step 2: Dispatch Reviewers
+### 步骤 2：分派评审者
 
-Dispatch 3 reviewer sub-agents in parallel using the Agent tool:
+使用 Agent 工具并行分派 3 个评审子 Agent：
 
 ```
 For each reviewer:
@@ -97,106 +97,106 @@ For each reviewer:
   """)
 ```
 
-> **Note:** Use the QX role Agents (game-designer, programmer, artist-ux, qa-tester) as reviewer types. These agents have their respective domain knowledge loaded.
+> **注意：** 使用 QX 角色 Agent（game-designer、programmer、artist-ux、qa-tester）作为评审者类型。这些 Agent 已加载了各自领域的知识。
 
-### Step 3: Synthesize Reviews
+### 步骤 3：综合评审意见
 
-After all 3 reviewers return, synthesize their findings:
+3 位评审者全部返回后，综合其发现：
 
 ```markdown
-## Three-Party Review Summary
+## 三方评审总结
 
-**Document:** [name]
-**Date:** [date]
-**Reviewers:** [3 names with roles]
+**文档：** [名称]
+**日期：** [日期]
+**评审者：** [3 位评审者姓名及角色]
 
-### Consensus Verdict
+### 共识结论
 [APPROVE / APPROVE WITH CONDITIONS / REQUEST CHANGES]
 
-### Critical Issues (must fix)
-1. [Issue] — raised by [reviewer]
+### 关键问题（必须修复）
+1. [问题] -- 由 [评审者] 提出
 2. ...
 
-### Important Issues (should address)
-1. [Issue] — raised by [reviewer]
+### 重要问题（应当解决）
+1. [问题] -- 由 [评审者] 提出
 2. ...
 
-### Suggestions
-1. [Suggestion] — raised by [reviewer]
+### 建议
+1. [建议] -- 由 [评审者] 提出
 2. ...
 
-### Conflicting Opinions
-[Where reviewers disagree, note both positions]
+### 意见分歧
+[评审者之间意见不一致之处，记录双方立场]
 
-### Questions Requiring Author Response
-1. [Question] — from [reviewer]
+### 需要作者回应的问题
+1. [问题] -- 来自 [评审者]
 2. ...
 ```
 
-### Step 4: Present to Author
+### 步骤 4：向作者呈现
 
-Present the synthesized review to the user:
+向用户呈现综合评审结果：
 
 ```
-Three-Party Review Complete — [Document Name]
+三方评审完成 -- [文档名称]
 
-Verdict: [APPROVE / APPROVE WITH CONDITIONS / REQUEST CHANGES]
-  Critical: [N] issues
-  Important: [N] issues
-  Suggestions: [N]
+结论：[APPROVE / APPROVE WITH CONDITIONS / REQUEST CHANGES]
+  关键问题：[N] 个
+  重要问题：[N] 个
+  建议：[N] 个
 
-[If REQUEST CHANGES]: Must address [N] critical issues before proceeding.
-[If APPROVE WITH CONDITIONS]: Can proceed, but should address [N] important issues.
-[If APPROVE]: Ready to proceed to next phase.
+[如果 REQUEST CHANGES]：必须解决 [N] 个关键问题后才能继续。
+[如果 APPROVE WITH CONDITIONS]：可以继续，但应解决 [N] 个重要问题。
+[如果 APPROVE]：可以进入下一阶段。
 ```
 
-### Step 5: Save Review Record
+### 步骤 5：保存评审记录
 
-Save to: `docs/reviews/[document-name]-review-[date].md`
+保存到：`docs/reviews/[document-name]-review-[date].md`
 
-### Step 6: Offer Next Steps
+### 步骤 6：提供后续步骤
 
-Based on verdict:
+根据结论：
 
-**If APPROVE:**
-- "Ready for next phase. What would you like to do?"
-- Suggest appropriate next skill (e.g., `/qx-stories` for GDD, `/qx-plan` for specs)
+**如果 APPROVE：**
+- "可以进入下一阶段。你想做什么？"
+- 建议合适的下一个 Skill（如 GDD 后使用 `/qx-stories`，规格后使用 `/qx-plan`）
 
-**If APPROVE WITH CONDITIONS:**
-- "Can proceed, but recommend addressing [N] important issues first."
-- Offer: "Address issues now, or proceed and track as follow-up?"
+**如果 APPROVE WITH CONDITIONS：**
+- "可以继续，但建议先解决 [N] 个重要问题。"
+- 提供选择："现在解决问题，还是继续并作为后续跟进？"
 
-**If REQUEST CHANGES:**
-- "Must address [N] critical issues before proceeding."
-- List the critical issues
-- "Would you like to revise the document now?"
+**如果 REQUEST CHANGES：**
+- "必须解决 [N] 个关键问题后才能继续。"
+- 列出关键问题
+- "你想现在修改文档吗？"
 
-## Review Quality Standards
+## 评审质量标准
 
-**Good reviews:**
-- Cite specific sections of the document
-- Explain WHY something is a concern, not just WHAT
-- Propose alternatives when raising issues
-- Acknowledge strengths, not just problems
+**好的评审：**
+- 引用文档的具体章节
+- 解释为什么某事是问题，而非仅仅指出是什么
+- 在提出问题时提供替代方案
+- 肯定优点，而非只挑毛病
 
-**Bad reviews:**
-- Vague ("this needs work")
-- Only negative (no strengths noted)
-- Off-lens (technical reviewer critiquing art direction)
-- Rubber-stamping (APPROVE with no substance)
+**差的评审：**
+- 笼统（"这里需要改进"）
+- 只有批评（没有提到优点）
+- 偏离视角（技术评审者评论美术方向）
+- 走过场（APPROVE 但没有实质内容）
 
-## Key Principles
+## 核心原则
 
-- **Three perspectives always** — Never skip to fewer reviewers
-- **Parallel dispatch** — Run all 3 reviews concurrently for speed
-- **Severity classification** — Every concern gets Critical/Important/Suggestion
-- **Conflict is valuable** — Disagreements between reviewers surface important trade-offs
-- **Author decides** — Reviews inform, author makes final call
-- **Evidence-based** — Reviews cite specific document sections
+- **始终三个视角** -- 绝不减少评审者数量
+- **并行分派** -- 同时运行 3 个评审以提高速度
+- **严重性分类** -- 每个问题都标注 关键/重要/建议
+- **分歧是有价值的** -- 评审者之间的分歧能暴露重要的权衡
+- **作者决定** -- 评审提供信息，作者做最终决定
+- **基于证据** -- 评审引用文档的具体章节
 
-## Related Skills
+## 相关 Skills
 
-- **qx-game-design** — Creates GDDs that get reviewed
-- **qx-writing-plans** — Creates plans that get reviewed
-- **qx-ux-design** — Creates UX specs that get reviewed
-- **qx-code-review** — Code-level review (post-implementation)
+- **qx-game-design** -- 创建待评审的 GDD
+- **qx-writing-plans** -- 创建待评审的计划
+- **qx-ux-design** -- 创建待评审的 UX 规格
+- **qx-code-review** -- 代码层面的评审（实现后）

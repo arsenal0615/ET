@@ -1,203 +1,203 @@
 ---
 name: qx-system-analysis
-description: "Use when planning changes to understand which systems are affected. Scans codebase relationships to produce an impact analysis report."
+description: "在规划变更时使用，了解哪些系统受影响。扫描代码库关系，生成影响分析报告。"
 ---
 
 # 系统影响分析（System Impact Analysis）
 
-## Overview
+## 概述
 
-Analyze the impact of a proposed change by scanning codebase relationships — data models, logic modules, messages, events, and their connections. Produces a structured impact report that informs planning and reduces surprise breakage.
+通过扫描代码库关系 — 数据模型、逻辑模块、消息、事件及其连接 — 来分析拟议变更的影响。生成结构化影响报告，为规划提供信息并减少意外损坏。
 
-**Core principle:** Understand the blast radius before you start changing code.
+**核心原则：** 在开始修改代码之前，先理解爆炸半径。
 
-**Announce at start:** "Using qx-system-analysis to analyze the impact of [proposed change]."
+**开始时宣告：** "正在使用 qx-system-analysis 分析 [拟议变更] 的影响。"
 
-## When to Use
+## 何时使用
 
-- Before implementing a change that touches shared systems
-- When `/qx-review` identifies potential cross-system effects
-- When planning work on a system you're not fully familiar with
-- When a change involves modifying protocol messages, data model structures, or event flows
+- 在实现涉及共享系统的变更之前
+- 当 `/qx-review` 识别出潜在的跨系统影响时
+- 当规划一个你不完全熟悉的系统的工作时
+- 当变更涉及修改协议消息、数据模型结构或事件流时
 
-## Two-Layer Analysis Model
+## 两层分析模型
 
-QX uses a two-layer system analysis approach:
+QX 使用两层系统分析方法：
 
-### Layer 1: Persistent System Map
-**File:** `docs/system-map.md`
-**Granularity:** Mid-level (component/system groups)
-**Updated by:** `/qx-compound` after each completed change
+### 第一层：持久化系统图
+**文件：** `docs/system-map.md`
+**粒度：** 中等（Component/系统组）
+**更新者：** 每次变更完成后由 `/qx-compound` 更新
 
-The system map provides a quick overview of what exists and how systems connect. It's a living document maintained across the project lifetime.
+系统图提供了现有内容和系统连接方式的快速概览。它是在项目生命周期中持续维护的活文档。
 
-### Layer 2: On-Demand Impact Analysis (This Skill)
-**Granularity:** Fine-grained (specific files, fields, message chains)
-**Triggered by:** `/qx-impact` or called internally by other skills
-**Output:** One-time analysis report for a specific proposed change
+### 第二层：按需影响分析（本 Skill）
+**粒度：** 细粒度（具体文件、字段、消息链）
+**触发方式：** `/qx-impact` 或被其他 skills 内部调用
+**输出：** 针对特定拟议变更的一次性分析报告
 
-## The Process
+## 流程
 
-### Step 1: Define the Change Scope
+### 步骤 1：定义变更范围
 
-Ask the user (or read from change proposal):
-- What system or component is being changed?
-- What kind of change? (add/modify/remove data model, message, event, etc.)
-- What's the motivation? (helps identify what we need to protect)
+询问用户（或从变更提案中读取）：
+- 正在变更什么系统或组件？
+- 什么类型的变更？（新增/修改/删除数据模型、消息、事件等）
+- 动机是什么？（有助于识别我们需要保护什么）
 
-### Step 2: Read the System Map
+### 步骤 2：阅读系统图
 
-Read `docs/system-map.md` to understand known system relationships.
+阅读 `docs/system-map.md` 了解已知的系统关系。
 
-If the system map doesn't exist yet, note that and proceed with direct codebase scanning.
+如果系统图尚不存在，记录下来并直接进行代码库扫描。
 
-### Step 3: Read Project Rules
+### 步骤 3：阅读项目规则
 
-Read the project's CLAUDE.md and MEMORY.md to understand:
-- Framework-specific patterns and conventions
-- Key attributes/annotations to search for
-- Module/assembly organization
-- Code generation steps that may be affected
+阅读项目的 CLAUDE.md 和 MEMORY.md 了解：
+- 框架特定的模式和约定
+- 需要搜索的关键属性/注解
+- 模块/程序集组织
+- 可能受影响的代码生成步骤
 
-### Step 4: Scan Codebase Relationships
+### 步骤 4：扫描代码库关系
 
-Perform targeted scans based on what's being changed. Adapt the scan patterns to the project's framework (read CLAUDE.md for specifics):
+根据变更内容执行定向扫描。将扫描模式适配项目框架（阅读 CLAUDE.md 获取细节）：
 
-**If changing a data model/component:**
-1. Find ownership declarations — which parent entity owns it?
-2. Find all logic modules that reference this data model
-3. Find all creation/instantiation call sites
-4. Find all read/access call sites
-5. Find event handlers that reference this data model
+**如果变更数据模型/Component：**
+1. 查找所有权声明 — 哪个父 Entity 拥有它？
+2. 查找所有引用此数据模型的逻辑模块
+3. 查找所有创建/实例化调用点
+4. 查找所有读取/访问调用点
+5. 查找引用此数据模型的事件处理器
 
-**If changing a message/protocol:**
-1. Find the protocol definition
-2. Find all handler classes for this message
-3. Find all send/call sites
-4. Trace the message chain through system layers
-5. Find the response type if it's a request/response pair
+**如果变更消息/协议：**
+1. 查找协议定义
+2. 查找此消息的所有 Handler 类
+3. 查找所有发送/调用点
+4. 追踪消息链穿过系统层
+5. 如果是请求/响应对，查找响应类型
 
-**If changing an event:**
-1. Find the event definition
-2. Find all event handlers/listeners
-3. Find all event publish/dispatch sites
-4. Check which processes/threads this event operates in
+**如果变更事件：**
+1. 查找事件定义
+2. 查找所有事件处理器/监听器
+3. 查找所有事件发布/分发点
+4. 检查此事件在哪些进程/线程中运行
 
-**If changing entity/data structure (parent/child relationships):**
-1. Find ownership declarations
-2. Find creation/instantiation calls
-3. Find factory methods that construct this entity
-4. Check serialization implications
+**如果变更 Entity/数据结构（父子关系）：**
+1. 查找所有权声明
+2. 查找创建/实例化调用
+3. 查找构造此 Entity 的工厂方法
+4. 检查序列化影响
 
-**If changing a numeric/config attribute:**
-1. Find constant/type definitions
-2. Find all read/write usages for this attribute
-3. Find calculations that produce/consume this value
-4. Check display code that presents this value
+**如果变更数值/配置属性：**
+1. 查找常量/类型定义
+2. 查找此属性的所有读写用法
+3. 查找产生/消费此值的计算
+4. 检查展示此值的显示代码
 
-### Step 5: Classify Impact
+### 步骤 5：分类影响
 
-For each affected area, classify:
+对每个受影响区域进行分类：
 
-| Impact Level | Criteria |
-|-------------|----------|
-| **Direct** | Code that directly references the changed element |
-| **Indirect** | Code that depends on direct references (2nd degree) |
-| **Potential** | Code that shares the same system boundary (may be affected) |
+| 影响级别 | 标准 |
+|----------|------|
+| **直接** | 直接引用被变更元素的代码 |
+| **间接** | 依赖直接引用的代码（第二度） |
+| **潜在** | 共享同一系统边界的代码（可能受影响） |
 
-### Step 6: Generate Impact Report
+### 步骤 6：生成影响报告
 
 ```markdown
-# Impact Analysis: [Change Description]
+# 影响分析: [变更描述]
 
-## Change Summary
-- **Target:** [Component/Message/Event being changed]
-- **Type:** [Add/Modify/Remove]
-- **Motivation:** [Why this change]
+## 变更摘要
+- **目标:** [被变更的 Component/消息/事件]
+- **类型:** [新增/修改/删除]
+- **动机:** [为什么做此变更]
 
-## Direct Impact
-| File | Element | Impact |
-|------|---------|--------|
-| [path] | [class/method] | [what changes] |
+## 直接影响
+| 文件 | 元素 | 影响 |
+|------|------|------|
+| [路径] | [类/方法] | [变更内容] |
 
-## Indirect Impact
-| File | Element | Impact |
-|------|---------|--------|
-| [path] | [class/method] | [potential effect] |
+## 间接影响
+| 文件 | 元素 | 影响 |
+|------|------|------|
+| [路径] | [类/方法] | [潜在效果] |
 
-## Message Chain Impact
+## 消息链影响
 ```
-[Trace: layer-by-layer showing affected messages]
-```
-
-## Cross-System Dependencies
-- [System A] depends on [changed element] via [mechanism]
-- [System B] reads [changed data] for [purpose]
-
-## Risk Assessment
-| Risk | Level | Mitigation |
-|------|-------|-----------|
-| [risk description] | High/Medium/Low | [how to mitigate] |
-
-## Recommended Test Coverage
-- [ ] [Test scenario 1]
-- [ ] [Test scenario 2]
-
-## Files to Modify
-1. [file path] — [what to change]
-2. [file path] — [what to change]
+[追踪: 逐层展示受影响的消息]
 ```
 
-### Step 7: Present and Recommend
+## 跨系统依赖
+- [系统 A] 通过 [机制] 依赖 [被变更元素]
+- [系统 B] 为 [目的] 读取 [被变更数据]
 
-Present the analysis summary:
+## 风险评估
+| 风险 | 级别 | 缓解措施 |
+|------|------|----------|
+| [风险描述] | 高/中/低 | [如何缓解] |
+
+## 推荐测试覆盖
+- [ ] [测试场景 1]
+- [ ] [测试场景 2]
+
+## 需要修改的文件
+1. [文件路径] — [变更内容]
+2. [文件路径] — [变更内容]
+```
+
+### 步骤 7：呈现和建议
+
+呈现分析摘要：
 
 ```
-Impact Analysis Complete — [Change Description]
+影响分析完成 — [变更描述]
 
-Direct impact: [N] files
-Indirect impact: [N] files
-Risk level: [High/Medium/Low]
+直接影响: [N] 个文件
+间接影响: [N] 个文件
+风险级别: [高/中/低]
 
-Key risks:
-1. [Top risk]
-2. [Second risk]
+关键风险:
+1. [首要风险]
+2. [次要风险]
 
-Recommendation: [Proceed / Proceed with caution / Reconsider approach]
+建议: [继续 / 谨慎继续 / 重新考虑方案]
 ```
 
-Offer next steps:
-- "Proceed to implementation planning? (`/qx-plan`)"
-- "Want me to scan deeper on [specific area]?"
-- "Should I update the system map with these findings?"
+提供下一步选项：
+- "继续制定实施计划？（`/qx-plan`）"
+- "要我在 [特定区域] 深入扫描吗？"
+- "要用这些发现更新系统图吗？"
 
-## Scan Patterns Quick Reference
+## 扫描模式速查
 
-> **Note:** Read the project's CLAUDE.md for project-specific patterns, attribute names, and conventions. The patterns below are generic examples — adapt to your project's framework.
+> **注意：** 阅读项目的 CLAUDE.md 获取项目特定的模式、属性名称和约定。以下模式是通用示例 — 请适配你项目的框架。
 
-| Looking for | Generic Approach |
-|------------|-----------------|
-| Data model owners | Search for ownership/parent declaration attributes |
-| Child relationships | Search for child/containment declaration attributes |
-| Logic modules | Search for classes that reference the target type |
-| Data model usage | Search for creation and access calls on the target type |
-| Message handlers | Search for handler classes matching the message name |
-| Event handlers | Search for event listener/subscriber registrations |
-| Event publishers | Search for event publish/dispatch calls |
-| RPC callers | Search for remote call invocations with the request type |
-| Factory methods | Search for factory/creation patterns |
+| 查找目标 | 通用方法 |
+|----------|----------|
+| 数据模型所有者 | 搜索所有权/父级声明属性 |
+| 子级关系 | 搜索子级/包含声明属性 |
+| 逻辑模块 | 搜索引用目标类型的类 |
+| 数据模型用法 | 搜索目标类型的创建和访问调用 |
+| 消息处理器 | 搜索匹配消息名称的 Handler 类 |
+| 事件处理器 | 搜索事件监听器/订阅者注册 |
+| 事件发布者 | 搜索事件发布/分发调用 |
+| RPC 调用者 | 搜索使用请求类型的远程调用 |
+| 工厂方法 | 搜索工厂/创建模式 |
 
-## Key Principles
+## 核心原则
 
-- **Scan before you plan** — Impact analysis informs the implementation plan
-- **Breadth first, then depth** — Start with direct references, then trace outward
-- **Classify, don't just list** — Direct vs Indirect vs Potential matters
-- **Risk drives testing** — Higher impact areas need more test coverage
-- **Living knowledge** — Suggest system map updates for new discoveries
+- **先扫描再规划** — 影响分析为实施计划提供信息
+- **先广度后深度** — 从直接引用开始，然后向外追踪
+- **分类，而非仅列举** — 直接 vs 间接 vs 潜在的区分很重要
+- **风险驱动测试** — 影响越大的区域需要更多测试覆盖
+- **活的知识** — 为新发现建议更新系统图
 
-## Related Skills
+## 相关 Skills
 
-- **qx-exploring** — For open-ended codebase exploration
-- **qx-writing-plans** — Uses impact analysis to inform implementation plans
-- **qx-compound** — Updates the system map after changes are complete
-- **qx-three-party-review** — May trigger impact analysis during review
+- **qx-exploring** — 用于开放式代码库探索
+- **qx-writing-plans** — 使用影响分析来指导实施计划
+- **qx-compound** — 在变更完成后更新系统图
+- **qx-three-party-review** — 在评审过程中可能触发影响分析

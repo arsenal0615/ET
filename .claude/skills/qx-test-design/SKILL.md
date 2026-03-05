@@ -1,101 +1,101 @@
 ---
 name: qx-test-design
-description: "Use when creating test scenarios, test plans, or test design documents for game features. Produces prioritized test coverage based on risk assessment and player impact."
+description: "在为游戏功能创建测试场景、测试计划或测试设计文档时使用。基于风险评估和玩家影响产出优先级排序的测试覆盖方案。"
 ---
 
-# Game Test Design
+# 游戏测试设计
 
-## Overview
+## 概述
 
-Create comprehensive test scenarios for game features, covering gameplay mechanics, progression systems, multiplayer functionality, and platform requirements. Produces a prioritized test plan based on risk assessment and player impact.
+为游戏功能创建全面的测试场景，覆盖游戏机制、进度系统、多人功能和平台需求。基于风险评估和玩家影响产出优先级排序的测试计划。
 
-**Announce at start:** "Using qx-test-design to create the test design for [feature/sprint]."
+**启动时宣布：** "正在使用 qx-test-design 为 [功能/sprint] 创建测试设计。"
 
-## When to Use
+## 适用场景
 
-- New feature needs test coverage design
-- Sprint test planning
-- Creating test scenarios for a game system
-- Establishing test strategy for a major release
+- 新功能需要测试覆盖设计
+- Sprint 测试规划
+- 为游戏系统创建测试场景
+- 为重大发布制定测试策略
 
-## Preflight
+## 前置条件
 
-- Game design documentation available (GDD, feature specs)
-- Understanding of target platforms
-- Knowledge of core gameplay loop
+- 游戏设计文档可用（GDD、功能规格）
+- 了解目标平台
+- 了解核心游戏循环
 
-## Process
+## 流程
 
-### Step 1: Gather Context
+### 步骤 1：收集上下文
 
-1. **Read Game Design Documentation**
-   - Locate GDD or feature specs in `docs/game-design/`
-   - Identify core mechanics and features being tested
-   - Note target platforms
+1. **阅读游戏设计文档**
+   - 在 `docs/game-design/` 中定位 GDD 或功能规格
+   - 识别待测试的核心机制和功能
+   - 记录目标平台
 
-2. **Identify Critical Systems**
-   - Core gameplay loop
-   - Progression / save systems
-   - Multiplayer (if applicable)
-   - Monetization (if applicable)
+2. **识别关键系统**
+   - 核心游戏循环
+   - 进度/存档系统
+   - 多人功能（如适用）
+   - 商业化系统（如适用）
 
-3. **Assess Risk Areas**
-   - Player-facing features (highest priority)
-   - Data persistence (save/load)
-   - Platform requirements
-   - Performance-critical paths
+3. **评估风险领域**
+   - 玩家直接感知的功能（最高优先级）
+   - 数据持久化（存档/读档）
+   - 平台需求
+   - 性能关键路径
 
-### Step 2: Define Test Categories
+### 步骤 2：定义测试分类
 
-#### Core Gameplay Testing
+#### 核心玩法测试
 
-| Category | Focus | Priority |
-|----------|-------|----------|
-| Core Loop | Primary mechanic execution | P0 |
-| Combat/Interaction | Hit detection, feedback | P0 |
-| Movement | Physics, collision, feel | P0 |
-| UI/UX | Menu navigation, HUD | P1 |
-| Audio | Sound triggers, music | P2 |
+| 分类 | 关注点 | 优先级 |
+|------|--------|--------|
+| 核心循环 | 主要机制执行 | P0 |
+| 战斗/交互 | 命中检测、反馈 | P0 |
+| 移动 | 物理、碰撞、手感 | P0 |
+| UI/UX | 菜单导航、HUD | P1 |
+| 音频 | 音效触发、音乐 | P2 |
 
-#### Progression Testing
+#### 进度测试
 
-| Category | Focus | Priority |
-|----------|-------|----------|
-| Save/Load | Data persistence | P0 |
-| Unlocks | Content gating | P1 |
-| Economy | Currency, rewards | P1 |
-| Achievements | Trigger conditions | P2 |
+| 分类 | 关注点 | 优先级 |
+|------|--------|--------|
+| 存档/读档 | 数据持久化 | P0 |
+| 解锁 | 内容门控 | P1 |
+| 经济 | 货币、奖励 | P1 |
+| 成就 | 触发条件 | P2 |
 
-#### Multiplayer Testing (if applicable)
+#### 多人测试（如适用）
 
-| Category | Focus | Priority |
-|----------|-------|----------|
-| Connectivity | Join/leave handling | P0 |
-| Synchronization | State consistency | P0 |
-| Latency | Degraded network | P1 |
-| Matchmaking | Player grouping | P1 |
+| 分类 | 关注点 | 优先级 |
+|------|--------|--------|
+| 连接性 | 加入/退出处理 | P0 |
+| 同步 | 状态一致性 | P0 |
+| 延迟 | 弱网环境 | P1 |
+| 匹配 | 玩家分组 | P1 |
 
-#### Platform Testing
+#### 平台测试
 
-| Category | Focus | Priority |
-|----------|-------|----------|
-| Input | Controller/touch support | P0 |
-| Performance | FPS, loading times | P1 |
-| Accessibility | Assist features | P1 |
+| 分类 | 关注点 | 优先级 |
+|------|--------|--------|
+| 输入 | 手柄/触控支持 | P0 |
+| 性能 | 帧率、加载时间 | P1 |
+| 无障碍 | 辅助功能 | P1 |
 
-### Step 3: Create Test Scenarios
+### 步骤 3：创建测试场景
 
-**Scenario Format:**
+**场景格式：**
 ```
-SCENARIO: [Descriptive Name]
-  GIVEN [Initial state/preconditions]
-  WHEN [Action taken]
-  THEN [Expected outcome]
+SCENARIO: [描述性名称]
+  GIVEN [初始状态/前置条件]
+  WHEN [执行的操作]
+  THEN [预期结果]
   PRIORITY: P0/P1/P2/P3
   CATEGORY: [gameplay/progression/multiplayer/platform]
 ```
 
-**Example — Gameplay:**
+**示例 -- 玩法：**
 ```
 SCENARIO: Basic Attack Hits Enemy
   GIVEN player is within attack range of enemy
@@ -108,7 +108,7 @@ SCENARIO: Basic Attack Hits Enemy
   CATEGORY: gameplay
 ```
 
-**Example — Progression:**
+**示例 -- 进度：**
 ```
 SCENARIO: Save Preserves Player Progress
   GIVEN player has 500 gold and 3 items
@@ -119,7 +119,7 @@ SCENARIO: Save Preserves Player Progress
   CATEGORY: progression
 ```
 
-**Example — Multiplayer:**
+**示例 -- 多人：**
 ```
 SCENARIO: Gameplay Under High Latency
   GIVEN 2 players in session with 200ms latency
@@ -130,123 +130,123 @@ SCENARIO: Gameplay Under High Latency
   CATEGORY: multiplayer
 ```
 
-**E2E Journey Format:**
+**E2E（端到端）旅程格式：**
 ```
-E2E SCENARIO: [Player Journey Name]
-  GIVEN [Initial game state]
-  WHEN [Sequence of player actions]
-  THEN [Observable outcomes]
-  TIMEOUT: [Expected max duration in seconds]
+E2E SCENARIO: [玩家旅程名称]
+  GIVEN [初始游戏状态]
+  WHEN [玩家操作序列]
+  THEN [可观测结果]
+  TIMEOUT: [预期最大持续时间（秒）]
   PRIORITY: P0/P1
   CATEGORY: e2e
 ```
 
-### Step 4: Prioritize Coverage
+### 步骤 4：覆盖优先级排序
 
-**Risk Priority Matrix:**
+**风险优先级矩阵：**
 ```
-                    IMPACT
-                Low      High
+                    影响程度
+                低        高
             ┌─────────┬─────────┐
-      High  │   P2    │   P0    │
-LIKELIHOOD  ├─────────┼─────────┤
-      Low   │   P3    │   P1    │
+      高    │   P2    │   P0    │
+发生概率    ├─────────┼─────────┤
+      低    │   P3    │   P1    │
             └─────────┴─────────┘
 ```
 
-**Coverage Targets by Priority:**
+**按优先级的覆盖目标：**
 
-| Priority | Criteria | Unit | Integration | E2E | Manual |
-|----------|----------|------|-------------|-----|--------|
-| P0 | Ship blockers | 100% | 80% | Core flows | Smoke |
-| P1 | Major features | 90% | 70% | Happy paths | Full |
-| P2 | Secondary | 80% | 50% | - | Targeted |
-| P3 | Edge cases | 60% | - | - | As needed |
+| 优先级 | 标准 | 单元测试 | 集成测试 | E2E | 手动测试 |
+|--------|------|----------|----------|-----|----------|
+| P0 | 发布阻塞项 | 100% | 80% | 核心流程 | 冒烟测试 |
+| P1 | 主要功能 | 90% | 70% | 正常路径 | 完整测试 |
+| P2 | 次要功能 | 80% | 50% | - | 定向测试 |
+| P3 | 边界情况 | 60% | - | - | 按需测试 |
 
-### Step 5: Generate Test Design Document
+### 步骤 5：生成测试设计文档
 
-Save to: `docs/test-plans/[feature-name]-test-design.md`
+保存到：`docs/test-plans/[feature-name]-test-design.md`
 
 ```markdown
-# Game Test Design: [Feature/Sprint Name]
+# 游戏测试设计：[功能/Sprint 名称]
 
-## Overview
-- Feature description and core mechanics
-- Target platforms
-- Test scope (in scope / out of scope)
+## 概述
+- 功能描述和核心机制
+- 目标平台
+- 测试范围（包含/排除）
 
-## Risk Assessment
-| Area | Risk | Mitigation |
-|------|------|-----------|
-| [area] | [potential issue] | [test strategy] |
+## 风险评估
+| 领域 | 风险 | 缓解策略 |
+|------|------|----------|
+| [领域] | [潜在问题] | [测试策略] |
 
-## Test Scenarios
+## 测试场景
 
-### Core Gameplay Tests
-[SCENARIO blocks...]
+### 核心玩法测试
+[SCENARIO 块...]
 
-### Progression Tests
-[SCENARIO blocks...]
+### 进度测试
+[SCENARIO 块...]
 
-### Multiplayer Tests (if applicable)
-[SCENARIO blocks...]
+### 多人测试（如适用）
+[SCENARIO 块...]
 
-### Platform Tests
-[SCENARIO blocks...]
+### 平台测试
+[SCENARIO 块...]
 
-### E2E Journey Tests
-[SCENARIO blocks...]
+### E2E 旅程测试
+[SCENARIO 块...]
 
-## Coverage Matrix
-| Feature | P0 | P1 | P2 | P3 | Total |
-|---------|----|----|----|----|-------|
-| [feature] | N | N | N | N | N |
+## 覆盖矩阵
+| 功能 | P0 | P1 | P2 | P3 | 总计 |
+|------|----|----|----|----|------|
+| [功能] | N | N | N | N | N |
 
-## Automation Strategy
-### Recommended for Automation
-- [scenario] — Reason
+## 自动化策略
+### 建议自动化
+- [场景] -- 原因
 
-### Manual Testing Required
-- [scenario] — Reason (e.g., requires human judgment on "feel")
+### 需要手动测试
+- [场景] -- 原因（如：需要人工判断"手感"）
 
-## Playtesting Recommendations
-- Internal: [focus, participants, duration]
-- External: [focus, target audience, duration]
+## 玩家测试建议
+- 内部测试：[关注点、参与者、持续时间]
+- 外部测试：[关注点、目标受众、持续时间]
 
-## Next Steps
-1. [ ] Review test design with team
-2. [ ] Implement P0 automated tests
-3. [ ] Plan playtesting sessions
+## 后续步骤
+1. [ ] 与团队评审测试设计
+2. [ ] 实现 P0 自动化测试
+3. [ ] 规划玩家测试环节
 ```
 
-### Step 6: Report Summary
+### 步骤 6：报告总结
 
 ```
-Test Design Complete — [Feature Name]
+测试设计完成 -- [功能名称]
 
-Scenarios Created: [count]
-  P0 (Critical): [count]
-  P1 (High): [count]
-  P2 (Medium): [count]
-  P3 (Low): [count]
+已创建场景数：[数量]
+  P0（关键）：[数量]
+  P1（高）：[数量]
+  P2（中）：[数量]
+  P3（低）：[数量]
 
-Focus Areas: Core Gameplay, Progression, [Multiplayer], Platform
+关注领域：核心玩法、进度、[多人]、平台
 
-Next: Review with team → Implement P0 tests → Plan playtests
+下一步：与团队评审 → 实现 P0 测试 → 规划玩家测试
 ```
 
-## Key Principles
+## 核心原则
 
-- **Risk-based priority** — Test high-impact, high-probability scenarios first
-- **Player-facing focus** — Prioritize what players actually experience
-- **Automate the repetitive** — Manual for exploration, automation for regression
-- **Don't duplicate analyzers** — Know what your build system already catches
+- **基于风险排序** -- 优先测试高影响、高概率的场景
+- **聚焦玩家体验** -- 优先测试玩家实际感知到的内容
+- **自动化重复项** -- 探索性测试用手动，回归测试用自动化
+- **不重复分析器的工作** -- 了解构建系统已经捕获了哪些问题
 
-> **Note:** Read the project's CLAUDE.md to understand what static analysis and compile-time checks already exist. Don't write tests for things the compiler catches.
+> **注意：** 阅读项目的 CLAUDE.md，了解已有的静态分析和编译期检查。不要为编译器已能捕获的问题编写测试。
 
-## Related Skills
+## 相关 Skills
 
-- **qx-tdd** — For test-driven implementation of the scenarios
-- **qx-verification** — For verifying test results before claiming completion
-- **qx-game-design** — GDD provides the features to test
-- **qx-sprint** — Sprint context determines test scope
+- **qx-tdd** -- 用于测试驱动实现测试场景
+- **qx-verification** -- 用于在声称完成之前验证测试结果
+- **qx-game-design** -- GDD 提供待测试的功能
+- **qx-sprint** -- Sprint 上下文决定测试范围

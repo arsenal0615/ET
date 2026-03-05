@@ -1,201 +1,201 @@
 ---
 name: qx-verification
-description: "Use when about to claim work is complete, fixed, or passing, before committing or creating PRs. Requires running verification commands and confirming output before making any success claims. Evidence before assertions, always."
+description: "在声称工作已完成、已修复或已通过之前使用，在提交或创建 PR 之前使用。要求运行验证命令并确认输出后才能做出任何成功声明。证据先于断言，始终如此。"
 ---
 
-# Verification Before Completion
+# 完成前验证
 
-## Overview
+## 概述
 
-Claiming work is complete without verification is dishonesty, not efficiency.
+未经验证就声称工作完成，是不诚实，不是高效。
 
-**Core principle:** Evidence before claims, always.
+**核心原则：** 证据先于声明，始终如此。
 
-**Violating the letter of this rule is violating the spirit of this rule.**
+**违反此规则的字面要求即违反此规则的精神。**
 
-## The Iron Law
-
-```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
-```
-
-If you haven't run the verification command in this message, you cannot claim it passes.
-
-## The Gate Function
+## 铁律
 
 ```
-BEFORE claiming any status or expressing satisfaction:
-
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
-
-Skip any step = lying, not verifying
+没有新鲜的验证证据，就不能声称完成
 ```
 
-## Verification Commands
+如果你在这条消息中没有运行验证命令，你就不能声称它通过了。
 
-> **IMPORTANT:** Read the project's CLAUDE.md for the specific build, test, and verification commands for this project. The commands below are generic patterns — adapt to your project.
+## 门控函数
 
-### Compilation / Build
+```
+在声称任何状态或表达满意之前：
+
+1. 识别：哪个命令能证明这个声明？
+2. 运行：执行完整命令（全新的、完整的）
+3. 阅读：完整输出，检查退出码，计数失败数
+4. 验证：输出是否确认了声明？
+   - 如果否：陈述实际状态并附带证据
+   - 如果是：陈述声明并附带证据
+5. 然后才能：做出声明
+
+跳过任何一步 = 说谎，不是验证
+```
+
+## 验证命令
+
+> **重要：** 阅读项目的 CLAUDE.md 获取本项目的具体构建、测试和验证命令。以下命令是通用模式 — 请适配你的项目。
+
+### 编译 / 构建
 ```bash
-# Build the project (use project-specific command from CLAUDE.md)
-# Expected: Build succeeded. 0 Error(s)
+# 构建项目（使用 CLAUDE.md 中的项目特定命令）
+# 预期输出: Build succeeded. 0 Error(s)
 ```
 
-### Code Generation
+### 代码生成
 ```bash
-# If project uses code generation (proto, config export, etc.)
-# Run the generation command from CLAUDE.md after definition changes
-# Then: rebuild to verify generated code compiles
+# 如果项目使用代码生成（proto、配置导出等）
+# 在定义变更后运行 CLAUDE.md 中的生成命令
+# 然后：重新构建以验证生成的代码可以编译
 ```
 
-### Test Execution
+### 测试执行
 ```bash
-# Run specific tests
+# 运行特定测试
 dotnet test --filter "TestName" -v n
 
-# Run all tests
+# 运行全部测试
 dotnet test -v n
 
-# Expected: Passed! X total, X passed, 0 failed
+# 预期输出: Passed! X total, X passed, 0 failed
 ```
 
-### Smoke Test
+### 冒烟测试
 ```bash
-# Quick runtime verification — application starts without crash
-# Use project-specific startup command from CLAUDE.md
+# 快速运行时验证 — 应用启动不崩溃
+# 使用 CLAUDE.md 中的项目特定启动命令
 ```
 
-## Common Failures
+## 常见失败
 
-| Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test runner output: 0 failures | Previous run, "should pass" |
-| Code compiles | Build output: 0 errors | Linter passing, "looks right" |
-| Code generated | Generation output + build passes | "I updated the definition file" |
-| Bug fixed | Test original symptom: passes | "Code changed, assumed fixed" |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows correct changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | "Tests passing" |
-| Framework rules followed | Build with analyzers: 0 errors | "I followed the pattern" |
+| 声明 | 需要什么 | 不充分的 |
+|------|----------|----------|
+| 测试通过 | 测试运行器输出: 0 failures | 之前的运行结果、"应该通过" |
+| 代码编译通过 | 构建输出: 0 errors | Linter 通过、"看起来对" |
+| 代码已生成 | 生成输出 + 构建通过 | "我更新了定义文件" |
+| Bug 已修复 | 测试原始症状: 通过 | "代码改了，假设已修复" |
+| 回归测试有效 | 红-绿循环已验证 | 测试通过一次 |
+| Agent 已完成 | VCS diff 显示正确变更 | Agent 报告 "成功" |
+| 需求已满足 | 逐条检查清单 | "测试通过了" |
+| 框架规则已遵守 | 带分析器构建: 0 errors | "我遵循了模式" |
 
-## Framework-Specific Verification
+## 框架特定验证
 
-> **IMPORTANT:** Read CLAUDE.md for the complete list of project-specific verification items. Common categories:
+> **重要：** 阅读 CLAUDE.md 获取项目特定验证项的完整列表。常见类别：
 
-### Data Model / Component Changes
-- [ ] Build passes (analyzers catch rule violations)
-- [ ] Ownership declarations match actual usage
-- [ ] Logic module has required annotations and markers
-- [ ] No methods in data-only classes (if project enforces this)
+### 数据模型 / Component 变更
+- [ ] 构建通过（分析器会捕获规则违反）
+- [ ] 所有权声明与实际用法匹配
+- [ ] 逻辑模块具有所需的注解和标记
+- [ ] 数据类中没有方法（如果项目强制执行此规则）
 
-### Message / Handler Changes
-- [ ] Code generation run after definition changes
-- [ ] Build passes after generation
-- [ ] Handler annotations match target context
-- [ ] Request/Response types properly linked
+### 消息 / Handler 变更
+- [ ] 定义变更后运行了代码生成
+- [ ] 生成后构建通过
+- [ ] Handler 注解匹配目标上下文
+- [ ] Request/Response 类型正确关联
 
-### Config / Data Changes
-- [ ] Export/generation run after source changes
-- [ ] Build passes after export
-- [ ] Values accessible at runtime
+### 配置 / 数据变更
+- [ ] 源文件变更后运行了导出/生成
+- [ ] 导出后构建通过
+- [ ] 运行时可访问值
 
-### Cross-Boundary Changes
-- [ ] No direct access across isolation boundaries
-- [ ] Proper inter-process messaging used
-- [ ] Required infrastructure components present
+### 跨边界变更
+- [ ] 没有跨隔离边界的直接访问
+- [ ] 使用了正确的进程间消息通信
+- [ ] 必需的基础设施组件已就位
 
-### Hot-Reload / Live-Update Safety
-- [ ] No unsafe static state
-- [ ] Logic modules follow required patterns
-- [ ] Live compilation succeeds
+### 热重载 / 热更新安全
+- [ ] 没有不安全的静态状态
+- [ ] 逻辑模块遵循所需模式
+- [ ] 热编译成功
 
-## Red Flags - STOP
+## 红旗 - 停下
 
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!")
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- **ANY wording implying success without having run verification**
+- 使用 "应该"、"大概"、"似乎"
+- 验证前表达满意（"太好了！"、"完美！"、"搞定！"）
+- 准备在没有验证的情况下提交/推送/创建 PR
+- 信任 Agent 的成功报告
+- 依赖部分验证
+- 想着 "就这一次"
+- **任何暗示成功但未运行验证的措辞**
 
-## Rationalization Prevention
+## 合理化预防
 
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence is not evidence |
-| "Just this once" | No exceptions |
-| "Build passed" | Build is not test. Run tests too. |
-| "Agent said success" | Verify independently |
-| "Partial check is enough" | Partial proves nothing |
-| "I followed the pattern" | Analyzers catch what eyes miss. Build it. |
+| 借口 | 现实 |
+|------|------|
+| "现在应该能用了" | 运行验证 |
+| "我很有信心" | 信心不是证据 |
+| "就这一次" | 没有例外 |
+| "构建通过了" | 构建不是测试。也要运行测试。 |
+| "Agent 说成功了" | 独立验证 |
+| "部分检查就够了" | 部分什么也证明不了 |
+| "我遵循了模式" | 分析器能捕获肉眼遗漏的问题。构建它。 |
 
-## Key Patterns
+## 关键模式
 
-**Tests:**
+**测试：**
 ```
-Correct: [Run test command] [See: 34/34 pass] "All tests pass"
-Wrong:   "Should pass now" / "Looks correct"
-```
-
-**Regression tests (TDD Red-Green):**
-```
-Correct: Write -> Run (pass) -> Revert fix -> Run (MUST FAIL) -> Restore -> Run (pass)
-Wrong:   "I've written a regression test" (without red-green verification)
+正确: [运行测试命令] [看到: 34/34 pass] "所有测试通过"
+错误: "现在应该通过了" / "看起来对"
 ```
 
-**Build:**
+**回归测试（TDD 红-绿循环）：**
 ```
-Correct: [Run build command] [See: Build succeeded. 0 Error(s)] "Build passes"
-Wrong:   "Code looks correct" (eyes don't catch analyzer errors)
-```
-
-**Requirements:**
-```
-Correct: Re-read plan -> Create checklist -> Verify each item -> Report gaps or completion
-Wrong:   "Tests pass, phase complete" (tests don't verify all requirements)
+正确: 编写 -> 运行（通过） -> 回退修复 -> 运行（必须失败） -> 恢复 -> 运行（通过）
+错误: "我已经写了回归测试"（没有红-绿验证）
 ```
 
-**Agent delegation:**
+**构建：**
 ```
-Correct: Agent reports success -> Check git diff -> Verify changes -> Build -> Test -> Report
-Wrong:   Trust agent report
+正确: [运行构建命令] [看到: Build succeeded. 0 Error(s)] "构建通过"
+错误: "代码看起来对"（肉眼捕捉不到分析器错误）
 ```
 
-## When To Apply
+**需求：**
+```
+正确: 重读计划 -> 创建检查清单 -> 逐项验证 -> 报告差距或完成
+错误: "测试通过了，阶段完成"（测试不能验证所有需求）
+```
 
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
+**Agent 委派：**
+```
+正确: Agent 报告成功 -> 检查 git diff -> 验证变更 -> 构建 -> 测试 -> 报告
+错误: 信任 Agent 报告
+```
 
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
+## 何时应用
 
-## The Bottom Line
+**始终在以下操作之前：**
+- 任何形式的成功/完成声明
+- 任何满意表达
+- 任何关于工作状态的正面陈述
+- 提交、创建 PR、任务完成
+- 进入下一个任务
+- 委派给 Agent
 
-**No shortcuts for verification.**
+**规则适用于：**
+- 精确措辞
+- 释义和同义词
+- 成功的暗示
+- 任何暗示完成/正确的沟通
 
-Run the command. Read the output. THEN claim the result.
+## 底线
 
-This is non-negotiable.
+**验证没有捷径。**
 
-## Related Skills
+运行命令。阅读输出。然后才声称结果。
 
-- **qx-code-review** — Multi-dimensional review (triggered during verification)
-- **qx-tdd** — Red-green cycle is a form of verification
-- **qx-debugging** — When verification reveals failures
-- **qx-managing-changes** — Verify phase in change lifecycle
+这是不可商量的。
+
+## 相关 Skills
+
+- **qx-code-review** — 多维审查（在验证过程中触发）
+- **qx-tdd** — 红-绿循环是一种验证形式
+- **qx-debugging** — 当验证揭示了失败时
+- **qx-managing-changes** — 变更生命周期中的验证阶段

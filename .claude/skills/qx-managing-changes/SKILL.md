@@ -1,434 +1,434 @@
 ---
 name: qx-managing-changes
-description: "Use when creating a new feature or change, continuing work on a change, defining requirements, writing proposals, designing solutions, checking change status, verifying implementation completeness, archiving completed work, or listing active changes. Triggers on: create change, continue, new feature, proposal, requirements, specs, design, verify, archive, status, list changes, /qx-change"
+description: "用于创建新功能或变更、继续进行中的变更、定义需求、编写提案、设计方案、检查变更状态、验证实现完整性、归档已完成工作或列出活跃变更。触发词: create change, continue, new feature, proposal, requirements, specs, design, verify, archive, status, list changes, /qx-change"
 ---
 
-# Managing Changes
+# 管理变更
 
-Manage the full lifecycle of a "change" — from proposal to archive. A change is a directory-based container at `docs/changes/<name>/` that tracks all artifacts for a feature, fix, or modification.
+管理"变更"的完整生命周期 — 从提案到归档。变更是位于 `docs/changes/<name>/` 的基于目录的容器，追踪一个功能、修复或修改的所有产物。
 
-**Announce at start:** "I'm using the qx-managing-changes skill to [create/propose/design/verify/archive] this change."
+**开始时宣告：** "我正在使用 qx-managing-changes skill 来 [创建/提案/设计/验证/归档] 这个变更。"
 
-## When to Use This vs Quick Mode
+## 何时使用此模式 vs 快速模式
 
-| Situation | Use This (Change Mode) | Use Quick Mode (qx-brainstorm) |
-|-----------|----------------------|-------------------------------|
-| New game system or feature | ✓ | |
-| Cross-role handoff (designer → engineer) | ✓ | |
-| Requirements need to be tracked long-term | ✓ | |
-| Technical investigation with formal design | ✓ | |
-| Small bug fix | | ✓ |
-| Simple refactoring | | ✓ |
-| Config change or tweak | | ✓ |
+| 场景 | 使用此模式（变更模式） | 使用快速模式（qx-brainstorm） |
+|------|----------------------|-------------------------------|
+| 新游戏系统或功能 | ✓ | |
+| 跨角色交接（策划 → 程序） | ✓ | |
+| 需求需要长期追踪 | ✓ | |
+| 带正式设计的技术调研 | ✓ | |
+| 小 Bug 修复 | | ✓ |
+| 简单重构 | | ✓ |
+| 配置变更或微调 | | ✓ |
 
-## Change Directory Structure
+## 变更目录结构
 
 ```
 docs/changes/<name>/
-├── .change.yaml       # Metadata (created date, status)
-├── proposal.md        # Why and what (required)
-├── design.md          # Technical approach (optional)
-├── specs/             # Delta specs (optional)
+├── .change.yaml       # 元数据（创建日期、状态）
+├── proposal.md        # 为什么和做什么（必需）
+├── design.md          # 技术方案（可选）
+├── specs/             # 增量规格（可选）
 │   └── <capability>/
-│       └── spec.md    # ADDED/MODIFIED/REMOVED requirements
-└── plan.md            # Implementation tasks with checkboxes
+│       └── spec.md    # 新增/修改/删除 的需求
+└── plan.md            # 带复选框的实施任务
 ```
 
-## Operations
+## 操作
 
-Infer the operation from conversation context. If ambiguous, ask the user.
+从对话上下文推断操作。如果有歧义，向用户确认。
 
 ---
 
-### CREATE — Start a New Change
+### CREATE — 启动新变更
 
-**Triggers:** "start a new feature", "create change", "new change", "/qx-change create"
+**触发词：** "启动新功能"、"创建变更"、"新变更"、"/qx-change create"
 
-**Process:**
-1. Get a name from the user (or derive from description)
-2. Convert to kebab-case (e.g., "combo attack system" → `combo-attack-system`)
-3. Check `docs/changes/` for duplicates
-4. Create directory and metadata:
+**流程：**
+1. 从用户获取名称（或从描述中推导）
+2. 转换为 kebab-case（例如 "combo attack system" → `combo-attack-system`）
+3. 检查 `docs/changes/` 是否有重复
+4. 创建目录和元数据：
 
 ```
 docs/changes/<name>/
 └── .change.yaml
 ```
 
-`.change.yaml` content:
+`.change.yaml` 内容：
 ```yaml
 created: YYYY-MM-DD
 status: active
 ```
 
-5. Announce what was created and suggest next step: "Change created. Want to write the proposal?"
+5. 宣告创建了什么并建议下一步："变更已创建。要编写提案吗？"
 
 ---
 
-### CONTINUE — Automatically Advance to Next Step
+### CONTINUE — 自动推进到下一步
 
-**Triggers:** "continue", "next step", "keep going", "/qx-change continue"
+**触发词：** "继续"、"下一步"、"接着做"、"/qx-change continue"
 
-**Process:**
-1. If no change specified, infer from context or ask
-2. Scan `docs/changes/<name>/` to determine what exists:
+**流程：**
+1. 如果没有指定变更，从上下文推断或询问
+2. 扫描 `docs/changes/<name>/` 确定已存在的内容：
 
 ```
-Check in order:
-  proposal.md exists?  → NO  → create proposal (run PROPOSE)
-  proposal.md exists?  → YES → check capabilities
-    Capabilities listed but no specs/?  → create specs (run SPEC)
-  design.md exists?    → NO  → create design (run DESIGN)
-  plan.md exists?      → NO  → create plan (invoke qx-writing-plans skill)
-  plan.md has - [ ]?   → YES → resume execution (invoke qx-exec skill)
-  all tasks [x]?       → YES → suggest verify/archive
+按顺序检查:
+  proposal.md 存在?  → 否  → 创建提案（运行 PROPOSE）
+  proposal.md 存在?  → 是  → 检查 capabilities
+    列出了 Capabilities 但没有 specs/?  → 创建规格（运行 SPEC）
+  design.md 存在?    → 否  → 创建设计（运行 DESIGN）
+  plan.md 存在?      → 否  → 创建计划（调用 qx-writing-plans skill）
+  plan.md 有 - [ ]?  → 是  → 恢复执行（调用 qx-exec skill）
+  所有任务 [x]?      → 是  → 建议验证/归档
 ```
 
-3. Announce what was detected and what will be created next:
+3. 宣告检测到的内容和下一步将创建的内容：
    ```
    Change: add-combo-system
-   Completed: proposal ✓, specs ✓
-   Next: Creating design.md
+   已完成: proposal ✓, specs ✓
+   下一步: 创建 design.md
    ```
 
-4. Execute the appropriate operation or invoke the appropriate skill
+4. 执行适当的操作或调用适当的 skill
 
-**Notes:**
-- This is the "just keep saying continue" workflow — user doesn't need to know which operation comes next
-- If capabilities are listed in proposal but specs are optional (pure technical change), skip to design
-- When reaching plan creation, hand off to `qx-writing-plans` skill
-- When reaching execution, hand off to `qx-exec` skill
+**注意：**
+- 这是"持续说继续"的工作流 — 用户不需要知道下一个操作是什么
+- 如果 proposal 中列出了 capabilities 但 specs 是可选的（纯技术变更），跳到 design
+- 到达计划创建时，交给 `qx-writing-plans` skill
+- 到达执行时，交给 `qx-exec` skill
 
 ---
 
-### PROPOSE — Define What and Why
+### PROPOSE — 定义做什么和为什么
 
-**Triggers:** "write proposal", "define the change", "/qx-change propose"
+**触发词：** "写提案"、"定义变更"、"/qx-change propose"
 
-**Requires:** Change must exist (run CREATE first if not)
+**前提：** 变更必须已存在（如不存在先运行 CREATE）
 
-**Process:**
-1. If no change is active, ask which change or create one
-2. Read CLAUDE.md for project-specific architecture and conventions
-3. Draft `proposal.md` using this template:
+**流程：**
+1. 如果没有活跃变更，询问哪个变更或创建一个
+2. 阅读 CLAUDE.md 获取项目特定的架构和约定
+3. 使用此模板起草 `proposal.md`：
 
 ```markdown
-## Why
+## 为什么
 
-<!-- What problem does this solve? Why now? -->
+<!-- 解决什么问题？为什么是现在？ -->
 
-## What Changes
+## 变更内容
 
-<!-- Bullet list of changes. Be specific. -->
+<!-- 变更的要点列表。要具体。 -->
 
 ## Capabilities
 
-### New Capabilities
-<!-- Each becomes a spec file. Use kebab-case names. -->
-- `<name>`: <brief description>
+### 新增 Capabilities
+<!-- 每个都会成为一个 spec 文件。使用 kebab-case 名称。 -->
+- `<name>`: <简要描述>
 
-### Modified Capabilities
-<!-- Existing capabilities whose requirements change. -->
-<!-- Check docs/specs/ for existing spec names. -->
+### 修改的 Capabilities
+<!-- 需求变更的现有 capabilities。 -->
+<!-- 检查 docs/specs/ 获取现有 spec 名称。 -->
 
-## Impact
+## 影响
 
-<!-- Affected code, APIs, dependencies, systems -->
+<!-- 受影响的代码、API、依赖、系统 -->
 
-### Framework Impact Checklist
-<!-- Read CLAUDE.md for project-specific items. Common checks: -->
-- [ ] **Modules/assemblies affected**: Which ones?
-- [ ] **New protocol/message definitions needed?** If yes, list them
-- [ ] **New config/data files needed?** If yes, list them
-- [ ] **Cross-process/cross-thread communication?** If yes, identify boundaries
-- [ ] **New data model types?** List with their ownership declarations
-- [ ] **Affects system-map.md?** If yes, which systems are impacted
+### 框架影响检查清单
+<!-- 阅读 CLAUDE.md 获取项目特定项。常见检查项: -->
+- [ ] **受影响的模块/程序集**: 哪些？
+- [ ] **需要新的协议/消息定义？** 如是，列出它们
+- [ ] **需要新的配置/数据文件？** 如是，列出它们
+- [ ] **跨进程/跨线程通信？** 如是，识别边界
+- [ ] **新的数据模型类型？** 列出及其所有权声明
+- [ ] **影响 system-map.md？** 如是，哪些系统受影响
 ```
 
-**Notes:**
-- Capabilities section is optional for pure technical changes
-- Each capability listed will need a corresponding spec file
-- Keep it concise (1-2 pages). Focus on "why" not "how".
+**注意：**
+- Capabilities 部分对于纯技术变更是可选的
+- 列出的每个 capability 都需要对应的 spec 文件
+- 保持简洁（1-2 页）。聚焦"为什么"而非"怎么做"。
 
 ---
 
-### SPEC — Define Requirements
+### SPEC — 定义需求
 
-**Triggers:** "write spec", "define requirements", "/qx-change spec"
+**触发词：** "写规格"、"定义需求"、"/qx-change spec"
 
-**Requires:** `proposal.md` must exist
+**前提：** `proposal.md` 必须存在
 
-**Process:**
-1. Read `proposal.md` to identify capabilities
-2. For each capability, create `docs/changes/<name>/specs/<capability>/spec.md`
-3. If modifying an existing capability, read `docs/specs/<capability>/spec.md` first
+**流程：**
+1. 阅读 `proposal.md` 识别 capabilities
+2. 为每个 capability 创建 `docs/changes/<name>/specs/<capability>/spec.md`
+3. 如果修改现有 capability，先阅读 `docs/specs/<capability>/spec.md`
 
-**Delta spec template:**
+**增量 spec 模板：**
 ```markdown
-## ADDED Requirements
+## 新增需求
 
-### Requirement: <name>
-<description using SHALL/MUST>
+### Requirement: <名称>
+<使用 SHALL/MUST 的描述>
 
-#### Scenario: <scenario name>
-- **WHEN** <condition>
-- **THEN** <expected outcome>
+#### Scenario: <场景名称>
+- **WHEN** <条件>
+- **THEN** <预期结果>
 
-## MODIFIED Requirements
+## 修改的需求
 
-### Requirement: <existing requirement name>
-<!-- Copy full requirement text from main spec, then modify -->
+### Requirement: <现有需求名称>
+<!-- 从主 spec 复制完整需求文本，然后修改 -->
 
-#### Scenario: <new or changed scenario>
-- **WHEN** <condition>
-- **THEN** <new expected outcome>
+#### Scenario: <新增或变更的场景>
+- **WHEN** <条件>
+- **THEN** <新的预期结果>
 
-## REMOVED Requirements
+## 删除的需求
 
-### Requirement: <name>
-**Reason**: <why it's being removed>
-**Migration**: <what replaces it>
+### Requirement: <名称>
+**原因**: <为什么删除>
+**迁移**: <替代方案>
 
-## RENAMED Requirements
+## 重命名的需求
 - FROM: `### Requirement: Old Name`
 - TO: `### Requirement: New Name`
 ```
 
-**Rules:**
-- Every requirement MUST have at least one scenario
-- Scenarios MUST use `#### Scenario:` (4 hashtags)
-- Use SHALL/MUST for normative requirements
-- MODIFIED requirements must include the full updated content, not just the diff
-- Skip this operation entirely for pure technical changes
+**规则：**
+- 每个需求必须有至少一个场景
+- 场景必须使用 `#### Scenario:`（4 个井号）
+- 使用 SHALL/MUST 表达规范性需求
+- 修改的需求必须包含完整更新后的内容，不能只写 diff
+- 对于纯技术变更，完全跳过此操作
 
 ---
 
-### DESIGN — Define How
+### DESIGN — 定义怎么做
 
-**Triggers:** "design the solution", "technical approach", "/qx-change design"
+**触发词：** "设计方案"、"技术方案"、"/qx-change design"
 
-**Requires:** `proposal.md` must exist. Specs recommended but not required.
+**前提：** `proposal.md` 必须存在。推荐有 specs 但不强制。
 
-**Process:**
-1. Read `proposal.md` and any specs for context
-2. Read `docs/system-map.md` for existing system relationships
-3. Read CLAUDE.md for project-specific architecture patterns
-4. Draft `design.md` using this template:
+**流程：**
+1. 阅读 `proposal.md` 和所有 specs 获取上下文
+2. 阅读 `docs/system-map.md` 了解现有系统关系
+3. 阅读 CLAUDE.md 获取项目特定的架构模式
+4. 使用此模板起草 `design.md`：
 
 ```markdown
-## Context
+## 背景
 
-<!-- Background and current state -->
+<!-- 背景和当前状态 -->
 
-## Goals / Non-Goals
+## 目标 / 非目标
 
-**Goals:**
-<!-- What this design aims to achieve -->
+**目标：**
+<!-- 此设计旨在达成什么 -->
 
-**Non-Goals:**
-<!-- What is explicitly out of scope -->
+**非目标：**
+<!-- 明确不在范围内的内容 -->
 
-## Decisions
+## 决策
 
-### Decision 1: <title>
+### 决策 1: <标题>
 
-**Choice:** <what was decided>
+**选择：** <决定了什么>
 
-**Alternatives considered:**
-- A) <option> → <why not>
-- B) <option> → <why not>
+**考虑过的替代方案：**
+- A) <方案> → <为什么不选>
+- B) <方案> → <为什么不选>
 
-**Rationale:** <why this choice>
+**理由：** <为什么选择这个>
 
-## Framework-Specific Decisions
+## 框架特定决策
 
-<!-- Read CLAUDE.md for project-specific architectural patterns. -->
-<!-- Document decisions about: -->
-<!-- - Data model design (ownership, lifecycle, relationships) -->
-<!-- - Message/protocol type selection -->
-<!-- - Concurrency/threading model choices -->
-<!-- - Module/assembly placement -->
+<!-- 阅读 CLAUDE.md 获取项目特定的架构模式。 -->
+<!-- 记录以下方面的决策: -->
+<!-- - 数据模型设计（所有权、生命周期、关系） -->
+<!-- - 消息/协议类型选择 -->
+<!-- - 并发/线程模型选择 -->
+<!-- - 模块/程序集放置 -->
 
-## Risks / Trade-offs
+## 风险 / 权衡
 
-| Risk | Mitigation |
-|------|------------|
-| <risk> | <mitigation> |
+| 风险 | 缓解措施 |
+|------|----------|
+| <风险> | <缓解措施> |
 ```
 
-**Notes:**
-- Optional for simple changes — skip if proposal is sufficient
-- Focus on architecture and "why X over Y", not line-by-line code
-- Good design docs explain the reasoning behind technical decisions
-- Framework-Specific Decisions section is optional — include only the subsections that apply
+**注意：**
+- 对于简单变更是可选的 — 如果 proposal 就够了就跳过
+- 聚焦架构和"为什么选 X 而非 Y"，而不是逐行代码
+- 好的设计文档解释技术决策背后的推理
+- 框架特定决策部分是可选的 — 只包含适用的子节
 
 ---
 
-### STATUS — Check Progress
+### STATUS — 检查进度
 
-**Triggers:** "what's the status", "progress", "/qx-change status"
+**触发词：** "什么状态"、"进度"、"/qx-change status"
 
-**Process:**
-1. If no change specified, ask or infer from context
-2. Read the change directory and report:
+**流程：**
+1. 如果没有指定变更，询问或从上下文推断
+2. 阅读变更目录并报告：
 
 ```
-Change: <name>
-Created: <date>
+Change: <名称>
+Created: <日期>
 Status: <active/archived>
 
-Artifacts:
+产物:
   [x] proposal.md
   [x] design.md
   [ ] specs/
   [x] plan.md
 
-Tasks: 5/12 complete (42%)
-  Completed: 1.1, 1.2, 2.1, 2.2, 2.3
-  Next: 3.1 — <description>
+任务: 5/12 完成 (42%)
+  已完成: 1.1, 1.2, 2.1, 2.2, 2.3
+  下一个: 3.1 — <描述>
 ```
 
-3. Count checkboxes in `plan.md`: `- [x]` = complete, `- [ ]` = pending
+3. 统计 `plan.md` 中的复选框：`- [x]` = 完成，`- [ ]` = 待办
 
 ---
 
-### LIST — Show All Changes
+### LIST — 显示所有变更
 
-**Triggers:** "list changes", "what changes exist", "/qx-change list"
+**触发词：** "列出变更"、"有哪些变更"、"/qx-change list"
 
-**Process:**
-1. Scan `docs/changes/` (exclude `archive/`)
-2. For each change directory:
-   - Read `.change.yaml` for created date
-   - Count checkboxes in `plan.md` if it exists
-3. Display:
+**流程：**
+1. 扫描 `docs/changes/`（排除 `archive/`）
+2. 对每个变更目录：
+   - 阅读 `.change.yaml` 获取创建日期
+   - 如果存在 `plan.md`，统计复选框
+3. 显示：
 
 ```
-Active Changes:
+活跃变更:
   add-combo-system    created: 2026-02-20    tasks: 3/8
-  optimize-ai         created: 2026-02-25    tasks: 0/0 (no plan yet)
+  optimize-ai         created: 2026-02-25    tasks: 0/0 (尚无计划)
 
-Recent Archives:
+近期归档:
   2026-02-15-fix-inventory-ui
   2026-02-10-add-quest-system
 ```
 
 ---
 
-### VERIFY — Check Implementation Completeness
+### VERIFY — 检查实现完整性
 
-**Triggers:** "verify", "check completeness", "/qx-change verify"
+**触发词：** "验证"、"检查完整性"、"/qx-change verify"
 
-**Requires:** `plan.md` must exist
+**前提：** `plan.md` 必须存在
 
-**Process:**
+**流程：**
 
-Three-dimensional verification with graceful degradation:
+三维验证，优雅降级：
 
-**1. Completeness (always checked)**
-- Count `- [ ]` vs `- [x]` in `plan.md`
-- Report: "N/M tasks complete"
-- CRITICAL if incomplete tasks remain
+**1. 完整性（始终检查）**
+- 统计 `plan.md` 中的 `- [ ]` vs `- [x]`
+- 报告："N/M 个任务完成"
+- 如果有未完成任务则为 CRITICAL
 
-**2. Correctness (if specs exist)**
-- For each requirement in `specs/`, search codebase for implementation evidence
-- For each scenario, check if corresponding test or logic exists
-- WARNING if requirement has no implementation evidence
+**2. 正确性（如果 specs 存在）**
+- 对 `specs/` 中的每个需求，搜索代码库中的实现证据
+- 对每个场景，检查是否存在对应的测试或逻辑
+- 如果需求没有实现证据则为 WARNING
 
-**3. Coherence (if design.md exists)**
-- For each decision in `design.md`, verify implementation follows the chosen approach
-- SUGGESTION if implementation diverges from design
+**3. 一致性（如果 design.md 存在）**
+- 对 `design.md` 中的每个决策，验证实现是否遵循了选定的方案
+- 如果实现偏离了设计则为 SUGGESTION
 
-**4. Framework Compliance (always checked)**
-- Read CLAUDE.md for project-specific rules and verification commands
-- Run the project's build/compile commands
-- Verify framework-specific declarations and annotations are correct
-- Check code generation steps were run if applicable
-- Verify no framework rule violations exist
+**4. 框架合规（始终检查）**
+- 阅读 CLAUDE.md 获取项目特定规则和验证命令
+- 运行项目的构建/编译命令
+- 验证框架特定的声明和注解是否正确
+- 检查代码生成步骤是否已运行（如适用）
+- 验证不存在框架规则违反
 
-**Output format:**
+**输出格式：**
 ```
-## Verification: <change-name>
+## 验证: <change-name>
 
-| Dimension      | Status  | Score |
+| 维度           | 状态    | 分数  |
 |---------------|---------|-------|
-| Completeness   | ✓ / ✗  | N/M   |
-| Correctness    | ✓ / ✗  | N/M   |
-| Coherence      | ✓ / △  | N/M   |
-| Framework Compliance | ✓ / ✗ | N/M |
+| 完整性         | ✓ / ✗  | N/M   |
+| 正确性         | ✓ / ✗  | N/M   |
+| 一致性         | ✓ / △  | N/M   |
+| 框架合规       | ✓ / ✗  | N/M   |
 
 ### CRITICAL
-- [ ] Task 3.2 is incomplete
-- [ ] Requirement "Combo Chain" has no implementation
+- [ ] 任务 3.2 未完成
+- [ ] 需求 "Combo Chain" 没有实现
 
 ### WARNING
-- Spec scenario "damage overflow" has no test coverage
-- Code generation step not run after definition changes
+- Spec 场景 "damage overflow" 没有测试覆盖
+- 定义变更后未运行代码生成步骤
 
 ### SUGGESTION
-- Design says approach A but implementation uses approach B
+- 设计说用方案 A 但实现用了方案 B
 ```
 
 ---
 
-### ARCHIVE — Close Out a Change
+### ARCHIVE — 收尾变更
 
-**Triggers:** "archive", "done with this", "/qx-change archive"
+**触发词：** "归档"、"完成了"、"/qx-change archive"
 
-**Requires:** Change must exist
+**前提：** 变更必须存在
 
-**Process:**
+**流程：**
 
-1. **Check completion**
-   - Count incomplete tasks in `plan.md`
-   - If incomplete: warn and ask for confirmation
-   - "3 tasks remain incomplete. Archive anyway?"
+1. **检查完成状态**
+   - 统计 `plan.md` 中的未完成任务
+   - 如果未完成：警告并要求确认
+   - "还有 3 个任务未完成。仍然归档吗？"
 
-2. **Check delta specs**
-   - Look for `docs/changes/<name>/specs/` directory
-   - If delta specs exist:
+2. **检查增量 specs**
+   - 查找 `docs/changes/<name>/specs/` 目录
+   - 如果存在增量 specs：
 
    ```
-   Delta specs found:
+   发现增量 specs:
      specs/combat-system/spec.md
-       ADDED: Combo Chain requirement (2 scenarios)
-       MODIFIED: Damage Calculation (1 new scenario)
+       新增: Combo Chain 需求（2 个场景）
+       修改: Damage Calculation（1 个新场景）
 
-   Options:
-   1. Sync to main specs (recommended) — merge into docs/specs/
-   2. Archive without syncing
+   选项:
+   1. 同步到主 specs（推荐）— 合并到 docs/specs/
+   2. 不同步直接归档
    ```
 
-3. **Sync specs (if chosen)**
-   - For each delta spec:
-     - Read `docs/specs/<capability>/spec.md` (create if doesn't exist)
-     - Apply ADDED: add new requirement blocks
-     - Apply MODIFIED: merge changes into existing requirements, preserving unmodified content
-     - Apply REMOVED: remove requirement blocks
-     - Apply RENAMED: rename requirement headers
-   - This is AI-driven intelligent merge, not programmatic — preserve existing content not mentioned in delta
+3. **同步 specs（如果选择了）**
+   - 对每个增量 spec：
+     - 阅读 `docs/specs/<capability>/spec.md`（不存在则创建）
+     - 应用新增：添加新的需求块
+     - 应用修改：合并变更到现有需求中，保留未修改的内容
+     - 应用删除：移除需求块
+     - 应用重命名：重命名需求标题
+   - 这是 AI 驱动的智能合并，不是程序化的 — 保留增量中未提及的现有内容
 
-4. **Move to archive**
+4. **移动到归档**
    ```
    docs/changes/<name>/ → docs/changes/archive/YYYY-MM-DD-<name>/
    ```
 
-5. **Display summary**
+5. **显示摘要**
    ```
-   ## Archived: <name>
+   ## 已归档: <name>
 
-   Location: docs/changes/archive/YYYY-MM-DD-<name>/
-   Specs synced: combat-system (2 added, 1 modified)
-   Tasks completed: 12/12
+   位置: docs/changes/archive/YYYY-MM-DD-<name>/
+   Specs 已同步: combat-system（2 个新增，1 个修改）
+   任务完成: 12/12
    ```
 
 ---
 
-## Key Principles
+## 核心原则
 
-- **Artifacts are optional except proposal** — Simple changes can go proposal → plan → execute
-- **Specs are for functional requirements** — Skip for pure technical work (performance, refactoring)
-- **Don't force the full workflow** — If user just wants to create and plan, let them
-- **Change directories are the handoff** — Designer creates proposal + specs, engineer picks up from design
-- **One change, one session at a time** — Avoid concurrent modification of the same change across sessions
-- **Check system-map.md** — Reference the persistent system relationship map during proposal and design
+- **除 proposal 外产物都是可选的** — 简单变更可以走 proposal → plan → 执行
+- **Specs 用于功能需求** — 纯技术工作（性能、重构）跳过
+- **不要强制完整工作流** — 如果用户只想创建和计划，让他们这样做
+- **变更目录是交接物** — 策划创建 proposal + specs，程序从 design 接手
+- **一次一个变更，一个会话** — 避免跨会话并发修改同一变更
+- **检查 system-map.md** — 在提案和设计期间引用持久化系统关系图

@@ -1,152 +1,152 @@
 ---
 name: qx-brainstorm
-description: "Use before any creative work — game features, system design, new mechanics. Explores ideas through collaborative dialogue, using game design techniques, before committing to implementation."
+description: "在任何创意工作之前使用 — 游戏功能、系统设计、新机制。通过协作对话和游戏设计技巧探索创意，在进入实现之前充分构思。"
 ---
 
-# Game Brainstorming
+# 游戏头脑风暴
 
-## Overview
+## 概述
 
-Help turn game ideas into fully formed designs through collaborative dialogue. Understand the vision first, explore approaches using game design techniques, then produce a design document for handoff.
+通过协作对话，将游戏创意打磨为完整的设计方案。先理解愿景，再运用游戏设计技巧探索方案，最终输出设计文档以供交接。
 
-**Core principle:** Design before implementation. Every feature goes through brainstorming, no matter how "simple" it seems.
+**核心原则：** 先设计，后实现。每个功能都必须经过头脑风暴，无论它看起来多么"简单"。
 
-**Announce at start:** "Using qx-brainstorm to explore this idea before implementation."
+**开始时宣告：** "正在使用 qx-brainstorm 在实现之前探索这个创意。"
 
 <HARD-GATE>
-Do NOT invoke any implementation skill, write any code, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY feature regardless of perceived simplicity.
+在你展示设计方案并获得用户批准之前，不得调用任何实现相关的 Skill，不得编写任何代码，不得采取任何实现行动。此规则适用于所有功能，无论其感知复杂度如何。
 </HARD-GATE>
 
-## Anti-Pattern: "This Is Too Simple"
+## 反模式："这太简单了"
 
-Every feature goes through this process. A stat modifier, a single UI panel, a config change — all of them. "Simple" features are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences), but you MUST present it and get approval.
+每个功能都必须经过这个流程。一个属性修正器、一个单独的 UI 面板、一个配置改动 — 全部如此。"简单"功能恰恰最容易因为未经审视的假设而导致大量返工。设计可以很简短（几句话），但你必须展示出来并获得批准。
 
-## Checklist
+## 检查清单
 
-You MUST create a task for each of these items and complete them in order:
+你必须为以下每个条目创建任务，并按顺序完成：
 
-1. **Explore project context** — check existing game docs, design docs, recent changes
-2. **Ask clarifying questions** — one at a time, understand vision/constraints/player experience
-3. **Apply game design techniques** — use appropriate ideation methods (see below)
-4. **Propose 2-3 approaches** — with trade-offs and your recommendation
-5. **Present design** — in sections scaled to complexity, get user approval after each section
-6. **Write design doc** — save to `docs/game-design/` and commit
-7. **Transition** — invoke `qx-writing-plans` to create implementation plan, or hand off to `/qx-review` for three-party review
+1. **探索项目上下文** — 检查现有游戏文档、设计文档、近期变更
+2. **提出澄清问题** — 一次一个，理解愿景/约束/玩家体验
+3. **运用游戏设计技巧** — 使用合适的构思方法（见下文）
+4. **提出 2-3 个方案** — 附带权衡分析和你的推荐
+5. **展示设计** — 按复杂度分节展示，每节后获取用户批准
+6. **撰写设计文档** — 保存到 `docs/game-design/` 并提交
+7. **过渡** — 调用 `qx-writing-plans` 创建实施计划，或交接给 `/qx-review` 进行三方评审
 
-## Process Flow
+## 流程图
 
 ```
-Explore context → Ask questions → Apply techniques → Propose approaches
-→ Present design → User approves? → Write doc → Transition
-                          ↑ no, revise ↓
+探索上下文 → 提问 → 运用技巧 → 提出方案
+→ 展示设计 → 用户批准？ → 撰写文档 → 过渡
+                          ↑ 否，修改 ↓
 ```
 
-## The Process
+## 流程详解
 
-### Understanding the Idea
+### 理解创意
 
-- Check existing game design documents first (`docs/game-design/`)
-- Read CLAUDE.md for project architecture context
-- Ask questions ONE AT A TIME to refine the idea
-- Prefer multiple choice questions when possible
-- Focus on: player experience, constraints, success criteria, system interactions
+- 首先检查现有游戏设计文档（`docs/game-design/`）
+- 阅读 CLAUDE.md 了解项目架构上下文
+- 一次只问一个问题来细化创意
+- 尽量使用选择题
+- 关注：玩家体验、约束条件、成功标准、系统交互
 
-### Applying Game Design Techniques
+### 运用游戏设计技巧
 
-Choose techniques based on what you're brainstorming:
+根据头脑风暴的内容选择合适的技巧：
 
-**For Core Gameplay:**
-| Technique | When to Use | Key Questions |
+**核心玩法相关：**
+| 技巧 | 适用场景 | 关键问题 |
 |-----------|-------------|---------------|
-| MDA Framework | Holistic design | Mechanics → Dynamics → Aesthetics: do they align? |
-| Core Loop Brainstorming | Gameplay foundation | What does player DO? What's the reward? Why repeat? |
-| Player Fantasy Mining | Motivation | What fantasy does the player live? What makes them feel awesome? |
-| Verbs Before Nouns | Mechanics-first | What verbs define the game? Build mechanics from actions |
+| MDA 框架 | 整体设计 | Mechanics（机制）→ Dynamics（动态）→ Aesthetics（美学）：它们是否一致？ |
+| 核心循环头脑风暴 | 玩法基础 | 玩家做什么？奖励是什么？为什么重复？ |
+| 玩家幻想挖掘 | 动机设计 | 玩家在体验什么幻想？什么让他们感到很酷？ |
+| 动词优先于名词 | 机制优先 | 哪些动词定义了游戏？从行为出发构建机制 |
 
-**For Innovation:**
-| Technique | When to Use | Key Questions |
+**创新相关：**
+| 技巧 | 适用场景 | 关键问题 |
 |-----------|-------------|---------------|
-| Genre Mashup | Fresh gameplay | Take two genres — what unique gameplay emerges? |
-| Constraint-Based | Elegant design | Pick a limitation — build everything around it |
-| Failure State Design | Tension | How can players fail interestingly? Is failure fair and instructive? |
+| 类型混搭 | 新鲜玩法 | 取两个类型 — 会产生什么独特玩法？ |
+| 基于约束的设计 | 优雅设计 | 选一个限制 — 围绕它构建一切 |
+| 失败状态设计 | 紧张感 | 玩家如何"有趣地"失败？失败是否公平且有教育意义？ |
 
-**For Systems:**
-| Technique | When to Use | Key Questions |
+**系统相关：**
+| 技巧 | 适用场景 | 关键问题 |
 |-----------|-------------|---------------|
-| Emergence Engineering | Depth/complexity | What simple rules combine to create complex outcomes? |
-| Economy Balancing | Resource design | Sources vs sinks — where are the exploits? |
-| Progression Curve | Pacing | How does difficulty evolve? When do we introduce concepts? |
+| 涌现工程 | 深度/复杂性 | 什么简单规则组合能产生复杂结果？ |
+| 经济平衡 | 资源设计 | 来源 vs 消耗 — 漏洞在哪里？ |
+| 进度曲线 | 节奏设计 | 难度如何演进？何时引入新概念？ |
 
-**For Narrative:**
-| Technique | When to Use | Key Questions |
+**叙事相关：**
+| 技巧 | 适用场景 | 关键问题 |
 |-----------|-------------|---------------|
-| Ludonarrative Harmony | Story + gameplay | Do mechanics reinforce narrative themes? |
-| Environmental Storytelling | World design | What does the space communicate without exposition? |
-| Player Agency Moments | Choice design | Where do choices matter? Branch vs flavor? |
+| 叙事机制和谐 | 故事 + 玩法 | 机制是否强化了叙事主题？ |
+| 环境叙事 | 世界设计 | 空间在不使用旁白的情况下传达了什么？ |
+| 玩家代入时刻 | 选择设计 | 哪些选择是有意义的？分支 vs 风味？ |
 
-### Exploring Approaches
+### 探索方案
 
-- Propose 2-3 different approaches with trade-offs
-- Lead with your recommended option and explain WHY
-- Consider: player experience, technical feasibility, scope, system interactions
+- 提出 2-3 个不同方案及其权衡
+- 先给出你的推荐方案并解释原因
+- 考虑：玩家体验、技术可行性、范围、系统交互
 
-### Presenting the Design
+### 展示设计
 
-- Scale each section to its complexity (few sentences if simple, up to 300 words if nuanced)
-- Ask after each section whether it looks right so far
-- Cover: gameplay mechanics, system interactions, data flow, edge cases, testing considerations
-- Be ready to go back and clarify
+- 每节的篇幅与其复杂度匹配（简单的几句话，复杂的最多 300 字）
+- 每节之后询问目前是否正确
+- 覆盖：玩法机制、系统交互、数据流、边界情况、测试考量
+- 随时准备回头澄清
 
-## Design Document Structure
+## 设计文档结构
 
 ```markdown
-# [Feature Name] Design
+# [功能名称] 设计
 
-## Vision
-[One paragraph — what is this and why does it matter to players?]
+## 愿景
+[一段话 — 这是什么，为什么对玩家重要？]
 
-## Player Experience
-[What does it feel like to interact with this feature?]
+## 玩家体验
+[与这个功能交互时的感受是什么？]
 
-## Core Mechanics
-[How does it work? Rules, interactions, feedback loops]
+## 核心机制
+[它是如何运作的？规则、交互、反馈循环]
 
-## System Interactions
-[How does this connect to existing game systems?]
+## 系统交互
+[它如何与现有游戏系统连接？]
 
-## Edge Cases & Constraints
-[What could go wrong? Boundaries and limitations]
+## 边界情况与约束
+[可能出什么问题？边界和限制]
 
-## Technical Considerations
-[Flag items for programmer attention — architecture, networking, data]
+## 技术考量
+[标记需要程序关注的事项 — 架构、网络、数据]
 
-## Success Criteria
-[How do we know this feature is working as intended?]
+## 成功标准
+[如何判断这个功能是否按预期工作？]
 
-## Open Questions
-[What still needs to be resolved?]
+## 待解决问题
+[还有什么需要解决的？]
 ```
 
-## After the Design
+## 设计完成后
 
-**Save:** Write to `docs/game-design/YYYY-MM-DD-<topic>-design.md`
+**保存：** 写入 `docs/game-design/YYYY-MM-DD-<topic>-design.md`
 
-**Transition options:**
-1. **Implementation path:** Invoke `qx-writing-plans` to create a detailed implementation plan
-2. **Review path:** If the feature is significant, invoke `/qx-review` for three-party review first
-3. **GDD path:** If this feeds into a larger GDD, invoke `qx-game-design` to integrate
+**过渡选项：**
+1. **实现路径：** 调用 `qx-writing-plans` 创建详细实施计划
+2. **评审路径：** 如果功能较重要，先调用 `/qx-review` 进行三方评审
+3. **GDD 路径：** 如果需要整合到更大的 GDD 中，调用 `qx-game-design` 进行集成
 
-## Key Principles
+## 关键原则
 
-- **One question at a time** — Don't overwhelm with multiple questions
-- **Multiple choice preferred** — Easier to answer than open-ended
-- **YAGNI ruthlessly** — Remove unnecessary features from all designs
-- **Player experience first** — Technical elegance that hurts fun is a failure
-- **Systems thinking** — Every new feature affects existing systems
-- **Incremental validation** — Present design, get approval before moving on
+- **一次一个问题** — 不要同时抛出多个问题
+- **优先选择题** — 比开放式问题更容易回答
+- **严格遵守 YAGNI（不需要就不做）** — 从所有设计中移除不必要的功能
+- **玩家体验优先** — 损害乐趣的技术优雅是失败的
+- **系统思维** — 每个新功能都会影响现有系统
+- **增量验证** — 展示设计，获得批准后再继续
 
-## Related Skills
+## 相关 Skills
 
-- **qx-game-design** — For creating/editing full Game Design Documents
-- **qx-writing-plans** — For creating implementation plans from designs
-- **qx-exploring** — For open-ended investigation before brainstorming
+- **qx-game-design** — 用于创建/编辑完整的游戏设计文档
+- **qx-writing-plans** — 用于从设计创建实施计划
+- **qx-exploring** — 用于头脑风暴之前的开放式调研

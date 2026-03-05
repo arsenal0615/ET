@@ -1,58 +1,58 @@
 ---
 name: qx-tdd
-description: "Use when implementing any feature or bugfix, before writing implementation code. Enforces test-driven development discipline."
+description: "在实现任何功能或修复 Bug 之前使用，先于编写实现代码。强制执行测试驱动开发纪律。"
 ---
 
-# Test-Driven Development (TDD)
+# 测试驱动开发（TDD）
 
-## Overview
+## 概述
 
-Write the test first. Watch it fail. Write minimal code to pass.
+先写测试。看着它失败。写最少的代码让它通过。
 
-**Core principle:** If you didn't watch the test fail, you don't know if it tests the right thing.
+**核心原则：** 如果你没有看着测试失败，你就不知道它是否在测试正确的事情。
 
-**Violating the letter of the rules is violating the spirit of the rules.**
+**违反规则的字面意思就是违反规则的精神。**
 
-## When to Use
+## 适用场景
 
-**Always:**
-- New features
-- Bug fixes
-- Refactoring
-- Behavior changes
+**始终使用：**
+- 新功能
+- Bug 修复
+- 重构（Refactoring）
+- 行为变更
 
-**Exceptions (ask your human partner):**
-- Throwaway prototypes
-- Generated code
-- Configuration files
+**例外（需征得你的人类伙伴同意）：**
+- 一次性原型
+- 生成的代码
+- 配置文件
 
-Thinking "skip TDD just this once"? Stop. That's rationalization.
+想着"就这一次跳过 TDD"？停下。那是在自我合理化。
 
-## The Iron Law
-
-```
-NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
-```
-
-Write code before the test? Delete it. Start over.
-
-**No exceptions:**
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
-
-Implement fresh from tests. Period.
-
-## Red-Green-Refactor
+## 铁律
 
 ```
-RED → Verify RED → GREEN → Verify GREEN → REFACTOR → Repeat
+没有先失败的测试，就不写生产代码
 ```
 
-### RED - Write Failing Test
+先写了代码再写测试？删掉。重新开始。
 
-Write one minimal test showing what should happen.
+**没有例外：**
+- 不要留作"参考"
+- 不要在写测试时"改编"它
+- 不要看它
+- 删除就是删除
+
+从测试出发，全新实现。句号。
+
+## 红-绿-重构（Red-Green-Refactor）
+
+```
+RED → 验证 RED → GREEN → 验证 GREEN → REFACTOR → 重复
+```
+
+### RED - 编写失败的测试
+
+编写一个最小的测试，展示预期行为。
 
 <Good>
 ```csharp
@@ -62,13 +62,13 @@ public void HealthSystem_Damage_ShouldNotExceedMaxHP()
     var unit = CreateTestUnit();
     SetMaxHP(unit, 100);
 
-    ApplyDamage(unit, 150); // exceeds max
+    ApplyDamage(unit, 150); // 超过最大值
 
     int actualHp = GetHP(unit);
     Assert.LessOrEqual(actualHp, 100, "HP should not exceed MaxHP");
 }
 ```
-Clear name, tests real behavior, one thing
+名称清晰，测试真实行为，只测一件事
 </Good>
 
 <Bad>
@@ -81,35 +81,35 @@ public void TestHealth()
     Assert.AreEqual(100, mock.Object.GetHP());
 }
 ```
-Vague name, tests mock not code
+名称模糊，测试的是 mock 而非真实代码
 </Bad>
 
-**Requirements:**
-- One behavior
-- Clear name
-- Real code (no mocks unless unavoidable)
+**要求：**
+- 只测一个行为
+- 名称清晰
+- 使用真实代码（除非不可避免才用 mock）
 
-### Verify RED - Watch It Fail
+### 验证 RED - 看着它失败
 
-**MANDATORY. Never skip.**
+**强制步骤。绝不跳过。**
 
 ```bash
-# Run the specific test (adapt command to your project)
+# 运行指定测试（根据项目调整命令）
 dotnet test --filter "HealthSystem_Damage_ShouldNotExceedMaxHP"
 ```
 
-Confirm:
-- Test fails (not errors)
-- Failure message is expected
-- Fails because feature missing (not typos)
+确认：
+- 测试失败（不是报错）
+- 失败信息符合预期
+- 因为功能缺失而失败（不是拼写错误）
 
-**Test passes?** You're testing existing behavior. Fix test.
+**测试通过了？** 你在测试已有行为。修正测试。
 
-**Test errors?** Fix error, re-run until it fails correctly.
+**测试报错了？** 修复错误，重新运行直到正确失败。
 
-### GREEN - Minimal Code
+### GREEN - 最少代码
 
-Write simplest code to pass the test.
+写最简单的代码让测试通过。
 
 <Good>
 ```csharp
@@ -121,7 +121,7 @@ public static void ApplyDamage(Unit unit, int damage)
     SetHP(unit, newHp);
 }
 ```
-Just enough to pass
+刚好够让测试通过
 </Good>
 
 <Bad>
@@ -130,124 +130,124 @@ public static void ApplyDamage(Unit unit, int damage,
     bool clamp = true, float? overrideMax = null,
     Action<int> onChanged = null)
 {
-    // YAGNI
+    // YAGNI（你不会需要它的）
 }
 ```
-Over-engineered
+过度设计
 </Bad>
 
-Don't add features, refactor other code, or "improve" beyond the test.
+不要添加功能、重构其他代码，或做超出测试要求的"改进"。
 
-### Verify GREEN - Watch It Pass
+### 验证 GREEN - 看着它通过
 
-**MANDATORY.**
+**强制步骤。**
 
 ```bash
 dotnet test
 ```
 
-Confirm:
-- Test passes
-- Other tests still pass
-- Output pristine (no errors, warnings)
+确认：
+- 测试通过
+- 其他测试仍然通过
+- 输出干净（无错误、无警告）
 
-**Test fails?** Fix code, not test.
+**测试失败了？** 修复代码，不是测试。
 
-**Other tests fail?** Fix now.
+**其他测试失败了？** 立即修复。
 
-### REFACTOR - Clean Up
+### REFACTOR - 清理
 
-After green only:
-- Remove duplication
-- Improve names
-- Extract helpers
+仅在 GREEN 之后：
+- 消除重复
+- 改进命名
+- 提取辅助方法
 
-Keep tests green. Don't add behavior.
+保持测试为绿。不添加行为。
 
-### Repeat
+### 重复
 
-Next failing test for next feature.
+下一个失败的测试，对应下一个功能。
 
-## Good Tests
+## 好的测试
 
-| Quality | Good | Bad |
-|---------|------|-----|
-| **Minimal** | One thing. "and" in name? Split it. | `Test_ValidatesEmailAndDomainAndWhitespace` |
-| **Clear** | Name describes behavior | `Test1` |
-| **Shows intent** | Demonstrates desired API | Obscures what code should do |
+| 质量 | 好的 | 差的 |
+|------|------|------|
+| **最小化** | 只测一件事。名称中有 "and"？拆分它。 | `Test_ValidatesEmailAndDomainAndWhitespace` |
+| **清晰** | 名称描述行为 | `Test1` |
+| **展示意图** | 展示期望的 API 用法 | 模糊了代码应该做什么 |
 
-## Why Order Matters
+## 为什么顺序很重要
 
-**"I'll write tests after to verify it works"**
+**"我之后写测试来验证它能工作"**
 
-Tests written after code pass immediately. Passing immediately proves nothing:
-- Might test wrong thing
-- Might test implementation, not behavior
-- Might miss edge cases you forgot
-- You never saw it catch the bug
+代码写完后写的测试会立即通过。立即通过什么也证明不了：
+- 可能测的是错误的东西
+- 可能测的是实现而非行为
+- 可能遗漏了你忘记的边界情况
+- 你从未看到它捕获过 Bug
 
-Test-first forces you to see the test fail, proving it actually tests something.
+先写测试迫使你看到测试失败，证明它确实在测试某些东西。
 
-**"Deleting X hours of work is wasteful"**
+**"删掉 X 小时的工作太浪费了"**
 
-Sunk cost fallacy. The time is already gone. Your choice now:
-- Delete and rewrite with TDD (X more hours, high confidence)
-- Keep it and add tests after (30 min, low confidence, likely bugs)
+沉没成本谬误（Sunk cost fallacy）。时间已经花了。你现在的选择：
+- 删除并用 TDD 重写（再花 X 小时，高可信度）
+- 保留并事后补测试（30 分钟，低可信度，大概率有 Bug）
 
-The "waste" is keeping code you can't trust.
+真正的"浪费"是保留你无法信任的代码。
 
-**"TDD is dogmatic, being pragmatic means adapting"**
+**"TDD 太教条了，务实就是要灵活"**
 
-TDD IS pragmatic:
-- Finds bugs before commit (faster than debugging after)
-- Prevents regressions (tests catch breaks immediately)
-- Documents behavior (tests show how to use code)
-- Enables refactoring (change freely, tests catch breaks)
+TDD 本身就是务实的：
+- 提交前发现 Bug（比提交后调试更快）
+- 防止回归（测试立即捕获破坏）
+- 记录行为（测试展示如何使用代码）
+- 支持重构（放心修改，测试捕获破坏）
 
-## Common Rationalizations
+## 常见自我合理化
 
-| Excuse | Reality |
-|--------|---------|
-| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
-| "I'll test after" | Tests passing immediately prove nothing. |
-| "Tests after achieve same goals" | Tests-after = "what does this do?" Tests-first = "what should this do?" |
-| "Already manually tested" | Ad-hoc ≠ systematic. No record, can't re-run. |
-| "Deleting X hours is wasteful" | Sunk cost fallacy. Keeping unverified code is technical debt. |
-| "Keep as reference, write tests first" | You'll adapt it. That's testing after. Delete means delete. |
-| "Need to explore first" | Fine. Throw away exploration, start with TDD. |
-| "Test hard = design unclear" | Listen to test. Hard to test = hard to use. |
-| "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
-| "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
-| "Existing code has no tests" | You're improving it. Add tests for existing code. |
+| 借口 | 现实 |
+|------|------|
+| "太简单了不需要测试" | 简单的代码也会出错。测试只需 30 秒。 |
+| "我之后再测" | 立即通过的测试什么也证明不了。 |
+| "事后补测试也能达到同样目的" | 事后补测试 = "这段代码做了什么？" 先写测试 = "这段代码应该做什么？" |
+| "我已经手动测过了" | 临时测试不等于系统测试。没有记录，无法重复运行。 |
+| "删掉 X 小时的工作太浪费了" | 沉没成本谬误。保留未验证的代码是技术债务。 |
+| "留作参考，测试还是先写" | 你会去改编它的。那就是事后补测试。删除就是删除。 |
+| "我需要先探索一下" | 可以。扔掉探索成果，然后用 TDD 开始。 |
+| "测试难写 = 设计不清晰" | 倾听测试。难以测试 = 难以使用。 |
+| "TDD 会拖慢我" | TDD 比调试更快。务实 = 先写测试。 |
+| "手动测试更快" | 手动测试无法证明边界情况。每次改动你都得重新测。 |
+| "现有代码没有测试" | 你在改进它。为现有代码添加测试。 |
 
-## Red Flags - STOP and Start Over
+## 红线 - 停下来，重新开始
 
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
+- 先写代码再写测试
+- 实现之后才写测试
+- 测试立即通过
+- 无法解释测试为什么失败
+- "之后再"添加测试
+- 自我合理化"就这一次"
+- "我已经手动测过了"
+- "事后补测试也能达到同样目的"
+- "留作参考"或"改编现有代码"
+- "已经花了 X 小时，删掉太浪费"
+- "TDD 太教条了，我在务实"
+- "这次情况不一样，因为..."
 
-**All of these mean: Delete code. Start over with TDD.**
+**以上所有情况都意味着：删除代码。用 TDD 重新开始。**
 
-## Project-Specific Testing Notes
+## 项目特定的测试说明
 
-> **IMPORTANT:** Read the project's CLAUDE.md and MEMORY.md for framework-specific testing constraints, conventions, and commands. Each project has its own rules about:
-> - How to create test objects (object pools, factories, etc.)
-> - Async test patterns (project-specific async frameworks)
-> - Where logic belongs (data vs logic separation patterns)
-> - Build/test commands and verification steps
+> **重要：** 阅读项目的 CLAUDE.md 和 MEMORY.md 了解框架特定的测试约束、约定和命令。每个项目都有自己的规则，包括：
+> - 如何创建测试对象（对象池、工厂等）
+> - 异步测试模式（项目特定的异步框架）
+> - 逻辑归属（数据与逻辑分离模式）
+> - 构建/测试命令和验证步骤
 
-## Example: Bug Fix
+## 示例：Bug 修复
 
-**Bug:** Empty email accepted in account registration
+**Bug：** 账号注册时接受了空邮箱
 
 **RED**
 ```csharp
@@ -259,7 +259,7 @@ public void AccountValidator_RejectsEmptyAccount()
 }
 ```
 
-**Verify RED**
+**验证 RED**
 ```
 Expected: "Account required"
 But was: null
@@ -273,62 +273,62 @@ public static ValidateResult ValidateAccount(string account)
     {
         return new ValidateResult { Error = "Account required" };
     }
-    // ...existing logic
+    // ...现有逻辑
 }
 ```
 
-**Verify GREEN**
+**验证 GREEN**
 ```
 PASS
 ```
 
 **REFACTOR**
-Extract validation for multiple fields if needed.
+如有需要，提取多字段的验证逻辑。
 
-## Verification Checklist
+## 验证清单
 
-Before marking work complete:
+在标记工作完成之前：
 
-- [ ] Every new function/method has a test
-- [ ] Watched each test fail before implementing
-- [ ] Each test failed for expected reason (feature missing, not typo)
-- [ ] Wrote minimal code to pass each test
-- [ ] All tests pass
-- [ ] Output pristine (no errors, warnings)
-- [ ] Tests use real code (mocks only if unavoidable)
-- [ ] Edge cases and errors covered
+- [ ] 每个新函数/方法都有测试
+- [ ] 在实现之前看着每个测试失败
+- [ ] 每个测试因预期原因失败（功能缺失，非拼写错误）
+- [ ] 为每个测试写了最少的通过代码
+- [ ] 所有测试通过
+- [ ] 输出干净（无错误、无警告）
+- [ ] 测试使用真实代码（仅在不可避免时使用 mock）
+- [ ] 边界情况和错误情况已覆盖
 
-Can't check all boxes? You skipped TDD. Start over.
+不能全部勾选？你跳过了 TDD。重新开始。
 
-## When Stuck
+## 卡住时怎么办
 
-| Problem | Solution |
-|---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
-| Test too complicated | Design too complicated. Simplify interface. |
-| Must mock everything | Code too coupled. Use dependency injection. |
-| Test setup huge | Extract helpers. Still complex? Simplify design. |
+| 问题 | 解决方案 |
+|------|----------|
+| 不知道怎么测试 | 写出你期望的 API。先写断言。问你的人类伙伴。 |
+| 测试太复杂 | 设计太复杂。简化接口。 |
+| 必须 mock 所有东西 | 代码耦合太重。使用依赖注入（Dependency Injection）。 |
+| 测试准备工作太庞大 | 提取辅助方法。还是复杂？简化设计。 |
 
-## Debugging Integration
+## 调试集成
 
-Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix and prevents regression.
+发现 Bug？写一个能复现它的失败测试。遵循 TDD 循环。测试证明修复有效并防止回归。
 
-Never fix bugs without a test.
+绝不在没有测试的情况下修复 Bug。
 
-## Testing Anti-Patterns
+## 测试反模式（Anti-Patterns）
 
-When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
-- Testing mock behavior instead of real behavior
-- Adding test-only methods to production classes
-- Mocking without understanding dependencies
-- Creating test objects that bypass normal lifecycle
-- Testing data-class methods directly instead of logic-module extensions
+在添加 mock 或测试工具时，阅读 @testing-anti-patterns.md 以避免常见陷阱：
+- 测试 mock 行为而非真实行为
+- 在生产类中添加仅供测试用的方法
+- 不理解依赖关系就使用 mock
+- 创建绕过正常生命周期的测试对象
+- 直接测试数据类方法而非逻辑模块的扩展方法
 
-## Final Rule
+## 最终规则
 
 ```
-Production code → test exists and failed first
-Otherwise → not TDD
+生产代码 → 必须有先失败的测试
+否则 → 不是 TDD
 ```
 
-No exceptions without your human partner's permission.
+没有你的人类伙伴的许可，不设例外。

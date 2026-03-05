@@ -1,73 +1,73 @@
 ---
 name: qx-writing-plans
-description: "Use when you have a spec, design, or requirements for a multi-step task, before touching code. Creates bite-sized TDD implementation plans with project framework awareness."
+description: "在有规格、设计或需求的多步骤任务开始编码之前使用。创建小粒度的 TDD 实施计划，具备项目框架感知能力。"
 ---
 
-# Writing Plans
+# 编写实施计划（Writing Plans）
 
-## Overview
+## 概述
 
-Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which files to touch for each task, code, testing, docs they might need to check, how to test it. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
+编写全面的实施计划，假设工程师对我们的代码库零上下文且审美存疑。记录他们需要知道的一切：每个任务要修改哪些文件、代码、测试、可能需要查阅的文档、如何测试。以小粒度任务形式给出完整计划。DRY（不重复）、YAGNI（不过度设计）、TDD（测试驱动）、频繁提交。
 
-Assume they are a skilled developer, but know almost nothing about the project's framework or the problem domain. Assume they don't know good test design very well.
+假设他们是有能力的开发者，但对项目框架和问题域几乎一无所知。假设他们不太擅长测试设计。
 
-**Announce at start:** "Using qx-writing-plans to create the implementation plan."
+**启动时宣告：** "正在使用 qx-writing-plans 创建实施计划。"
 
-## Change Context Detection
+## 变更上下文检测
 
-Before writing the plan, detect whether you're working within a change:
+编写计划前，检测是否在变更上下文中工作：
 
-1. **Check conversation context** — Has the user mentioned a change name? Have you been working on a change in `docs/changes/<name>/`?
-2. **Check for explicit path** — Did the user reference a file inside `docs/changes/`?
+1. **检查对话上下文** — 用户是否提到了变更名称？你是否在 `docs/changes/<name>/` 中工作？
+2. **检查显式路径** — 用户是否引用了 `docs/changes/` 中的文件？
 
-**If change context detected (Change Mode):**
-- Read `docs/changes/<name>/proposal.md`, `design.md`, and `specs/` as input context
-- Save plan to: `docs/changes/<name>/plan.md`
-- Use checkbox format for tasks (see Change Mode Task Structure below)
+**如果检测到变更上下文（Change Mode）：**
+- 读取 `docs/changes/<name>/proposal.md`、`design.md` 和 `specs/` 作为输入上下文
+- 计划保存到：`docs/changes/<name>/plan.md`
+- 任务使用复选框格式（见下方 Change Mode 任务结构）
 
-**If no change context (Quick Mode):**
-- Save plans to: `docs/plans/YYYY-MM-DD-<feature-name>.md`
-- Use original task format (see Task Structure below)
+**如果没有变更上下文（Quick Mode）：**
+- 计划保存到：`docs/plans/YYYY-MM-DD-<feature-name>.md`
+- 使用原始任务格式（见下方任务结构）
 
-## Project Context Loading
+## 项目上下文加载
 
-**Before writing any plan, read the project's CLAUDE.md and MEMORY.md to understand:**
-- Framework rules and coding conventions
-- Module/assembly organization and placement rules
-- Code generation steps (proto compilation, config export, etc.)
-- Build and verification commands
-- File naming conventions
-- Key patterns and anti-patterns
+**编写任何计划之前，读取项目的 CLAUDE.md 和 MEMORY.md 以了解：**
+- 框架规则和编码约定
+- 模块/程序集组织和放置规则
+- 代码生成步骤（Proto 编译、配置导出等）
+- 构建和验证命令
+- 文件命名约定
+- 关键模式和反模式
 
-## Bite-Sized Task Granularity
+## 小粒度任务粒度
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" - step
-- "Run it to make sure it fails" - step
-- "Implement the minimal code to make the test pass" - step
-- "Run the tests and make sure they pass" - step
-- "Commit" - step
+**每一步是一个动作（2-5 分钟）：**
+- "编写失败测试" - 一步
+- "运行确认失败" - 一步
+- "实现最小代码使测试通过" - 一步
+- "运行测试确认通过" - 一步
+- "提交" - 一步
 
-## Plan Document Header
+## 计划文档头部
 
-**Every plan MUST start with this header:**
+**每个计划必须以此头部开始：**
 
 ```markdown
 # [Feature Name] Implementation Plan
 
 > **For Claude:** REQUIRED: Use `/qx-exec` to implement this plan task-by-task.
 
-**Goal:** [One sentence describing what this builds]
+**Goal:** [一句话描述要构建什么]
 
-**Architecture:** [2-3 sentences about approach]
+**Architecture:** [2-3 句话关于实现方法]
 
-**Tech Stack:** [Key technologies/modules affected]
+**Tech Stack:** [涉及的关键技术/模块]
 
 **Impact:**
-- Modules/Assemblies: [list affected modules]
-- Code generation changes: [Yes/No — if yes, which generation steps needed]
-- New data models: [list with ownership declarations]
-- New messages/protocols: [list types]
+- Modules/Assemblies: [列出受影响的模块]
+- Code generation changes: [是/否 — 如果是，需要哪些生成步骤]
+- New data models: [列出，附带所有权声明]
+- New messages/protocols: [列出类型]
 
 **Rules:** [列出本计划涉及的 project-rules 文件名，2-4 个，不含路径前缀]
 - 例：ecs-patterns, code-templates, messaging-network
@@ -78,7 +78,7 @@ Before writing the plan, detect whether you're working within a change:
 ---
 ```
 
-## Task Structure (Quick Mode)
+## 任务结构（Quick Mode）
 
 ````markdown
 ### Task N: [Component Name]
@@ -93,7 +93,7 @@ Before writing the plan, detect whether you're working within a change:
 - Modify: `path/to/existing/file.cs:123-145`
 - Test: `path/to/test/file.cs`
 
-**Step 1: Write the failing test**
+**Step 1: 编写失败测试**
 
 ```csharp
 [Test]
@@ -107,12 +107,12 @@ public void TestSpecificBehavior()
 }
 ```
 
-**Step 2: Run test to verify it fails**
+**Step 2: 运行测试验证失败**
 
 Run: `dotnet test --filter "TestSpecificBehavior" -v n`
-Expected: FAIL with "method not found" or similar
+Expected: FAIL，报 "method not found" 或类似错误
 
-**Step 3: Write minimal implementation**
+**Step 3: 编写最小实现**
 
 ```csharp
 public static class MySystem
@@ -124,17 +124,17 @@ public static class MySystem
 }
 ```
 
-**Step 4: Run test to verify it passes**
+**Step 4: 运行测试验证通过**
 
 Run: `dotnet test --filter "TestSpecificBehavior" -v n`
 Expected: PASS
 
-**Step 5: Compile check**
+**Step 5: 编译检查**
 
-Run: [project build command from CLAUDE.md]
+Run: [CLAUDE.md 中的项目构建命令]
 Expected: Build succeeded, 0 errors
 
-**Step 6: Commit**
+**Step 6: 提交**
 
 ```bash
 git add <specific files>
@@ -142,14 +142,14 @@ git commit -m "feat: add specific feature"
 ```
 ````
 
-## Change Mode Task Structure
+## Change Mode 任务结构
 
-When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox format for persistent tracking:
+为变更编写计划时（`docs/changes/<name>/plan.md`），使用复选框格式进行持久化跟踪：
 
 ````markdown
 ## 1. [Group Name]
 
-- [ ] 1.1 [Task description]
+- [ ] 1.1 [任务描述]
 
 **Context:**
 - Depends: [前置任务编号，如 1.0；无依赖则省略此行]
@@ -161,14 +161,14 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 - Test: `path/to/test/file.cs`
 
 **Steps:**
-1. Write failing test
-2. Run to verify failure
-3. Implement minimal code
-4. Run to verify pass
-5. Compile check (project build command)
-6. Commit
+1. 编写失败测试
+2. 运行验证失败
+3. 实现最小代码
+4. 运行验证通过
+5. 编译检查（项目构建命令）
+6. 提交
 
-- [ ] 1.2 [Next task description]
+- [ ] 1.2 [下一个任务描述]
 
 **Context:**
 - Why: [一句话设计意图]
@@ -177,7 +177,7 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 
 ## 2. [Next Group]
 
-- [ ] 2.1 [Task description]
+- [ ] 2.1 [任务描述]
 
 **Context:**
 - Depends: 1.1, 1.2
@@ -186,77 +186,77 @@ When writing a plan for a change (`docs/changes/<name>/plan.md`), use checkbox f
 ...
 ````
 
-**Key differences from quick mode:**
-- Tasks use `- [ ]` checkbox format (updated to `- [x]` during execution)
-- Tasks are numbered as `N.M` (group.task)
-- Groups are numbered `## N. Group Name`
-- Progress persists across sessions via checkbox state
+**与 Quick Mode 的主要区别：**
+- 任务使用 `- [ ]` 复选框格式（执行时更新为 `- [x]`）
+- 任务编号为 `N.M`（组.任务）
+- 组编号为 `## N. Group Name`
+- 进度通过复选框状态在会话间持久化
 
-## Framework-Aware Planning
+## 框架感知的计划编写
 
-> **IMPORTANT:** Read CLAUDE.md for project-specific rules. Adapt the patterns below to your project's framework.
+> **重要：** 阅读 CLAUDE.md 了解项目特定规则。将以下模式适配到你的项目框架。
 
-When writing plans, ensure every plan addresses project-specific concerns:
+编写计划时，确保每个计划都涉及项目特定的关注点：
 
-### Module/Assembly Placement
-For each new file, specify which module or assembly it belongs to based on the project's architecture (read CLAUDE.md for the specific module organization).
+### 模块/程序集放置
+对于每个新文件，根据项目架构指定它属于哪个模块或程序集（阅读 CLAUDE.md 了解具体的模块组织方式）。
 
-### File Path Convention
-Always use full paths following the project's directory structure conventions.
+### 文件路径约定
+始终使用遵循项目目录结构约定的完整路径。
 
-### Code Generation Steps
-If plan involves new protocol/message definitions or config data:
-- Include a task for defining the source (proto files, Excel, etc.)
-- Include a task for running the code generation command
-- Include a verification step to confirm generated code compiles
+### 代码生成步骤
+如果计划涉及新的协议/消息定义或配置数据：
+- 包含定义源文件的任务（proto 文件、Excel 等）
+- 包含运行代码生成命令的任务
+- 包含验证生成代码编译通过的步骤
 
-### Data Model Declaration Tasks
-When plan creates new data models, include tasks for:
-- Creating the data definition with proper ownership annotations
-- Creating the associated logic module with required markers
-- Verifying compilation passes
+### 数据模型声明任务
+当计划创建新数据模型时，包含以下任务：
+- 创建带有正确所有权注解的数据定义
+- 创建带有必需标记的关联逻辑模块
+- 验证编译通过
 
-## Remember
+## 注意事项
 
-- Exact file paths always (follow project path conventions)
-- Complete code in plan (not "add validation")
-- Exact commands with expected output
-- DRY, YAGNI, TDD, frequent commits
-- Every new data model needs both definition + logic files
-- Every code generation change needs a generation step
-- Always include build verification step
-- Every task MUST have a `**Context:**` block with at least `Why`
-- `Depends` only declares direct dependencies (not transitive)
-- `Reads` only lists files truly needed (don't be greedy)
-- Plan header `Rules` should list 2-4 relevant rule files (not all 9)
+- 始终使用精确的文件路径（遵循项目路径约定）
+- 计划中给出完整代码（而非"添加验证"）
+- 精确的命令和预期输出
+- DRY（不重复）、YAGNI（不过度设计）、TDD（测试驱动）、频繁提交
+- 每个新数据模型都需要定义文件 + 逻辑文件
+- 每个代码生成变更都需要生成步骤
+- 始终包含构建验证步骤
+- 每个任务必须有 `**Context:**` 块，至少包含 `Why`
+- `Depends` 只声明直接依赖（非传递依赖）
+- `Reads` 只列出真正需要的文件（不要贪多）
+- 计划头部 `Rules` 应列出 2-4 个相关规则文件（不是全部 9 个）
 
-## Execution Handoff
+## 执行交接
 
-After saving the plan, offer execution choice:
+保存计划后，提供执行选择：
 
-**Change Mode:**
+**Change Mode：**
 
-**"Plan complete and saved to `docs/changes/<name>/plan.md`. Two execution options:**
+**"计划已完成并保存到 `docs/changes/<name>/plan.md`。两种执行方式：**
 
-**1. Multi-Agent Execution (this session)** — Use `/qx-exec` to dispatch agents per task, review between tasks, fast iteration
+**1. 多 Agent 执行（当前会话）** — 使用 `/qx-exec` 按任务分派 Agent，任务间审查，快速迭代
 
-**2. New Session** — Open new session, load plan, execute with checkpoints. Progress tracked via checkboxes — resume anytime.
+**2. 新会话** — 开启新会话，加载计划，带检查点执行。进度通过复选框跟踪 — 随时可恢复。
 
-**Which approach?"**
+**选择哪种方式？"**
 
-**Quick Mode:**
+**Quick Mode：**
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"计划已完成并保存到 `docs/plans/<filename>.md`。两种执行方式：**
 
-**1. Multi-Agent Execution (this session)** — Use `/qx-exec` to dispatch agents per task with review
+**1. 多 Agent 执行（当前会话）** — 使用 `/qx-exec` 按任务分派 Agent，含审查
 
-**2. New Session** — Open new session, load plan, execute with checkpoints
+**2. 新会话** — 开启新会话，加载计划，带检查点执行
 
-**Which approach?"**
+**选择哪种方式？"**
 
-## Related Skills
+## 相关 Skills
 
-- **qx-tdd** — For test-driven discipline during plan execution
-- **qx-code-review** — For reviewing completed tasks
-- **qx-exec** — For executing plans with multi-agent orchestration
-- **qx-managing-changes** — For change lifecycle (plan is one phase)
+- **qx-tdd** — 计划执行期间的测试驱动纪律
+- **qx-code-review** — 审查已完成的任务
+- **qx-exec** — 使用多 Agent 编排执行计划
+- **qx-managing-changes** — 变更生命周期（计划是其中一个阶段）

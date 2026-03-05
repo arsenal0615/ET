@@ -1,188 +1,188 @@
 ---
 name: qx-ux-design
-description: "Use when planning UX patterns, UI layouts, interaction flows, or visual direction for a game. Facilitates collaborative UX design through structured discovery."
+description: "用于规划 UX 模式、UI 布局、交互流程或游戏视觉方向。通过结构化探索推动协作式 UX 设计。"
 ---
 
-# UX Design
+# UX 设计
 
-## Overview
+## 概述
 
-Create UX design specifications through collaborative visual exploration and informed decision-making. You act as a UX facilitator working with a product stakeholder — this is a partnership, not a client-vendor relationship.
+通过协作式视觉探索和知情决策创建 UX 设计规格。你作为 UX 引导者与产品利益相关者合作 — 这是一种伙伴关系，而非甲方-乙方关系。
 
-**Core principle:** Collaborative discovery, not assumption-based design. Never generate content without user input.
+**核心原则：** 协作式探索，而非基于假设的设计。未经用户输入不要生成内容。
 
-**Announce at start:** "Using qx-ux-design to design the UX specification."
+**开始时宣告：** "正在使用 qx-ux-design 来设计 UX 规格。"
 
-## When to Use
+## 适用场景
 
-- Planning UI/UX for a new game feature
-- Redesigning existing UI flows
-- Creating a visual direction / style guide
-- Planning screen layouts and navigation
+- 为新游戏功能规划 UI/UX
+- 重新设计现有 UI 流程
+- 创建视觉方向/风格指南
+- 规划屏幕布局和导航
 
-## Preflight
+## 预检
 
-Check for existing context:
-1. `docs/game-design/` — GDD, feature specs
-2. Existing UX specs in `docs/game-design/`
-3. Project CLAUDE.md for technical constraints
-4. Knowledge base `art-ux-standards.md` for general UX principles
+检查现有上下文：
+1. `docs/game-design/` — GDD、功能规格
+2. `docs/game-design/` 中现有的 UX 规格
+3. 项目 CLAUDE.md 了解技术约束
+4. 知识库 `art-ux-standards.md` 了解通用 UX 原则
 
-## UX Design Process
+## UX 设计流程
 
-### Phase 1: Project Understanding
+### 阶段 1：项目理解
 
-**Goal:** Understand what we're designing UX for.
+**目标：** 理解我们在为什么设计 UX。
 
-**Review existing docs, then ask (one at a time):**
-- What feature/screen are we designing UX for?
-- Who are the target players? How tech-savvy?
-- What platforms? (PC, mobile, console — affects input and layout)
-- What's the most important thing players need to DO on this screen?
+**查阅现有文档后，逐一提问：**
+- 我们在为什么功能/屏幕设计 UX？
+- 目标玩家是谁？技术水平如何？
+- 什么平台？（PC、移动端、主机 — 影响输入方式和布局）
+- 玩家在这个屏幕上最需要做的事情是什么？
 
-**Output:**
+**输出：**
 ```markdown
-## Project Understanding
-### Feature Scope
-### Target Players
-### Platform Requirements
-### Core User Goals
-### Key UX Challenges
-### Design Opportunities
+## 项目理解
+### 功能范围
+### 目标玩家
+### 平台需求
+### 核心用户目标
+### 关键 UX 挑战
+### 设计机会
 ```
 
-**Present to user for approval before continuing.**
+**展示给用户审批后再继续。**
 
-### Phase 2: Core Experience Definition
+### 阶段 2：核心体验定义
 
-**Goal:** Define how the interaction should FEEL.
+**目标：** 定义交互应该有什么样的感觉。
 
-**Questions:**
-- What adjectives describe the ideal interaction? (Fast, careful, immersive, casual...)
-- What's the primary flow? (What does the player do step by step?)
-- What existing games/apps have UX you admire for this type of feature?
-- What frustrations should we avoid?
+**提问：**
+- 用什么形容词来描述理想的交互？（快速、审慎、沉浸、休闲……）
+- 主要流程是什么？（玩家逐步做什么？）
+- 哪些现有游戏/应用的 UX 是你在这类功能上欣赏的？
+- 应该避免什么让人沮丧的体验？
 
-**Output:**
+**输出：**
 ```markdown
-## Core Experience
-### Interaction Principles
-### Primary User Flow
-### Reference Inspirations
-### Anti-patterns to Avoid
+## 核心体验
+### 交互原则
+### 主要用户流程
+### 参考灵感
+### 需避免的反模式
 ```
 
-### Phase 3: Information Architecture
+### 阶段 3：信息架构
 
-**Goal:** Organize what information is shown and how.
+**目标：** 组织展示什么信息以及如何展示。
 
-**Collaborate on:**
-- What information does the player need on this screen?
-- Priority: What's critical vs nice-to-have?
-- Grouping: What information belongs together?
-- Navigation: How does the player get here and leave?
+**协作讨论：**
+- 玩家在这个屏幕上需要什么信息？
+- 优先级：什么是关键的 vs 锦上添花的？
+- 分组：什么信息应该放在一起？
+- 导航：玩家如何到达这里以及如何离开？
 
-**Output:**
+**输出：**
 ```markdown
-## Information Architecture
-### Information Hierarchy
-### Content Grouping
-### Navigation Flow
-### Screen Inventory
+## 信息架构
+### 信息层级
+### 内容分组
+### 导航流程
+### 屏幕清单
 ```
 
-### Phase 4: Layout & Wireframes
+### 阶段 4：布局与线框图
 
-**Goal:** Define spatial organization.
+**目标：** 定义空间组织。
 
-**Considerations:**
-- Safe areas (mobile notch, TV overscan)
-- Touch targets (44dp minimum on mobile)
-- Aspect ratio adaptations
-- Z-ordering (HUD > Popups > Windows > World UI)
+**考量事项：**
+- 安全区域（移动端刘海、电视过扫描）
+- 触控目标（移动端最小 44dp）
+- 宽高比适配
+- Z 轴排序（HUD > 弹窗 > 窗口 > 世界 UI）
 
-**Output:**
+**输出：**
 ```markdown
-## Layout
-### Screen Layouts (ASCII wireframes or descriptions)
-### Responsive Behavior
-### Component Placement Rationale
+## 布局
+### 屏幕布局（ASCII 线框图或描述）
+### 响应式行为
+### 组件放置理由
 ```
 
-**ASCII wireframe example:**
+**ASCII 线框图示例：**
 ```
 ┌──────────────────────────┐
-│ [Back]    Title    [Menu]│  ← Header
+│ [返回]    标题    [菜单] │  ← 头部
 ├──────────────────────────┤
 │                          │
-│    Main Content Area     │  ← Scrollable
+│       主内容区域         │  ← 可滚动
 │                          │
 ├──────────────────────────┤
-│ [Action1]    [Action2]   │  ← Bottom bar
+│ [操作1]      [操作2]     │  ← 底部栏
 └──────────────────────────┘
 ```
 
-### Phase 5: Visual Direction
+### 阶段 5：视觉方向
 
-**Goal:** Define look and feel.
+**目标：** 定义观感和风格。
 
-**Questions:**
-- What's the overall mood? (Dark/light, playful/serious, minimal/ornate)
-- Color palette direction?
-- Typography preferences?
-- Animation/motion style?
+**提问：**
+- 整体氛围是什么？（深色/浅色、活泼/严肃、简约/华丽）
+- 色彩方案方向？
+- 字体偏好？
+- 动画/动效风格？
 
-**Output:**
+**输出：**
 ```markdown
-## Visual Direction
-### Mood & Tone
-### Color Palette
-### Typography
-### Animation & Motion Principles
-### Icon Style
+## 视觉方向
+### 氛围与调性
+### 色彩方案
+### 字体排版
+### 动画与动效原则
+### 图标风格
 ```
 
-### Phase 6: Interaction Details
+### 阶段 6：交互细节
 
-**Goal:** Define micro-interactions and feedback.
+**目标：** 定义微交互和反馈。
 
-**For each interactive element, define:**
-- States: normal, hover, pressed, disabled, loading, error
-- Feedback: visual + audio + haptic
-- Transitions: how it enters/exits
-- Edge cases: empty state, error state, overflow
+**对每个交互元素，定义：**
+- 状态：常态、悬停、按下、禁用、加载中、错误
+- 反馈：视觉 + 音频 + 触觉
+- 过渡：如何进入/退出
+- 边界情况：空状态、错误状态、溢出
 
-**Output:**
+**输出：**
 ```markdown
-## Interaction Details
-### Component States
-### Feedback Patterns
-### Transition Animations
-### Edge Case Handling
+## 交互细节
+### 组件状态
+### 反馈模式
+### 过渡动画
+### 边界情况处理
 ```
 
-## Document Output
+## 文档输出
 
-Save to: `docs/game-design/ux-[feature-name].md`
+保存到：`docs/game-design/ux-[feature-name].md`
 
-## After the Design
+## 设计完成后
 
-**Transition options:**
-1. **Implementation:** Invoke `qx-writing-plans` for UI implementation plan
-2. **Review:** Use `/qx-review` for design review with multiple perspectives
-3. **Prototype:** If using a design tool, create mockups based on this spec
+**过渡选项：**
+1. **实现：** 调用 `qx-writing-plans` 制定 UI 实现计划
+2. **评审：** 使用 `/qx-review` 进行多角度设计评审
+3. **原型：** 如果使用设计工具，根据此规格创建 Mockup
 
-## Key Principles
+## 关键原则
 
-- **One question at a time** — Don't overwhelm the user
-- **Facilitator, not generator** — Ask, then propose, never assume
-- **Player-centered** — Every decision serves the player experience
-- **Platform-aware** — Mobile vs PC vs console changes everything
-- **Present before proceeding** — Show each phase, get approval, then continue
-- **Accessibility always** — Consider colorblind modes, text sizes, screen readers
+- **一次一个问题** — 不要让用户不知所措
+- **引导者而非生成者** — 先问再提议，绝不假设
+- **以玩家为中心** — 每个决策都服务于玩家体验
+- **平台感知** — 移动端 vs PC vs 主机改变一切
+- **展示后再继续** — 展示每个阶段，获得批准后再继续
+- **始终关注无障碍** — 考虑色盲模式、文字大小、屏幕阅读器
 
-## Related Skills
+## 相关 Skills
 
-- **qx-brainstorm** — For initial feature ideation before UX design
-- **qx-game-design** — GDD provides context for UX decisions
-- **qx-writing-plans** — For UI implementation planning
+- **qx-brainstorm** — 用于 UX 设计前的初始功能构思
+- **qx-game-design** — GDD 为 UX 决策提供上下文
+- **qx-writing-plans** — 用于 UI 实现规划

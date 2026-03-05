@@ -1,98 +1,98 @@
 ---
 name: qx-finishing
-description: "Use when implementation is complete and all tests pass. Guides completion of development work by presenting structured options for merge, PR, or cleanup."
+description: "在实现完成且所有测试通过后使用。通过提供合并、PR 或清理的结构化选项来引导开发工作的收尾。"
 ---
 
-# Finishing Development Work
+# 开发工作收尾
 
-## Overview
+## 概述
 
-Guide completion of development work by presenting clear options and handling the chosen workflow.
+通过提供清晰的选项并处理所选的工作流，引导开发工作的收尾。
 
-**Core principle:** Verify tests → Present options → Execute choice → Clean up.
+**核心原则：** 验证测试 → 展示选项 → 执行选择 → 清理。
 
-**Announce at start:** "Using qx-finishing to complete this work."
+**启动时宣布：** "正在使用 qx-finishing 来完成这项工作的收尾。"
 
-## The Process
+## 流程
 
-### Step 1: Verify Before Finishing
+### 步骤 1：收尾前验证
 
-**Before presenting options, verify work is complete:**
+**在展示选项之前，验证工作已完成：**
 
-Run the project's build and test commands:
+运行项目的构建和测试命令：
 ```bash
-# Build (adapt to your project)
-dotnet build   # or the project-specific build command
+# 构建（根据项目调整）
+dotnet build   # 或项目特定的构建命令
 
-# Tests
-dotnet test    # or the project-specific test command
+# 测试
+dotnet test    # 或项目特定的测试命令
 ```
 
-> **Note:** Read project CLAUDE.md for the specific build/test commands.
+> **注意：** 阅读项目 CLAUDE.md 获取具体的构建/测试命令。
 
-**If tests fail:**
+**如果测试失败：**
 ```
-Tests failing (N failures). Must fix before completing:
+测试失败（N 个失败）。必须修复后才能完成：
 
-[Show failures]
+[显示失败详情]
 
-Cannot proceed with merge/PR until tests pass.
+在测试通过之前无法进行合并/PR。
 ```
 
-Stop. Don't proceed to Step 2.
+停止。不要进入步骤 2。
 
-**If tests pass:** Continue to Step 2.
+**如果测试通过：** 继续步骤 2。
 
-### Step 2: Check Change Context
+### 步骤 2：检查变更上下文
 
-Detect if working within a change lifecycle:
-1. Check `docs/changes/` for an active change matching this work
-2. If found, suggest running `/qx-change verify` first
+检测是否在变更生命周期内工作：
+1. 检查 `docs/changes/` 中是否有与本次工作匹配的活跃变更
+2. 如果找到，建议先运行 `/qx-change verify`
 
-### Step 3: Determine Base Branch
+### 步骤 3：确定基准分支
 
 ```bash
 git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 ```
 
-Or ask: "This branch split from [main] — is that correct?"
+或询问："这个分支是从 [main] 分出的 -- 是否正确？"
 
-### Step 4: Present Options
+### 步骤 4：展示选项
 
-Present exactly these 4 options:
+展示恰好这 4 个选项：
 
 ```
-Implementation complete. What would you like to do?
+实现已完成。你想要做什么？
 
-1. Merge back to [base-branch] locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
-4. Discard this work
+1. 本地合并回 [base-branch]
+2. 推送并创建 Pull Request
+3. 保持分支现状（我之后自己处理）
+4. 丢弃这项工作
 
-Which option?
+选哪个？
 ```
 
-**Don't add explanation** — keep options concise.
+**不要添加解释** -- 保持选项简洁。
 
-### Step 5: Execute Choice
+### 步骤 5：执行选择
 
-#### Option 1: Merge Locally
+#### 选项 1：本地合并
 
 ```bash
 git checkout [base-branch]
 git pull
 git merge [feature-branch]
 
-# Verify tests on merged result
+# 在合并结果上验证测试
 [test command]
 
-# If tests pass
+# 如果测试通过
 git branch -d [feature-branch]
 ```
 
-Then: Cleanup (Step 6)
+然后：清理（步骤 6）
 
-#### Option 2: Push and Create PR
+#### 选项 2：推送并创建 PR
 
 ```bash
 git push -u origin [feature-branch]
@@ -107,79 +107,79 @@ EOF
 )"
 ```
 
-Report PR URL to user. Then: Cleanup (Step 6)
+向用户报告 PR URL。然后：清理（步骤 6）
 
-#### Option 3: Keep As-Is
+#### 选项 3：保持现状
 
-Report: "Keeping branch [name]. You can return to it later."
+报告："保持分支 [name] 现状。你可以之后返回继续。"
 
-**Don't cleanup.**
+**不做清理。**
 
-#### Option 4: Discard
+#### 选项 4：丢弃
 
-**Confirm first:**
+**先确认：**
 ```
-This will permanently delete:
-- Branch [name]
-- All commits: [commit-list]
+这将永久删除：
+- 分支 [name]
+- 所有提交：[commit-list]
 
-Type 'discard' to confirm.
+输入 'discard' 确认。
 ```
 
-Wait for exact confirmation. If confirmed:
+等待精确确认。确认后：
 ```bash
 git checkout [base-branch]
 git branch -D [feature-branch]
 ```
 
-Then: Cleanup (Step 6)
+然后：清理（步骤 6）
 
-### Step 6: Cleanup
+### 步骤 6：清理
 
-**For Options 1, 2, 4:**
+**针对选项 1、2、4：**
 
-Check if in a worktree:
+检查是否在 worktree 中：
 ```bash
 git worktree list
 ```
 
-If in a worktree, offer to remove it.
+如果在 worktree 中，提议移除它。
 
-**For Option 3:** Keep everything as-is.
+**针对选项 3：** 保持一切现状。
 
-### Step 7: Update Change Status
+### 步骤 7：更新变更状态
 
-If working within a change (`docs/changes/[name]/`):
-- Option 1 (merge): Suggest running `/qx-change archive`
-- Option 2 (PR): Note that archive should happen after PR merge
-- Option 4 (discard): Suggest cleaning up the change directory
+如果在变更生命周期内工作（`docs/changes/[name]/`）：
+- 选项 1（合并）：建议运行 `/qx-change archive`
+- 选项 2（PR）：说明应在 PR 合并后再归档
+- 选项 4（丢弃）：建议清理变更目录
 
-## Quick Reference
+## 快速参考
 
-| Option | Merge | Push | Keep Branch | Cleanup |
-|--------|-------|------|-------------|---------|
-| 1. Merge locally | Yes | - | Delete | Yes |
-| 2. Create PR | - | Yes | Keep | Worktree only |
-| 3. Keep as-is | - | - | Keep | No |
-| 4. Discard | - | - | Force delete | Yes |
+| 选项 | 合并 | 推送 | 保留分支 | 清理 |
+|------|------|------|----------|------|
+| 1. 本地合并 | 是 | - | 删除 | 是 |
+| 2. 创建 PR | - | 是 | 保留 | 仅 worktree |
+| 3. 保持现状 | - | - | 保留 | 否 |
+| 4. 丢弃 | - | - | 强制删除 | 是 |
 
-## Red Flags
+## 红线
 
-**Never:**
-- Proceed with failing tests
-- Merge without verifying tests on result
-- Delete work without confirmation
-- Force-push without explicit request
+**绝不：**
+- 在测试失败时继续
+- 不验证测试结果就合并
+- 不经确认就删除工作
+- 未经明确要求就 force-push
 
-**Always:**
-- Verify tests before offering options
-- Present exactly 4 options
-- Get typed confirmation for Option 4
-- Update change status if in change lifecycle
+**始终：**
+- 在提供选项前验证测试
+- 展示恰好 4 个选项
+- 选项 4 需要输入确认
+- 如果在变更生命周期内，更新变更状态
 
-## Related Skills
+## 相关 Skills
 
-- **qx-verification** — Verify work before finishing
-- **qx-code-review** — Review code before merge/PR
-- **qx-managing-changes** — Archive change after completion
-- **qx-compound** — Extract learnings after completion
+- **qx-verification** -- 在收尾前验证工作
+- **qx-code-review** -- 在合并/PR 前审查代码
+- **qx-managing-changes** -- 完成后归档变更
+- **qx-compound** -- 完成后提取经验
