@@ -15,6 +15,7 @@ namespace ET
         public string Name;
         public string Tag;
         public int[] Thresholds;
+        public SynergyType Type;
         public string Description;
         public SynergyEffectParam[] Effects;
     }
