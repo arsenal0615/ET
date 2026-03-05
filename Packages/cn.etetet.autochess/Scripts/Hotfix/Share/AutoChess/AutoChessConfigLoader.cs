@@ -270,156 +270,169 @@ namespace ET
             synergies["Ace"] = new SynergyDef
             {
                 Id = id++, Name = "王牌", Tag = "Ace",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "王牌单位获得额外暴击率和暴击伤害",
+                Description = "王牌单位获得额外伤害加成和吸血效果",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 0.3f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0.6f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 0.40f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.70f, Param2 = 0.70f, Param3 = 0f },
                 },
             };
 
             synergies["Assassin"] = new SynergyDef
             {
                 Id = id++, Name = "刺客", Tag = "Assassin",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "刺客单位战斗开始跳跃至敌方后排",
+                Description = "刺客单位获得暴击加成，战斗开始时跳至敌方后排",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.20f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 0.25f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 1f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.60f, Param2 = 1f, Param3 = 0f },
                 },
             };
 
             synergies["Blaster"] = new SynergyDef
             {
                 Id = id++, Name = "爆破", Tag = "Blaster",
+                Type = SynergyType.Static,
                 Thresholds = new[] { 2, 4 },
-                Description = "爆破单位攻击造成溅射伤害",
+                Description = "爆破单位获得射程加成和距离伤害加成",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.25f, Param2 = 1f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.50f, Param2 = 2f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.10f, Param2 = 1f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 1f, Param3 = 0f },
                 },
             };
 
             synergies["Brawler"] = new SynergyDef
             {
                 Id = id++, Name = "格斗", Tag = "Brawler",
+                Type = SynergyType.Static,
                 Thresholds = new[] { 2, 4 },
-                Description = "格斗单位获得额外生命值",
+                Description = "格斗单位获得额外生命值加成",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.20f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 0.10f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.5f, Param2 = 0f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 1.0f, Param2 = 0f, Param3 = 0f },
                 },
             };
 
             synergies["Brutalist"] = new SynergyDef
             {
                 Id = id++, Name = "重装", Tag = "Brutalist",
+                Type = SynergyType.Static,
                 Thresholds = new[] { 2, 4 },
-                Description = "重装单位获得额外护甲和攻击力",
+                Description = "重装单位获得攻击速度加成",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 0.10f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0.20f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.60f, Param2 = 0f, Param3 = 0f },
                 },
             };
 
             synergies["Clan"] = new SynergyDef
             {
                 Id = id++, Name = "部落", Tag = "Clan",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "部落单位获得攻击速度加成",
+                Description = "部落单位血量低时触发治疗和攻速爆发",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0.10f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.35f, Param2 = 0.35f, Param3 = 5.0f },
+                    new SynergyEffectParam { Param1 = 0.70f, Param2 = 0.70f, Param3 = 5.0f },
                 },
             };
 
             synergies["Giant"] = new SynergyDef
             {
                 Id = id++, Name = "巨人", Tag = "Giant",
+                Type = SynergyType.Static,
                 Thresholds = new[] { 2, 4 },
-                Description = "巨人单位获得额外生命值和击退效果",
+                Description = "巨人单位获得伤害减免",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.60f, Param2 = 1f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.4f, Param2 = 0f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.4f, Param2 = 0f, Param3 = 0f },
                 },
             };
 
             synergies["Goblin"] = new SynergyDef
             {
                 Id = id++, Name = "哥布林", Tag = "Goblin",
+                Type = SynergyType.Economic,
                 Thresholds = new[] { 2, 4 },
-                Description = "哥布林单位获得额外闪避和移动速度",
+                Description = "每回合获赠哥布林单位",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 0.20f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 0.40f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 1f, Param2 = 0f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 2f, Param2 = 0f, Param3 = 0f },
                 },
             };
 
             synergies["P.E.K.K.A"] = new SynergyDef
             {
                 Id = id++, Name = "皮卡", Tag = "P.E.K.K.A",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "皮卡单位获得额外攻击力和护盾",
+                Description = "皮卡单位击杀回血并获得伤害加成",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.20f, Param2 = 100f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 250f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.60f, Param2 = 0.40f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.60f, Param2 = 0.40f, Param3 = 0f },
                 },
             };
 
             synergies["Noble"] = new SynergyDef
             {
                 Id = id++, Name = "贵族", Tag = "Noble",
+                Type = SynergyType.Static,
                 Thresholds = new[] { 2, 4 },
-                Description = "贵族单位每回合获得额外金币",
+                Description = "贵族前排获得伤害减免，后排获得伤害加成",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 1f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 2f, Param2 = 0.10f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.25f, Param2 = 1f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 1f, Param3 = 0f },
                 },
             };
 
             synergies["Ranger"] = new SynergyDef
             {
                 Id = id++, Name = "射手", Tag = "Ranger",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "射手单位获得额外攻击速度和射程",
+                Description = "射手单位每次攻击叠加攻速",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 1f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.30f, Param2 = 2f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.10f, Param2 = 5f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.15f, Param2 = 5f, Param3 = 0f },
                 },
             };
 
             synergies["Superstar"] = new SynergyDef
             {
                 Id = id++, Name = "巨星", Tag = "Superstar",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "巨星单位获得法力回复加成",
+                Description = "巨星单位预充法力并有几率双重施法",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.25f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.50f, Param2 = 5f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.333f, Param2 = 0.50f, Param3 = 4f },
+                    new SynergyEffectParam { Param1 = 0.667f, Param2 = 0.50f, Param3 = 4f },
                 },
             };
 
             synergies["Undead"] = new SynergyDef
             {
                 Id = id++, Name = "亡灵", Tag = "Undead",
+                Type = SynergyType.Dynamic,
                 Thresholds = new[] { 2, 4 },
-                Description = "亡灵单位降低敌方防御并获得吸血",
+                Description = "亡灵单位降低敌方最大生命值",
                 Effects = new[]
                 {
-                    new SynergyEffectParam { Param1 = 0.20f, Param2 = 0f, Param3 = 0f },
-                    new SynergyEffectParam { Param1 = 0.40f, Param2 = 0.20f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.25f, Param2 = 0f, Param3 = 0f },
+                    new SynergyEffectParam { Param1 = 0.50f, Param2 = 0f, Param3 = 0f },
                 },
             };
         }

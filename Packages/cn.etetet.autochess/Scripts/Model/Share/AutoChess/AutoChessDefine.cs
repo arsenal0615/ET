@@ -6,6 +6,7 @@ namespace ET
         public const int BoardWidth = 8;
         public const int BoardHeight = 5;
         public const int BenchSize = 5;
+        public const int FrontRowMax = 1; // Row 0-1=前排, Row 2-4=后排
 
         // 商店
         public const int ShopSlotCount = 3;
