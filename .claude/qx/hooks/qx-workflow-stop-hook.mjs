@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+
+/**
+ * QX Workflow Stop Hook — AI 回答完后触发记录 + 推荐下一步（Stop）
+ *
+ * 职责:
+ * 1. 当 AI 完成一轮回答后，注入记录指令
+ * 2. 根据工作流转换表推荐下一步命令
+ * 3. 注入当前活跃变更上下文
+ *
+ * 配对: UserPromptSubmit(标记) + Stop(触发记录)
+ * 一次性触发: block 后立即清除 pending_record，避免无限循环
+ *
+ * 状态文件:
+ *   .claude/qx/state/workflow-record.json (读写)
+ *   .claude/qx/state/loop.json (只读)
+ */
+
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { resolve } from "path";
+
+// ─── 工作流转换表 ───
+// key = "command" 或 "command subcommand"，value = 推荐的下一步
+const WORKFLOW_TRANSITIONS = {
+  // 策划阶段
+  "/qx-brainstorm": "/qx-gdd 或 /qx-narrative",
+  "/qx-gdd": "/qx-review（三方评审）",
+  "/qx-narrative": "/qx-review（三方评审）",
+  "/qx-game-arch": "/qx-review（三方评审）",
+  "/qx-review": "/qx-stories（拆分 Story）或 /qx-change create",
+  "/qx-stories": "/qx-sprint plan（Sprint 规划）",
+  "/qx-sprint": "/qx-change create（开始第一个变更）",
+  "/qx-prd": "/qx-review（三方评审）",
+
+  // 变更生命周期
+  "/qx-change create": "/qx-change propose",
+  "/qx-change propose": "/qx-change design 或 /qx-review",
+  "/qx-change spec": "/qx-change design",
+  "/qx-change design": "/qx-plan（编写实施计划）",
+  "/qx-change verify": "/qx-finishing（收尾）",
+  "/qx-change archive": "/qx-compound（复合积累）",
+
+  // 实施阶段
+  "/qx-plan": "/qx-exec（执行计划）",
+  "/qx-exec": "/qx-finishing（收尾）",
+  "/qx-verify": "/qx-finishing（收尾）",
+  "/qx-finishing": "/qx-change archive（归档变更）",
+  "/qx-compound": "下一个 Story → /qx-change create",
+
+  // 其他
+  "/qx-impact": "根据影响分析结果决定下一步",
+  "/qx-debug": "修复后 → /qx-verify（验证修复）",
+  "/qx-test design": "/qx-test automate（自动化测试）",
+  "/qx-test automate": "/qx-test execute（执行测试）",
+  "/qx-test execute": "/qx-verify（验证结果）",
+  "/qx-ux": "/qx-review（评审 UX 方案）",
+};
+
+// 这些子命令完成后需要提醒用户 git commit 变更文档
+const COMMIT_AFTER_SUBCOMMANDS = new Set(["create", "propose", "spec", "design"]);
+
+// ─── 主逻辑 ───
+
+const input = JSON.parse(await readStdin());
+const cwd = input.cwd || process.cwd();
+const sessionId = input.session_id || "";
+
+const recordFile = resolve(cwd, ".claude/qx/state/workflow-record.json");
+const loopFile = resolve(cwd, ".claude/qx/state/loop.json");
+
+// 加载 workflow-record 状态
+let recordState = null;
+if (existsSync(recordFile)) {
+  try {
+    recordState = JSON.parse(readFileSync(recordFile, "utf8"));
+  } catch {
+    recordState = null;
+  }
+}
+
+// 无状态或无待记录 → 放行
+if (!recordState || !recordState.pending_record) {
+  allow();
+}
+
+// Session 隔离
+if (recordState.session_id && recordState.session_id !== sessionId) {
+  allow();
+}
+
+// 检查 loop 是否活跃
+let loopActive = false;
+if (existsSync(loopFile)) {
+  try {
+    const loopState = JSON.parse(readFileSync(loopFile, "utf8"));
+    loopActive = loopState.active === true;
+  } catch {
+    loopActive = false;
+  }
+}
+
+// Loop 活跃 → 让 loop hook 接管
+if (loopActive) {
+  allow();
+}
+
+// ═══ 触发记录：清除标志 + 注入记录指令 ═══
+recordState.pending_record = false;
+try {
+  writeFileSync(recordFile, JSON.stringify(recordState, null, 2));
+} catch {
+  /* best effort */
+}
+
+const logFile =
+  recordState.log_file || ".claude/memory/qx-a1-workflow-analysis.md";
+const trigger = recordState.last_trigger || "(unknown)";
+const preview = recordState.trigger_preview || "";
+const stepNum = recordState.step_count || "?";
+const planFile = recordState.plan_file || "";
+const activeChanges = recordState.active_changes || [];
+const lastCommand = recordState.last_command || "";
+const lastSubcommand = recordState.last_subcommand || "";
+
+// 查找推荐下一步
+const transitionKey = lastSubcommand
+  ? `${lastCommand} ${lastSubcommand}`
+  : lastCommand;
+const recommendedNext =
+  WORKFLOW_TRANSITIONS[transitionKey] ||
+  WORKFLOW_TRANSITIONS[lastCommand] ||
+  "";
+
+// 构建上下文块
+const planContext = planFile ? `**执行计划**: ${planFile}\n` : "";
+
+const changesContext =
+  activeChanges.length > 0
+    ? `**当前活跃变更**: ${activeChanges.join(", ")}\n`
+    : "";
+
+// 构建推荐下一步
+const nextLine = recommendedNext
+  ? `\u{1F449} 推荐下一步: ${recommendedNext}\n`
+  : "";
+
+// 构建 git commit 提醒
+const commitReminder =
+  lastCommand === "/qx-change" && COMMIT_AFTER_SUBCOMMANDS.has(lastSubcommand)
+    ? `\n\u{1F4A1} 变更文档已生成，请 git commit 相关文件（.change.yaml / proposal.md / design.md 等）\n`
+    : "";
+
+// 构建轻量记录指令
+const recordLine =
+  `\n\u{1F4DD} 请追加一行记录到 ${logFile}（表格格式）：\n` +
+  `| ${stepNum} | ${trigger} | (一句话摘要) | (遇到的问题，如无则留空) |\n`;
+
+process.stdout.write(
+  JSON.stringify({
+    decision: "block",
+    reason:
+      `<qx-workflow-record>\n` +
+      `\u2705 ${trigger} 已完成\n` +
+      nextLine +
+      commitReminder +
+      planContext +
+      changesContext +
+      recordLine +
+      `</qx-workflow-record>`,
+  })
+);
+process.exit(0);
+
+// ─── 工具函数 ───
+
+function allow() {
+  process.stdout.write(JSON.stringify({ decision: "allow" }));
+  process.exit(0);
+}
+
+async function readStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString("utf8");
+}

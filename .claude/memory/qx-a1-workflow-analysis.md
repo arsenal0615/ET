@@ -295,6 +295,45 @@ qx-finishing → 发现 3 个未跟踪文件，补提交 proposal/design/.change
 
 ---
 
+## 十二、a1-unit 变更执行记录
+
+> 开始时间：2026-03-04（跨会话，context compaction 后续接）
+
+### 步骤记录
+
+| 顺序 | 步骤 | Token | 备注 |
+|------|------|-------|------|
+| 1 | /qx-exec 读取计划 | 主会话 | 读取 plan.md（1340 行，15 任务 8 阶段），构建 static context |
+| 2 | Task 1.1-1.3（单 agent） | ~93K | UnitInfo + RosterComponent + MatchRoomFactory；**命名空间冲突** `global::ET.UnitInfo` 修复 |
+| 3 | Task 2.1（RosterService） | 不可用 | AddToBench/Remove/Find/Stats/Recover + TestRoster |
+| 4 | Task 3.1（PlacementService） | 不可用 | TryPlaceToBoard/TryMoveOnBoard/TrySwap + TestPlacement |
+| 5 | Task 4.1（MergeService） | 不可用 | RunMergeChain（确定性 6 层排序）+ TestMerge |
+| 6 | Task 5.1（PreBattleService） | 不可用 | ValidateAndFix + TestPreBattle |
+| 7 | Task 6.1（UnitService） | 不可用 | Buy/Sell/CreateFirstRoundGift 门面 + TestUnitService |
+| 8 | Task 6.2+6.3（并行 bg） | 不可用 | Handler_Unit + Shop 集成 FirstRoundGift；后台 agent 无 Bash 权限，主会话补 commit |
+| 9 | Task 7.1（Elimination） | 不可用 | EliminatePlayer + RecoverAllToPool + TestEliminationRecovery |
+| 10 | Task 8.1-8.2（构建+测试） | 主会话 | 12 预存错误 / 0 新错误；12 个测试方法确认完整 |
+| 11 | Task 8.3（system-map） | 主会话 | 新增单位系统章节 |
+| 12 | Task 8.4（Final Review） | ~93K | APPROVE + 3 Important 已修复 |
+| 13 | /qx-finishing → archive | 主会话 | 归档到 archive/ |
+| 14 | /qx-compound | 主会话 | MEMORY +4 条，patterns +4 模式 |
+
+### 关键发现
+
+1. **命名空间冲突 `global::`** — Proto `ET.UnitInfo` vs autochess `ET.Server.UnitInfo`
+2. **副作用前预检** — Buy 必须先检查板凳再调 TryBuy（Final Review [I1]）
+3. **后台 Agent 限制** — `run_in_background` agent 无 Bash 权限，需主会话补 commit
+4. **步骤记录中断** — context compaction 后"持久工作规则"丢失，未触发记录
+
+### 新发现工作流问题
+
+| # | 问题 | 环节 | 严重程度 |
+|---|------|------|---------|
+| #15 | context compaction 后 MEMORY 中的"持久工作规则"丢失，步骤记录中断 | MEMORY 机制 | P1 |
+| #16 | 后台 Agent 无 Bash 权限，需主会话补 commit | qx-exec 并行 | P2 |
+
+---
+
 ## 附：已记录问题总览（qx-workflow-issues.md）
 
 | # | 环节 | 严重程度 | 状态 |
@@ -306,5 +345,7 @@ qx-finishing → 发现 3 个未跟踪文件，补提交 proposal/design/.change
 | #5 | 三方评审缺少作者回应闭环 | P2 | 待修复 |
 | #6 | qx-stories 缺少依赖完整性验证 | P2 | 待修复 |
 | #7 | qx-change 的 propose→design 缺少检查点 | P2 | 待修复 |
-| #8 | qx-exec 缺少并行执行能力 | P1 | 待修复 |
-| #9~#14 | 本次分析新发现（见上） | P1-P2 | 待记录 |
+| #8 | qx-exec 缺少并行执行能力 | P1 | 已部分解决（6.2+6.3 并行） |
+| #9~#14 | 本次分析新发现（见第九节） | P1-P2 | 待记录 |
+| #15 | context compaction 后步骤记录中断 | P1 | 新 |
+| #16 | 后台 Agent 无 Bash 权限 | P2 | 新 |

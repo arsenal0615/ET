@@ -92,7 +92,12 @@ description: "在有已批准的实施计划时使用。读取计划，按任务
    a. 如果计划头部有 "Design Ref:" 且不是 "None"：
       → 读取引用的文件
       → 包含相关章节
-4. 将所有内容存储为 `static_context` 以供复用
+4. 从设计文档中提取审查约束（用于规格审查员）：
+   a. 提取所有技术决策（TD-* 编号及其要求）
+   b. 提取实体树结构图（[ComponentOf]/[ChildOf] 关系）
+   c. 提取属性要求（如 [FriendOf] 声明列表）
+   d. 存储为 `static_context.design_constraints` 以供审查员使用
+5. 将所有内容存储为 `static_context` 以供复用
 ```
 
 **static_context 包含：**
@@ -100,6 +105,7 @@ description: "在有已批准的实施计划时使用。读取计划，按任务
 - CLAUDE.md 分析器规则（始终包含）
 - 相关 project-rules 内容（来自头部 Rules 字段）
 - 设计文档摘录（如果 Design Ref 存在）
+- 设计约束摘要（技术决策 + 结构要求 + 属性声明 -- 用于审查员注入）
 
 同时初始化 `task_outputs = {}` — 一个映射，存储每个任务的完成输出以用于依赖解析。
 
@@ -260,8 +266,16 @@ Agent(subagent_type="code-reviewer", prompt="""
   ### 项目框架规则（与本任务相关）
   [Same framework rules injected to implementer — from static_context]
 
+  ### 设计文档约束（必须对照检查）
+  [From static_context.design_constraints — key technical decisions (TD-*),
+   structure requirements, attribute requirements (e.g. [FriendOf], [ComponentOf], [ChildOf]),
+   sub-seed isolation requirements, entity tree constraints.
+   Only include decisions relevant to this task's scope.]
+
   ### 变更的文件
   [From implementer structured output — file paths]
+
+  **重要：你必须使用 Read 工具读取上述每个文件的当前磁盘内容。不要依赖实现者摘要中引用的代码片段——它们可能是过期的。**
 
   ### 实现者摘要
   [From implementer structured output — 实现摘要 + 关键决策]
@@ -271,6 +285,7 @@ Agent(subagent_type="code-reviewer", prompt="""
   2. 没有超出规格的额外内容
   3. 实现遵循框架规则（对照上面注入的规则）
   4. 设计意图被保留（对照设计意图）
+  5. 设计文档的技术决策和结构约束被遵循（对照设计文档约束，特别是属性声明、种子隔离、实体树关系）
 
   裁定: PASS / FAIL
   如果 FAIL: 列出具体的缺口或多余内容
@@ -295,6 +310,8 @@ Agent(subagent_type="code-reviewer", prompt="""
 
   ### 变更的文件
   [From implementer structured output — file paths]
+
+  **重要：你必须使用 Read 工具读取上述每个文件的当前磁盘内容。不要依赖实现者摘要中引用的代码片段——它们可能是过期的。**
 
   ### 实现者摘要
   [From implementer structured output — 实现摘要 + 关键决策]
@@ -444,6 +461,24 @@ Agent(subagent_type="code-reviewer", prompt="""
 | 质量审查发现 Critical 问题 | 必须修复后才能继续 |
 | 任务后构建/测试失败 | 在下一个任务前调查 |
 | 被不清楚的需求阻塞 | 停止，询问用户，回答后恢复 |
+
+### Orchestrator 直接修复标准
+
+当审查发现需要修复的问题时，orchestrator 可以选择直接修复（而非重新分派 Agent），但**仅限于以下情况**：
+
+**可以直接修复：**
+- 单行属性修改（如 `SceneType.Main` → `SceneType.Map`、添加 `[FriendOf(typeof(X))]`）
+- Import / using 语句增删
+- 常量值调整
+- 明显的拼写或命名修正
+
+**必须重新分派 Agent：**
+- 涉及多个文件的架构性修改
+- 算法或流程逻辑变更
+- 新增文件或大段代码（>20 行）
+- 需要运行测试验证的修复
+
+直接修复后仍需重新运行审查（使用 haiku 模型快速复查即可）。
 
 ## 向后兼容
 
