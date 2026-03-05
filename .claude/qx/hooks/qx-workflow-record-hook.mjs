@@ -140,8 +140,17 @@ if (isQxCommand) {
   safeWrite(stateFile, state);
   allow();
 } else if (isActive) {
-  // ═══ 活跃工作流的后续输入 → 标记 ═══
-  state.pending_record = true;
+  // ═══ 活跃工作流的后续输入 → 有条件标记 ═══
+
+  // 去重：跳过不应触发记录的后续消息
+  const isTaskNotification = userPrompt.includes("<task-notification>");
+  const isHookFeedback = userPrompt.includes("<qx-workflow-record>");
+  const skipRecord = isTaskNotification || isHookFeedback;
+
+  if (!skipRecord) {
+    state.pending_record = true;
+  }
+  // 即使跳过记录，也更新时间戳保持活跃状态
   state.last_trigger = `(follow-up: ${state.last_command}${state.last_subcommand ? " " + state.last_subcommand : ""})`;
   state.trigger_timestamp = new Date().toISOString();
   state.trigger_preview = userPrompt.substring(0, 200);
@@ -151,7 +160,7 @@ if (isQxCommand) {
   state.steps = state.steps || [];
   state.steps.push({
     n: state.step_count,
-    cmd: "(follow-up)",
+    cmd: skipRecord ? "(skip-notification)" : "(follow-up)",
     ts: new Date().toISOString(),
     preview: userPrompt.substring(0, 120),
   });

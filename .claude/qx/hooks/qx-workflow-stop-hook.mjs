@@ -104,8 +104,31 @@ if (loopActive) {
   allow();
 }
 
-// ═══ 触发记录：清除标志 + 注入记录指令 ═══
+// ═══ 去重：同一 trigger 短时间内不重复 block ═══
+const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 分钟
+const currentTrigger = recordState.last_trigger || "";
+const lastBlocked = recordState._last_blocked_trigger || "";
+const lastBlockedAt = recordState._last_blocked_at || "";
+
+if (
+  currentTrigger === lastBlocked &&
+  lastBlockedAt &&
+  Date.now() - new Date(lastBlockedAt).getTime() < DEDUP_WINDOW_MS
+) {
+  // 同一 trigger 已在窗口内 block 过 → 清除 pending 并放行
+  recordState.pending_record = false;
+  try {
+    writeFileSync(recordFile, JSON.stringify(recordState, null, 2));
+  } catch {
+    /* best effort */
+  }
+  allow();
+}
+
+// ═══ 触发记录：清除标志 + 记录去重信息 + 注入记录指令 ═══
 recordState.pending_record = false;
+recordState._last_blocked_trigger = currentTrigger;
+recordState._last_blocked_at = new Date().toISOString();
 try {
   writeFileSync(recordFile, JSON.stringify(recordState, null, 2));
 } catch {
