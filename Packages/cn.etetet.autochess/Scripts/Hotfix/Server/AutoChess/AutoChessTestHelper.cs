@@ -12,6 +12,7 @@ namespace ET.Server
     [FriendOf(typeof(ShopComponent))]
     [FriendOf(typeof(SharedPoolComponent))]
     [FriendOf(typeof(RosterComponent))]
+    [FriendOf(typeof(SynergyComponent))]
     public static class AutoChessTestHelper
     {
         /// <summary>
@@ -31,6 +32,9 @@ namespace ET.Server
             TestPreBattle(scene);
             TestUnitService(scene);
             TestEliminationRecovery(scene);
+            TestSynergyCounting(scene);
+            TestSynergySnapshot(scene);
+            TestGoblinGift(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -786,6 +790,167 @@ namespace ET.Server
 
             scene.RemoveComponent<MatchComponent>();
             Log.Info("[AutoChess] Elimination recovery test passed: roster units returned to pool correctly");
+        }
+
+        /// <summary>
+        /// 验证羁绊统计：tag 计数、level 计算、实时更新。
+        /// </summary>
+        public static void TestSynergyCounting(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 12001, 12002, 12003, 12004 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 12121);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(12001);
+            SynergyComponent synergy = p1.GetComponent<SynergyComponent>();
+            if (synergy == null) throw new Exception("SynergyComponent missing on player");
+
+            // 添加单位到棋盘：迷你皮卡(Id=1, P.E.K.K.A/Brutalist) 和 皮卡超人(Id=10, P.E.K.K.A/Brawler)
+            UnitInfo u1 = RosterService.AddToBench(p1, 1, 1, false);
+            u1.Row = 0; u1.Col = 0;
+            UnitInfo u2 = RosterService.AddToBench(p1, 10, 1, false);
+            u2.Row = 1; u2.Col = 0;
+            // 板凳：野蛮人(Id=4, Clan/Brawler)
+            UnitInfo u3 = RosterService.AddToBench(p1, 4, 1, false);
+
+            SynergyService.Recalculate(p1);
+
+            // P.E.K.K.A: 2个棋盘 → count=2, thresholds=[2,4] → level=1
+            SynergyEntry pekka = FindSynergyByTag(synergy.LiveSynergies, "P.E.K.K.A");
+            if (pekka == null) throw new Exception("P.E.K.K.A synergy not found");
+            if (pekka.Count != 2) throw new Exception($"P.E.K.K.A count expected 2, got {pekka.Count}");
+            if (pekka.Level != 1) throw new Exception($"P.E.K.K.A level expected 1, got {pekka.Level}");
+
+            // Brutalist: 1个棋盘 → count=1, thresholds=[2,4] → level=0
+            SynergyEntry brutalist = FindSynergyByTag(synergy.LiveSynergies, "Brutalist");
+            if (brutalist == null) throw new Exception("Brutalist synergy not found");
+            if (brutalist.Count != 1) throw new Exception($"Brutalist count expected 1, got {brutalist.Count}");
+            if (brutalist.Level != 0) throw new Exception($"Brutalist level expected 0, got {brutalist.Level}");
+
+            // Brawler: 只有皮卡超人1个在棋盘（野蛮人在板凳不计） → count=1, level=0
+            SynergyEntry brawler = FindSynergyByTag(synergy.LiveSynergies, "Brawler");
+            if (brawler == null) throw new Exception("Brawler synergy not found");
+            if (brawler.Count != 1) throw new Exception($"Brawler count expected 1, got {brawler.Count}");
+            if (brawler.Level != 0) throw new Exception($"Brawler level expected 0, got {brawler.Level}");
+
+            // 将野蛮人移到棋盘 → Brawler count=2, level=1
+            u3.Row = 2; u3.Col = 0;
+            SynergyService.Recalculate(p1);
+            brawler = FindSynergyByTag(synergy.LiveSynergies, "Brawler");
+            if (brawler.Count != 2) throw new Exception($"Brawler count expected 2 after move, got {brawler.Count}");
+            if (brawler.Level != 1) throw new Exception($"Brawler level expected 1 after move, got {brawler.Level}");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] SynergyCounting test passed: tag counting, level calc, real-time update correct");
+        }
+
+        /// <summary>
+        /// 验证快照生成：ActiveSynergies、UnitModifiers 静态效果。
+        /// </summary>
+        public static void TestSynergySnapshot(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 13001, 13002, 13003, 13004 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 13131);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(13001);
+
+            // 棋盘放 2 个 Brawler：皮卡超人(Id=10, P.E.K.K.A/Brawler) 和 野蛮人(Id=4, Clan/Brawler)
+            UnitInfo u1 = RosterService.AddToBench(p1, 10, 1, false);
+            u1.Row = 0; u1.Col = 0;
+            UnitInfo u2 = RosterService.AddToBench(p1, 4, 1, false);
+            u2.Row = 1; u2.Col = 0;
+
+            SynergyService.GenerateSnapshot(p1);
+
+            SynergyComponent synergy = p1.GetComponent<SynergyComponent>();
+            TraitSnapshot snapshot = synergy.Snapshot;
+            if (snapshot == null) throw new Exception("Snapshot should not be null");
+
+            // ActiveSynergies 应包含 Brawler level=1
+            SynergyEntry activeBrawler = null;
+            foreach (SynergyEntry e in snapshot.ActiveSynergies)
+            {
+                if (e.Tag == "Brawler") activeBrawler = e;
+            }
+            if (activeBrawler == null) throw new Exception("Brawler not in ActiveSynergies");
+            if (activeBrawler.Level != 1) throw new Exception($"Brawler active level expected 1, got {activeBrawler.Level}");
+
+            // UnitModifiers: Brawler level=1 → HpMultiplier = 1.0 * (1 + 0.5) = 1.5
+            if (!snapshot.UnitModifiers.ContainsKey(u1.InstId))
+                throw new Exception("u1 missing from UnitModifiers");
+            UnitBattleModifiers mods1 = snapshot.UnitModifiers[u1.InstId];
+            float expectedHp = 1.5f;
+            if (Math.Abs(mods1.HpMultiplier - expectedHp) > 0.001f)
+                throw new Exception($"u1 HpMultiplier expected {expectedHp}, got {mods1.HpMultiplier}");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] SynergySnapshot test passed: snapshot generation and static effects correct");
+        }
+
+        /// <summary>
+        /// 验证 Goblin 经济羁绊：赠送单位到板凳。
+        /// </summary>
+        public static void TestGoblinGift(Scene scene)
+        {
+            AutoChessConfigLoader.Init();
+
+            MatchComponent matchComp = scene.AddComponent<MatchComponent>();
+            List<long> playerIds = new List<long> { 14001, 14002, 14003, 14004 };
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, playerIds, 14141);
+            room.StartMatch();
+
+            MatchPlayer p1 = room.FindPlayerById(14001);
+            DeterministicRngComponent rng = room.GetComponent<DeterministicRngComponent>();
+            SynergyComponent synergy = p1.GetComponent<SynergyComponent>();
+
+            // 手动设置 LastGoblinLevel = 1（模拟上回合有 Goblin 激活）
+            synergy.LastGoblinLevel = 1;
+
+            int benchBefore = RosterService.GetBenchUsed(p1);
+            int given = GoblinGiftService.TryGiveGifts(p1, rng, 2);
+
+            // Goblin level=1 → Effects[0].Param1=1 → 赠送 1 个
+            if (given != 1) throw new Exception($"GoblinGift: expected 1 gift, got {given}");
+            if (RosterService.GetBenchUsed(p1) != benchBefore + 1)
+                throw new Exception("GoblinGift: bench should have 1 more unit");
+
+            // 验证赠送的单位是 isGift=true 且有 Goblin 标签
+            RosterComponent roster = p1.GetComponent<RosterComponent>();
+            UnitInfo giftUnit = roster.Units[roster.Units.Count - 1];
+            if (!giftUnit.IsGift) throw new Exception("Gift unit should have IsGift=true");
+
+            UnitTemplateDef giftDef = AutoChessConfigLoader.GetUnit(giftUnit.TemplateId);
+            bool hasGoblinTag = false;
+            foreach (string tag in giftDef.Tags)
+            {
+                if (tag == "Goblin") { hasGoblinTag = true; break; }
+            }
+            if (!hasGoblinTag) throw new Exception("Gift unit should have Goblin tag");
+
+            // LastGoblinLevel=0 → 不赠送
+            synergy.LastGoblinLevel = 0;
+            int noGift = GoblinGiftService.TryGiveGifts(p1, rng, 3);
+            if (noGift != 0) throw new Exception("GoblinGift: should give 0 when LastGoblinLevel=0");
+
+            scene.RemoveComponent<MatchComponent>();
+            Log.Info("[AutoChess] GoblinGift test passed: gift giving and validation correct");
+        }
+
+        private static SynergyEntry FindSynergyByTag(List<SynergyEntry> entries, string tag)
+        {
+            if (entries == null) return null;
+            foreach (SynergyEntry e in entries)
+            {
+                if (e.Tag == tag) return e;
+            }
+            return null;
         }
     }
 }
