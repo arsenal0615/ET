@@ -18,6 +18,12 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "cn.etetet.autochess": {
+      "version": "file:cn.etetet.autochess",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "cn.etetet.console": {
       "version": "file:cn.etetet.console",
       "depth": 0,
