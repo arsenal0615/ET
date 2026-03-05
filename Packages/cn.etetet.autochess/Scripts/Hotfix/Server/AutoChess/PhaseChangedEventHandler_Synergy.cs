@@ -6,7 +6,6 @@ namespace ET.Server
     /// - PreBattle: 对所有存活玩家 GenerateSnapshot
     /// - RoundStart (round >= 2): 对所有存活玩家 TryGiveGifts
     /// </summary>
-    [FriendOf(typeof(MatchRoom))]
     [Event(SceneType.Map)]
     public class PhaseChangedEventHandler_Synergy : AEvent<Scene, PhaseChangedEvent>
     {
