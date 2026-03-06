@@ -18,6 +18,7 @@ namespace ET.Server
             self.MatchState = MatchState.Waiting;
             self.FinalResults = new List<(long, int)>();
             self.LastRoundLosers = new List<long>();
+            self.LastGhost = null;
         }
 
         [EntitySystem]
@@ -25,6 +26,7 @@ namespace ET.Server
         {
             self.FinalResults = null;
             self.LastRoundLosers = null;
+            self.LastGhost = null;
         }
 
         public static void Init(this MatchRoom self, uint seed, List<long> playerIds)

@@ -57,6 +57,21 @@ namespace ET
         // 标记 - 召唤物为 false
         public bool IsEffectiveForDamageCount;
 
+        // Tick 跟踪（战斗循环用）
+        public int LastAttackTick = -999;
+        public int LastMoveTick = -999;
+        public int AttackTargetInstId = -1; // 当前攻击目标（用于仇恨判定）
+        public int Cost; // 单位费用（用于 Ace 队长选取）
+
+        // 动态羁绊运行时状态
+        public bool ClanTriggered;       // Clan 低血爆发已触发
+        public int RangerStacks;         // Ranger 攻速叠层
+        public int AceLifestealPct;      // Ace 吸血百分比(0-100)
+        public bool IsCursedByUndead;    // 被亡灵诅咒标记
+
+        // 羁绊标签（从模板拷贝，用于运行时判断）
+        public string[] Tags;
+
         // 辅助属性
         public bool IsStunned
         {

@@ -70,6 +70,21 @@ namespace ET
         }
 
         /// <summary>
+        /// 获取指定格子的 6 个邻居坐标到数组中，返回邻居数量（总是 6）。
+        /// </summary>
+        public static int GetNeighbors(int col, int row, int[] outCols, int[] outRows)
+        {
+            int[][] offsets = (row & 1) == 0 ? EvenRowOffsets : OddRowOffsets;
+            for (int i = 0; i < offsets.Length; i++)
+            {
+                outCols[i] = col + offsets[i][0];
+                outRows[i] = row + offsets[i][1];
+            }
+
+            return offsets.Length;
+        }
+
+        /// <summary>
         /// 检查坐标是否在棋盘范围内。
         /// </summary>
         public static bool IsInBounds(int col, int row)

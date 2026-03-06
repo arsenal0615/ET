@@ -20,6 +20,7 @@ namespace ET.Server
         public int CurrentRound;
         public MatchState MatchState;
         public List<(long PlayerId, int Rank)> FinalResults;
-        public List<long> LastRoundLosers; // 上回合战败的 PlayerId，E5 战斗结算写入
+        public List<long> LastRoundLosers; // 上回合战败的 PlayerId，E8 结算写入
+        public GhostSnapshot LastGhost; // 最近淘汰者阵容快照，用于 Ghost 配对
     }
 }

@@ -38,6 +38,16 @@ namespace ET
 
         // 战斗
         public const int CombatTickRate = 20; // ticks per second
+        public const int MaxCombatTicks = 600; // 30 seconds
+        public const int FrenzyStartTick = 400; // last 10 seconds
+        public const float FrenzyAtkSpeedMultiplier = 2.0f;
+        public const float FrenzyInvisDurationMultiplier = 0.5f;
+        public const int DrawHpLoss = 1;
+        public const float DefaultCritMultiplier = 1.5f;
+
+        // 星级倍率: index=star (0 unused)
+        [StaticField]
+        public static readonly int[] StarMultipliers = { 0, 1, 2, 4, 8 };
 
         // 法力
         public const int ManaMax = 100;
