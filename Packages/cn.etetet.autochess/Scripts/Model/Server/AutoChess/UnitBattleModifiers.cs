@@ -13,5 +13,7 @@ namespace ET.Server
         public float AtkSpeedMultiplier = 1.0f;
         public int RangeBonus = 0;
         public float DistanceDamagePerHex = 0f;
+        public int ManaPrecharge = 0;
+        public int ChainCastChancePct = 0;
     }
 }
