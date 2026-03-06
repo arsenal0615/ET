@@ -46,6 +46,7 @@ namespace ET
         public int RangeBonus;
         public float HpMultiplier = 1.0f;
         public float DistanceDamagePerHex;
+        public int ChainCastChancePct;
 
         // Buff
         public List<ActiveBuff> Buffs;

@@ -40,6 +40,7 @@ namespace ET.Server
             TestTriggerChecker();
             TestTargetSelector();
             TestEffectApplier();
+            TestSkillExecutor();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1516,6 +1517,118 @@ namespace ET.Server
                 throw new Exception($"EffectApplier TickBuff: expected 0 buffs, got {tickUnit.Buffs.Count}");
 
             Log.Info("[AutoChess] TestEffectApplier passed.");
+        }
+
+        /// <summary>
+        /// SkillExecutor 管线集成测试
+        /// </summary>
+        public static void TestSkillExecutor()
+        {
+            // === Test 1: CombatStart 技能完整管线 ===
+            // Skill 4 = 冲锋, CombatStart, FarthestInRange, Damage(2.0)+Stun(1.0s)
+            var caster1 = new CombatUnitState
+            {
+                InstId = 1, SkillDefId = 4, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Atk = 100, Hp = 500, MaxHp = 500, Range = 3,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                FacingCol = 2, FacingRow = 0,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var enemy1 = new CombatUnitState
+            {
+                InstId = 10, Col = 2, Row = 0, Side = 1, IsAlive = true,
+                Hp = 500, MaxHp = 500, DamageReduction = 0f, Range = 1,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var allUnits1 = new System.Collections.Generic.List<CombatUnitState> { caster1, enemy1 };
+
+            var result1 = SkillExecutor.TryExecute(caster1, SkillTriggerType.CombatStart, allUnits1, null, 0);
+            if (result1.Status != SkillExecutionStatus.Executed)
+                throw new System.Exception($"SkillExecutor CombatStart: expected Executed, got {result1.Status}");
+            if (result1.EffectResults.Count < 1)
+                throw new System.Exception($"SkillExecutor CombatStart: expected at least 1 effect result, got {result1.EffectResults.Count}");
+            // Damage: floor(100 * 2.0 * 1.0) = 200, enemy HP: 500 - 200 = 300
+            if (enemy1.Hp != 300)
+                throw new System.Exception($"SkillExecutor CombatStart: expected enemy HP=300, got {enemy1.Hp}");
+            // Stun buff should be applied
+            if (!enemy1.IsStunned)
+                throw new System.Exception("SkillExecutor CombatStart: enemy should be stunned");
+
+            // === Test 2: Interval 技能在 tick=0 不触发 ===
+            // Skill 6 = 电场, Interval 3s, caster.Trigger.LastIntervalTick=0
+            var caster2 = new CombatUnitState
+            {
+                InstId = 2, SkillDefId = 6, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Atk = 50, Hp = 300, MaxHp = 300, Range = 2,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var enemy2 = new CombatUnitState
+            {
+                InstId = 20, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                Hp = 200, MaxHp = 200, DamageReduction = 0f, Range = 1,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var allUnits2 = new System.Collections.Generic.List<CombatUnitState> { caster2, enemy2 };
+
+            // tick=0, Interval requires 3s * TickRate ticks to pass, so tick=0 - lastTick(0) = 0 < required
+            // But! Interval check: (0 - 0) >= requiredTicks. RequiredTicks = 3*5 = 15. 0 >= 15 = false.
+            var result2 = SkillExecutor.TryExecute(caster2, SkillTriggerType.Interval, allUnits2, null, 0);
+            if (result2.Status != SkillExecutionStatus.NotTriggered)
+                throw new System.Exception($"SkillExecutor Interval tick=0: expected NotTriggered, got {result2.Status}");
+
+            // === Test 3: 所有敌人死亡 → NoTargets ===
+            var caster3 = new CombatUnitState
+            {
+                InstId = 3, SkillDefId = 4, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Atk = 100, Hp = 500, MaxHp = 500, Range = 3,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                FacingCol = 2, FacingRow = 0,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var deadEnemy = new CombatUnitState
+            {
+                InstId = 30, Col = 2, Row = 0, Side = 1, IsAlive = false,
+                Hp = 0, MaxHp = 500, Range = 1,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var allUnits3 = new System.Collections.Generic.List<CombatUnitState> { caster3, deadEnemy };
+
+            var result3 = SkillExecutor.TryExecute(caster3, SkillTriggerType.CombatStart, allUnits3, null, 0);
+            if (result3.Status != SkillExecutionStatus.NoTargets)
+                throw new System.Exception($"SkillExecutor NoTargets: expected NoTargets, got {result3.Status}");
+
+            // === Test 4: SkillDefId=0 → NotTriggered ===
+            var casterNoSkill = new CombatUnitState
+            {
+                InstId = 4, SkillDefId = 0, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Atk = 50, Hp = 300, MaxHp = 300, Range = 1,
+                DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                Buffs = new System.Collections.Generic.List<ActiveBuff>(),
+                Trigger = new TriggerState()
+            };
+
+            var result4 = SkillExecutor.TryExecute(casterNoSkill, SkillTriggerType.CombatStart,
+                new System.Collections.Generic.List<CombatUnitState> { casterNoSkill }, null, 0);
+            if (result4.Status != SkillExecutionStatus.NotTriggered)
+                throw new System.Exception($"SkillExecutor NoSkill: expected NotTriggered, got {result4.Status}");
+
+            Log.Info("[AutoChess] TestSkillExecutor passed.");
         }
     }
 }
