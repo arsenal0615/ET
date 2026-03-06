@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-06（a1-synergy：SynergyComponent、SynergyService、GoblinGiftService、PhaseChangedEventHandler_Synergy、TraitSnapshot）
+> 最后更新：2026-03-06（a1-skill：SkillExecutor、TriggerChecker、TargetSelector、EffectApplier、ManaService、CombatUnitState、HexUtil）
 
 ---
 
@@ -212,6 +212,25 @@
 - **SynergyType** (enum, Model/Share) — Static=1, Dynamic=2, Economic=3
 - **集成点**：PlacementService（棋盘变化→Recalculate）、UnitService（Buy/Sell→Recalculate）、MatchRoomFactory（添加 SynergyComponent）
 
+### 技能系统（a1-skill）
+
+- **数据类** (Model/Share, namespace ET, `[EnableClass]`)
+  - **CombatUnitState** — 战斗单位运行时状态（HP/Atk/Mana/位置/Buffs/TriggerState + 内联修改器字段）
+  - **ActiveBuff** — Buff 运行时数据（Type/RemainingTicks/Value1/Value2）
+  - **TriggerState** — 触发器运行时状态（HitCount/KillTriggerCount/HpBelowTriggered/LastIntervalTick）
+  - **SkillEffectResult** — 单个效果结果（TargetInstId/EffectType/Value/Col/Row）
+  - **SkillExecutionResult** — 技能执行结果（Status/CasterInstId/SkillId/EffectResults）
+- **BuffType** (enum, Model/Share) — None=0, Stun=1, Invisibility=2, Reflect=3, HealOverTime=4, SpeedBuff=5
+- **SkillExecutionStatus** (enum, Model/Share) — NotTriggered=0, NoTargets=1, Executed=2
+- **HexUtil** (静态工具类, Model/Share) — 六边形距离/邻居/坐标转换（odd-r offset ↔ axial）
+- **ManaService** (静态服务类, Hotfix/Server) — 法力累积/消耗（GainOnAttack/GainOnHit/IsFull/Consume）
+- **TriggerChecker** (静态服务类, Hotfix/Server) — 8 种触发条件判定（CombatStart/Interval/OnHitCount/OnKill/OnHpBelow/ManaFull/AttackTrait/OnDeath）
+- **TargetSelector** (静态服务类, Hotfix/Server) — 10 种目标选取算法（Self/NearestEnemy/FarthestInRadius/FarthestInRange/LowestHp/MultiTargets/AreaRadius/ClusterLargest/LinePierce/Cone）
+- **EffectApplier** (静态服务类, Hotfix/Server) — 10 种效果应用（Damage/Stun/Knockback/Invisibility/SpeedBuff/Summon/Clone/Reflect/HealOverTime/Projectile）+ TickBuff 生命周期
+- **SkillExecutor** (门面类, Hotfix/Server) — 唯一入口，编排 Trigger→Target→Effect 管线 + Superstar 连发（DeriveSubSeed(SkillChain)）
+- **集成点**: E7 战斗模拟器每 tick 调用 SkillExecutor.TryExecute + TickBuffs；CombatUnitState 从 UnitInfo + UnitBattleModifiers 初始化
+- **测试**: AutoChessTestHelper — HexUtil / Mana / TriggerChecker / TargetSelector / EffectApplier / SkillExecutor / SkillSystem（7+6 个测试）
+
 ### 事件
 
 - **PhaseChangedEvent** — RoundFSMComponent 切相时发布；字段：`MatchRoomId`（long）、`Round`（int）、`NewPhase`（RoundPhase）
@@ -235,7 +254,7 @@
 
 - **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + RosterComponent + SynergyComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
 - **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer + RosterService.RecoverAllToPool）、EndMatch()
-- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery / SynergyCounting / SynergySnapshot / GoblinGift（15 个测试）
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery / SynergyCounting / SynergySnapshot / GoblinGift / HexUtil / Mana / TriggerChecker / TargetSelector / EffectApplier / SkillExecutor / SkillSystem（22 个测试）
 
 ### SceneType
 
