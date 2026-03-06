@@ -8,5 +8,6 @@ namespace ET
         CommanderPassive = 4,
         GoblinGift = 5,
         FirstGift = 6,
+        SkillChain = 7,
     }
 }

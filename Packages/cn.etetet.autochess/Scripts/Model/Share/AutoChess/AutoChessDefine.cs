@@ -39,6 +39,15 @@ namespace ET
         // 战斗
         public const int CombatTickRate = 20; // ticks per second
 
+        // 法力
+        public const int ManaMax = 100;
+        public const int DefaultManaGainOnAttack = 10;
+        public const int DefaultManaGainOnHit = 6;
+
+        // 技能
+        public const int SuperstarMaxChains = 4;
+        public const int SuperstarChainChancePct = 50;
+
         // 经济
         public const int RoundBaseIncome = 4;
         public const int CommanderPassiveMin = 4;
