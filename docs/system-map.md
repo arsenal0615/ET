@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-04（a1-unit：RosterComponent、UnitInfo、RosterService、PlacementService、MergeService、PreBattleService、UnitService、PhaseChangedEventHandler_Unit）
+> 最后更新：2026-03-06（a1-synergy：SynergyComponent、SynergyService、GoblinGiftService、PhaseChangedEventHandler_Synergy、TraitSnapshot）
 
 ---
 
@@ -150,6 +150,7 @@
     - **EconomyLogComponent** (ComponentOf: MatchPlayer) — 圣水流水账（List<EconomyDelta>）
     - **ShopComponent** (ComponentOf: MatchPlayer) — 玩家商店（ShopOffer[3] 槽位、ShopRollIndex 全局递增、FirstRoundGiftTemplateId）
     - **RosterComponent** (ComponentOf: MatchPlayer) — 单位列表（List\<UnitInfo\> Units、NextInstId 自增）
+    - **SynergyComponent** (ComponentOf: MatchPlayer) — 羁绊状态（LiveSynergies 实时统计、Snapshot 冻结快照、LastGoblinLevel 跨回合持久化）
 
 ### 经济系统
 
@@ -196,13 +197,30 @@
   - `Sell(player, unit, pool, round)` — Remove + ShopService.TrySell
   - `CreateFirstRoundGift(player)` — 读取 FirstRoundGiftTemplateId → AddToBench(isGift=true)
 
+### 羁绊系统（a1-synergy）
+
+- **SynergyService** (静态服务类, Hotfix/Server) — 羁绊统计与快照生成
+  - `Recalculate(player)` — 遍历棋盘单位标签统计 count/level，更新 LiveSynergies，有变化发布 SynergyChangedEvent
+  - `GenerateSnapshot(player)` — 基于 LiveSynergies 生成冻结 TraitSnapshot（ActiveSynergies + UnitSynergyMap + UnitModifiers），应用静态效果，更新 LastGoblinLevel
+  - `ApplyStaticEffects(unit, synergies, mods)` — 5 种静态羁绊属性加成（Brawler/Giant/Noble/Blaster/Brutalist）
+- **GoblinGiftService** (静态服务类, Hotfix/Server) — Goblin 经济羁绊
+  - `TryGiveGifts(player, rng, round)` — 根据 LastGoblinLevel 赠送哥布林单位（isGift=true，不扣卡池）
+- **数据类** (Model/Server, `[EnableClass]`)
+  - **SynergyEntry** — 单条羁绊统计（Tag/Count/Level/Type）
+  - **TraitSnapshot** — 冻结快照（ActiveSynergies、UnitSynergyMap、UnitModifiers）
+  - **UnitBattleModifiers** — 单位属性修改值（HpMultiplier/DamageReduction/AtkSpeedMultiplier 等），E7 战斗初始化时读取
+- **SynergyType** (enum, Model/Share) — Static=1, Dynamic=2, Economic=3
+- **集成点**：PlacementService（棋盘变化→Recalculate）、UnitService（Buy/Sell→Recalculate）、MatchRoomFactory（添加 SynergyComponent）
+
 ### 事件
 
 - **PhaseChangedEvent** — RoundFSMComponent 切相时发布；字段：`MatchRoomId`（long）、`Round`（int）、`NewPhase`（RoundPhase）
   - **PhaseChangedEventHandler_Economy** `[Event(SceneType.Map)]` — 订阅 RoundStart 发放收入 + 统帅被动
   - **PhaseChangedEventHandler_Shop** `[Event(SceneType.Map)]` — 订阅 RoundStart 刷新所有玩家商店 Offer；Round 1 额外执行首回合礼包 + UnitService.CreateFirstRoundGift
   - **PhaseChangedEventHandler_Unit** `[Event(SceneType.Map)]` — 订阅 Deployment（MergeService.RunMergeChain）+ PreBattle（PreBattleService.ValidateAndFix）
+  - **PhaseChangedEventHandler_Synergy** `[Event(SceneType.Map)]` — 订阅 Deployment（Recalculate）+ PreBattle（GenerateSnapshot）+ RoundStart≥2（TryGiveGifts）
 - **ElixirChangedEvent** — EconomyService.ApplyDelta 发布；供 E9 网络层订阅推送客户端
+- **SynergyChangedEvent** — SynergyService.Recalculate 发布；供 E9 网络层订阅推送客户端
 
 ### 关键字段
 
@@ -215,9 +233,9 @@
 
 ### 工厂与辅助
 
-- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + RosterComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
+- **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + RosterComponent + SynergyComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
 - **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer + RosterService.RecoverAllToPool）、EndMatch()
-- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery（12 个测试）
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery / SynergyCounting / SynergySnapshot / GoblinGift（15 个测试）
 
 ### SceneType
 

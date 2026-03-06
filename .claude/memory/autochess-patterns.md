@@ -7,6 +7,8 @@
 | a1-foundation | 2026-03-02 | Entity树、PRNG、RoundFSM、PhaseGate、ConfigLoader |
 | a1-economy | 2026-03-03 | EconomyService、EconomyLogComponent、PhaseChangedEventHandler |
 | a1-shop | 2026-03-03 | SharedPoolComponent、ShopComponent、ShopService、FirstRoundGiftService、PhaseChangedEventHandler_Shop |
+| a1-unit | 2026-03-04 | UnitInfo、RosterService、PlacementService、MergeService、PreBattleService、UnitService（门面）、PhaseChangedEventHandler_Unit |
+| a1-synergy | 2026-03-06 | SynergyComponent、SynergyService、GoblinGiftService、PhaseChangedEventHandler_Synergy、TraitSnapshot、UnitBattleModifiers |
 
 ---
 
@@ -225,6 +227,56 @@ MatchRoom.LastRoundLosers (List<long>)
 
 ---
 
+### 7. Modifiers 快照模式（不修改持久数据）
+
+羁绊效果不直接修改 UnitInfo，而是写入 TraitSnapshot 的 UnitBattleModifiers：
+
+```csharp
+// 正确：效果写入独立快照，UnitInfo 保持"干净"
+TraitSnapshot snapshot = new TraitSnapshot();
+UnitBattleModifiers mods = new UnitBattleModifiers(); // 默认值全为 1.0f/0
+ApplyStaticEffects(unit, unitSynergies, mods);
+snapshot.UnitModifiers[unit.InstId] = mods;
+
+// E7 战斗初始化时合并：battleHp = baseHp * starMultiplier * mods.HpMultiplier
+// 回合结束不需要任何回退逻辑 — snapshot 整体丢弃
+
+// 错误：直接修改 UnitInfo
+// unit.Hp = (int)(unit.Hp * 1.5f);  // ← 跨回合持久化，需要记录原值并恢复
+```
+
+---
+
+### 8. EntitySystemOf 配对规则
+
+声明了 IAwake/IDestroy/IDeserialize 的 Entity **必须** 有对应的 `[EntitySystemOf]` System 类：
+
+```csharp
+// Model/Server — Entity 声明
+[ComponentOf(typeof(MatchPlayer))]
+public class SynergyComponent : Entity, IAwake, IDestroy
+{
+    public List<SynergyEntry> LiveSynergies;
+    // ...
+}
+
+// Hotfix/Server — 必须有此文件！否则 Awake/Destroy 静默不触发
+[EntitySystemOf(typeof(SynergyComponent))]
+[FriendOf(typeof(SynergyComponent))]
+public static partial class SynergyComponentSystem
+{
+    [EntitySystem]
+    private static void Awake(this SynergyComponent self) { self.LiveSynergies = new List<SynergyEntry>(); }
+
+    [EntitySystem]
+    private static void Destroy(this SynergyComponent self) { self.LiveSynergies = null; }
+}
+
+// 危险：编译不报错，运行时 Awake 不触发 → LiveSynergies 为 null → NullReferenceException
+```
+
+---
+
 ## 集成测试模式（AutoChessTestHelper）
 
 所有 A1 功能通过 `AutoChessTestHelper.RunAllTests(scene)` 集成验证：
@@ -236,6 +288,9 @@ TestEntityTree      → 结构验证 + 淘汰 + 排名
 TestPhaseGate       → 操作门控矩阵（Deployment/Battle/其他阶段）
 TestEconomy         → 5 个收支方法 + clamp + log + LastRoundLosers
 TestShop            → 卡池初始化 / Offer生成 / 预扣 / 购买 / 出售 / 礼包 / 淘汰回收（10个断言）
+TestSynergyCounting → 标签统计 + level 计算 + 棋盘变化实时更新
+TestSynergySnapshot → 快照生成 + ActiveSynergies + UnitModifiers（Brawler HpMultiplier=1.5f）
+TestGoblinGift      → LastGoblinLevel 读取 + 赠送 + isGift=true + Goblin 标签验证
 ```
 
 触发方式：服务端启动后手动调用（无自动运行机制）。
