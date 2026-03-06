@@ -1,5 +1,5 @@
 ---
-name: qx-sprint
+name: qx-gd-sprint
 description: "用于 Sprint 规划、Sprint 状态跟踪和 Sprint 回顾。管理从 Epic/Story 拆分到执行跟踪的开发节奏。"
 ---
 
@@ -9,7 +9,7 @@ description: "用于 Sprint 规划、Sprint 状态跟踪和 Sprint 回顾。管�
 
 管理开发 Sprint：规划工作、跟踪状态、进行回顾。结合游戏设计中的 Epic 和 Story 来组织实现工作。
 
-**开始时宣告：** "正在使用 qx-sprint 来 [规划/跟踪/回顾] Sprint。"
+**开始时宣告：** "正在使用 qx-gd-sprint 来 [规划/跟踪/回顾] Sprint。"
 
 ## 模式
 
@@ -183,7 +183,7 @@ GDD → /qx-gd-stories → Stories → /qx-gd-sprint plan → Sprint 计划
 
 ## 相关 Skills
 
-- **qx-brainstorm** — 用于 Sprint 规划前的功能构思
-- **qx-game-design** — GDD 提供 Story 待办列表的来源
-- **qx-managing-changes** — 每个 Story 在执行时变为一个变更
-- **qx-writing-plans** — 用于为每个 Story 创建实施计划
+- **qx-gd-brainstorm** — 用于 Sprint 规划前的功能构思
+- **qx-gd-gdd** — GDD 提供 Story 待办列表的来源
+- **qx-dev-change** — 每个 Story 在执行时变为一个变更
+- **qx-dev-plan** — 用于为每个 Story 创建实施计划

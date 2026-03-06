@@ -1,5 +1,5 @@
 ---
-name: qx-three-party-review
+name: qx-meeting
 description: "在设计文档、GDD、提案或计划需要多角度评审后再继续时使用。编排结构化评审，由 3 个基于角色的评审者提供多元化专家反馈。"
 ---
 
@@ -11,7 +11,7 @@ description: "在设计文档、GDD、提案或计划需要多角度评审后再
 
 **核心原则：** 三个视角能发现一个视角遗漏的问题。战略 + 技术 + 对抗 = 全面评审。
 
-**启动时宣布：** "正在使用 qx-three-party-review 对 [文档] 进行三方评审。"
+**启动时宣布：** "正在使用 qx-meeting 对 [文档] 进行三方评审。"
 
 ## 适用场景
 
@@ -264,7 +264,7 @@ For each reviewer:
 
 ## 相关 Skills
 
-- **qx-game-design** -- 创建待评审的 GDD
-- **qx-writing-plans** -- 创建待评审的计划
-- **qx-ux-design** -- 创建待评审的 UX 规格
+- **qx-gd-gdd** -- 创建待评审的 GDD
+- **qx-dev-plan** -- 创建待评审的计划
+- **qx-art-ux** -- 创建待评审的 UX 规格
 - **qx-code-review** -- 代码层面的评审（实现后）

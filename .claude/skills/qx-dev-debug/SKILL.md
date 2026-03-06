@@ -1,5 +1,5 @@
 ---
-name: qx-debugging
+name: qx-dev-debug
 description: "在遇到任何 Bug、测试失败或异常行为时使用，在提出修复方案之前使用。强制执行系统化的根因调查。"
 ---
 

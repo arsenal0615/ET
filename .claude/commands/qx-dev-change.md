@@ -1,9 +1,9 @@
 ---
-name: 'qx-change'
+name: 'qx-dev-change'
 description: '技术变更全生命周期。用法: /qx-dev-change [create|propose|spec|design|verify|archive|status|list]'
 ---
 
-Invoke the `qx-managing-changes` skill.
+Invoke the `qx-dev-change` skill.
 
 Subcommand and arguments: $ARGUMENTS
 

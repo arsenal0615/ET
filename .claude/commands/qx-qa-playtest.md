@@ -1,5 +1,5 @@
 ---
-name: 'qx-playtest'
+name: 'qx-qa-playtest'
 description: '玩家测试计划。设计内部/外部玩家测试方案，定义测试目标和观察指标。'
 ---
 

@@ -1,6 +1,6 @@
 # 开三方评审检查清单
 
-> 用于 qx-three-party-review Skill 流程追踪。
+> 用于 qx-meeting Skill 流程追踪。
 
 ## 评审前
 

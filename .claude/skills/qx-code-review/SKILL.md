@@ -218,7 +218,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 ## 相关 Skills
 
-- **qx-verification** — 在宣称完成前的验证
-- **qx-managing-changes** — 变更生命周期（验证阶段触发审查）
-- **qx-debugging** — 当审查发现需要调查的 Bug 时
+- **qx-verify** — 在宣称完成前的验证
+- **qx-dev-change** — 变更生命周期（验证阶段触发审查）
+- **qx-dev-debug** — 当审查发现需要调查的 Bug 时
 - **qx-tdd** — 编写测试以覆盖审查中发现的缺口

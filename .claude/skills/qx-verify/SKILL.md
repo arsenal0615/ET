@@ -1,5 +1,5 @@
 ---
-name: qx-verification
+name: qx-verify
 description: "在声称工作已完成、已修复或已通过之前使用，在提交或创建 PR 之前使用。要求运行验证命令并确认输出后才能做出任何成功声明。证据先于断言，始终如此。"
 ---
 
@@ -197,5 +197,5 @@ dotnet test -v n
 
 - **qx-code-review** — 多维审查（在验证过程中触发）
 - **qx-tdd** — 红-绿循环是一种验证形式
-- **qx-debugging** — 当验证揭示了失败时
-- **qx-managing-changes** — 变更生命周期中的验证阶段
+- **qx-dev-debug** — 当验证揭示了失败时
+- **qx-dev-change** — 变更生命周期中的验证阶段

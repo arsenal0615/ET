@@ -1,9 +1,9 @@
 ---
-name: 'qx-audit-decision'
+name: 'qx-gd-audit-decision'
 description: '设计方案决策点审视。对已做决策进行同类对标、优劣分析和优化建议。'
 ---
 
-Invoke the `qx-audit-decision` skill to review key decisions in a design document.
+Invoke the `qx-gd-audit-decision` skill to review key decisions in a design document.
 
 对当前选中的文本或接下来提供的设计方案执行决策点审视。
 

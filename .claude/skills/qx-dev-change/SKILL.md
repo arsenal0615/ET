@@ -1,5 +1,5 @@
 ---
-name: qx-managing-changes
+name: qx-dev-change
 description: "用于创建新功能或变更、继续进行中的变更、定义需求、编写提案、设计方案、检查变更状态、验证实现完整性、归档已完成工作或列出活跃变更。触发词: create change, continue, new feature, proposal, requirements, specs, design, verify, archive, status, list changes, /qx-dev-change"
 ---
 
@@ -7,11 +7,11 @@ description: "用于创建新功能或变更、继续进行中的变更、定义
 
 管理"变更"的完整生命周期 — 从提案到归档。变更是位于 `docs/changes/<name>/` 的基于目录的容器，追踪一个功能、修复或修改的所有产物。
 
-**开始时宣告：** "我正在使用 qx-managing-changes skill 来 [创建/提案/设计/验证/归档] 这个变更。"
+**开始时宣告：** "我正在使用 qx-dev-change skill 来 [创建/提案/设计/验证/归档] 这个变更。"
 
 ## 何时使用此模式 vs 快速模式
 
-| 场景 | 使用此模式（变更模式） | 使用快速模式（qx-brainstorm） |
+| 场景 | 使用此模式（变更模式） | 使用快速模式（qx-gd-brainstorm） |
 |------|----------------------|-------------------------------|
 | 新游戏系统或功能 | ✓ | |
 | 跨角色交接（策划 → 程序） | ✓ | |
@@ -79,7 +79,7 @@ status: active
   proposal.md 存在?  → 是  → 检查 capabilities
     列出了 Capabilities 但没有 specs/?  → 创建规格（运行 SPEC）
   design.md 存在?    → 否  → 创建设计（运行 DESIGN）
-  plan.md 存在?      → 否  → 创建计划（调用 qx-writing-plans skill）
+  plan.md 存在?      → 否  → 创建计划（调用 qx-dev-plan skill）
   plan.md 有 - [ ]?  → 是  → 恢复执行（调用 qx-exec skill）
   所有任务 [x]?      → 是  → 建议验证/归档
 ```
@@ -96,7 +96,7 @@ status: active
 **注意：**
 - 这是"持续说继续"的工作流 — 用户不需要知道下一个操作是什么
 - 如果 proposal 中列出了 capabilities 但 specs 是可选的（纯技术变更），跳到 design
-- 到达计划创建时，交给 `qx-writing-plans` skill
+- 到达计划创建时，交给 `qx-dev-plan` skill
 - 到达执行时，交给 `qx-exec` skill
 
 ---
@@ -153,7 +153,7 @@ status: active
 **建议下一步：**
 ```
 必选: → /qx-dev-change spec（如有 capabilities）或 /qx-dev-change design
-可选: → /qx-review（跨角色交接或高风险变更时推荐）
+可选: → /qx-meeting（跨角色交接或高风险变更时推荐）
 ```
 
 ---
@@ -210,9 +210,9 @@ status: active
 **建议下一步：**
 ```
 必选: → /qx-dev-change design
-可选: → /qx-review（跨角色交接或高风险变更时推荐）
+可选: → /qx-meeting（跨角色交接或高风险变更时推荐）
 ```
-注意：三方评审（/qx-review）不是变更流程的必经步骤。仅在以下情况推荐：
+注意：三方评审（/qx-meeting）不是变更流程的必经步骤。仅在以下情况推荐：
 - 跨角色交接（策划 → 程序）需要对齐理解
 - 高风险/高复杂度变更需要多角度审查
 - 用户明确要求评审

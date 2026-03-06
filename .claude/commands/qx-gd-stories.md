@@ -1,5 +1,5 @@
 ---
-name: 'qx-stories'
+name: 'qx-gd-stories'
 description: '拆分 Epic 和 Story。将 GDD 或功能设计分解为可执行的开发任务。'
 ---
 

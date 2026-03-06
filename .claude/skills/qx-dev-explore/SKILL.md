@@ -1,5 +1,5 @@
 ---
-name: qx-exploring
+name: qx-dev-explore
 description: "进入探索模式 — 作为思维伙伴，在 QX 游戏开发工作流中探索想法、调查项目代码、比较方案、澄清需求。"
 ---
 
@@ -225,9 +225,9 @@ You: [读 change artifacts]
 当事情结晶并且用户准备行动时，建议适当的下一步：
 
 - **准备进入结构化变更：** "要创建一个变更吗？我可以建立 `docs/changes/<name>/` 并根据我们讨论的内容起草提案。"
-  → 转到 `qx-managing-changes` skill
+  → 转到 `qx-dev-change` skill
 - **准备快速实现：** "这足够简单，可以用快速模式。要直接进入头脑风暴 → 计划 → 执行吗？"
-  → 转到 `qx-brainstorm` skill
+  → 转到 `qx-gd-brainstorm` skill
 - **还没准备好：** "我们可以继续探索。不着急。"
 
 ---

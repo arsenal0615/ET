@@ -179,7 +179,7 @@ git worktree list
 
 ## 相关 Skills
 
-- **qx-verification** -- 在收尾前验证工作
+- **qx-verify** -- 在收尾前验证工作
 - **qx-code-review** -- 在合并/PR 前审查代码
-- **qx-managing-changes** -- 完成后归档变更
+- **qx-dev-change** -- 完成后归档变更
 - **qx-compound** -- 完成后提取经验

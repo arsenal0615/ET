@@ -1,5 +1,5 @@
 ---
-name: qx-writing-plans
+name: qx-dev-plan
 description: "在有规格、设计或需求的多步骤任务开始编码之前使用。创建小粒度的 TDD 实施计划，具备项目框架感知能力。"
 ---
 
@@ -11,7 +11,7 @@ description: "在有规格、设计或需求的多步骤任务开始编码之前
 
 假设他们是有能力的开发者，但对项目框架和问题域几乎一无所知。假设他们不太擅长测试设计。
 
-**启动时宣告：** "正在使用 qx-writing-plans 创建实施计划。"
+**启动时宣告：** "正在使用 qx-dev-plan 创建实施计划。"
 
 ## 变更上下文检测
 
@@ -259,4 +259,4 @@ git commit -m "feat: add specific feature"
 - **qx-tdd** — 计划执行期间的测试驱动纪律
 - **qx-code-review** — 审查已完成的任务
 - **qx-exec** — 使用多 Agent 编排执行计划
-- **qx-managing-changes** — 变更生命周期（计划是其中一个阶段）
+- **qx-dev-change** — 变更生命周期（计划是其中一个阶段）

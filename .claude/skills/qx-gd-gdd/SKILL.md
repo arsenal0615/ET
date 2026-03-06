@@ -1,5 +1,5 @@
 ---
-name: qx-game-design
+name: qx-gd-gdd
 description: "创建或编辑游戏设计文档（GDD）。支持文档阶段感知、草稿缓存机制和精修工具链。"
 ---
 
@@ -11,7 +11,7 @@ description: "创建或编辑游戏设计文档（GDD）。支持文档阶段感
 
 **绝对禁区**：禁止讨论任何具体代码或编程概念。
 
-**开始时宣告：** "正在使用 qx-game-design 来创建/编辑游戏设计文档。"
+**开始时宣告：** "正在使用 qx-gd-gdd 来创建/编辑游戏设计文档。"
 
 ## 最高优先级指令
 
@@ -149,15 +149,15 @@ description: "创建或编辑游戏设计文档（GDD）。支持文档阶段感
 
 展示过渡选项：
 1. **Story 拆分：** 使用 `/qx-gd-stories` 将 GDD 拆分为 Epic 和 Story
-2. **三方评审：** 使用 `/qx-review` 进行多角度评审
+2. **三方评审：** 使用 `/qx-meeting` 进行多角度评审
 3. **技术设计：** 交接给程序员进行系统架构设计
 4. **Sprint 规划：** 使用 `/qx-gd-sprint` 制定开发计划
 
 ## 相关 Skills
 
-- **qx-brainstorm** — 用于创意发散和隐藏决策点挖掘
-- **qx-audit-design** — 用于盲点挖掘
-- **qx-audit-decision** — 用于决策点审视
-- **qx-refine** — 用于文本精炼
-- **qx-ambiguity** — 用于歧义审查
-- **qx-prototype** — 用于 HTML 原型验证
+- **qx-gd-brainstorm** — 用于创意发散和隐藏决策点挖掘
+- **qx-gd-audit-design** — 用于盲点挖掘
+- **qx-gd-audit-decision** — 用于决策点审视
+- **qx-gd-refine** — 用于文本精炼
+- **qx-gd-ambiguity** — 用于歧义审查
+- **qx-gd-prototype** — 用于 HTML 原型验证

@@ -1,5 +1,5 @@
 ---
-name: qx-exec
+name: qx-dev-exec
 description: "在有已批准的实施计划时使用。读取计划，按任务分派子 Agent 并遵循 TDD 纪律，运行两阶段审查（规格合规 + 代码质量），并跟踪进度。支持 --loop 持久化执行。"
 ---
 
@@ -11,7 +11,7 @@ description: "在有已批准的实施计划时使用。读取计划，按任务
 
 **核心原则：** 每个任务一个全新 Agent + TDD + 两阶段审查 = 高质量、快速迭代。
 
-**启动时宣告：** "正在使用 qx-exec 执行位于 [plan path] 的计划。"
+**启动时宣告：** "正在使用 qx-dev-exec 执行位于 [plan path] 的计划。"
 
 ## 何时使用
 
@@ -579,9 +579,9 @@ Agent(subagent_type="code-reviewer", prompt="""
 
 ## 相关 Skills
 
-- **qx-writing-plans** — 创建本 Skill 执行的计划
+- **qx-dev-plan** — 创建本 Skill 执行的计划
 - **qx-tdd** — 实现者 Agent 遵循的 TDD 纪律
 - **qx-code-review** — 审查员 Agent 使用的审查方法论
 - **qx-verification** — 所有任务完成后的完整验证
 - **qx-finishing** — 执行完成后的分支收尾
-- **qx-managing-changes** — 包装计划执行的变更生命周期
+- **qx-dev-change** — 包装计划执行的变更生命周期

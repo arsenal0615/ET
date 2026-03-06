@@ -1,5 +1,5 @@
 ---
-name: qx-prototype
+name: qx-gd-prototype
 description: "策划文档 HTML 原型验证。将策划需求转化为可交互的单文件 HTML 原型，直观验证功能覆盖度。"
 ---
 
@@ -9,7 +9,7 @@ description: "策划文档 HTML 原型验证。将策划需求转化为可交互
 
 将策划需求文档转化为一个直观的单文件 HTML 原型。核心目的是向策划清晰展示对需求的理解，并确认所有功能点均已覆盖。
 
-**开始时宣告：** "正在使用 qx-prototype 创建 HTML 原型。"
+**开始时宣告：** "正在使用 qx-gd-prototype 创建 HTML 原型。"
 
 ## 执行流程
 

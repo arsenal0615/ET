@@ -1,9 +1,9 @@
 ---
-name: 'qx-ambiguity'
+name: 'qx-gd-ambiguity'
 description: '设计文档歧义审查。三阶段递进审查：常规理解→恶意合规→创造性曲解。'
 ---
 
-Invoke the `qx-ambiguity` skill to hunt ambiguities in a design document.
+Invoke the `qx-gd-ambiguity` skill to hunt ambiguities in a design document.
 
 对当前选中的文本或接下来提供的文档内容执行三阶段歧义审查。
 

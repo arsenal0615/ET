@@ -1,5 +1,5 @@
 ---
-name: qx-audit-design
+name: qx-gd-audit-design
 description: "设计方案盲点挖掘。找出方案中所有未完善、未做出决策、或根本没有被意识到需要决策的点。"
 ---
 
@@ -11,7 +11,7 @@ description: "设计方案盲点挖掘。找出方案中所有未完善、未做
 
 执行本 skill 时，输出结果为只读分析，禁止自行写入或修改任何文件。
 
-**开始时宣告：** "正在使用 qx-audit-design 对方案进行盲点挖掘。"
+**开始时宣告：** "正在使用 qx-gd-audit-design 对方案进行盲点挖掘。"
 
 ## 核心身份
 

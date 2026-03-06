@@ -73,7 +73,7 @@ state.last_continued_at = new Date().toISOString();
 writeFileSync(stateFile, JSON.stringify(state, null, 2));
 
 const planPath = state.plan_path || "the current plan";
-const message = `QX Loop: 继续执行 ${planPath}（迭代 ${state.iteration}/${maxIterations}）。检查进度并继续下一个任务。如所有任务完成，运行 /qx-stop。`;
+const message = `QX Loop: 继续执行 ${planPath}（迭代 ${state.iteration}/${maxIterations}）。检查进度并继续下一个任务。如所有任务完成，运行 /qx-dev-stop。`;
 
 process.stdout.write(
   JSON.stringify({

@@ -23,37 +23,35 @@ import { resolve } from "path";
 // key = "command" 或 "command subcommand"，value = 推荐的下一步
 const WORKFLOW_TRANSITIONS = {
   // 策划阶段
-  "/qx-brainstorm": "/qx-gdd 或 /qx-narrative",
-  "/qx-gdd": "/qx-review（三方评审）",
-  "/qx-narrative": "/qx-review（三方评审）",
-  "/qx-game-arch": "/qx-review（三方评审）",
-  "/qx-review": "/qx-stories（拆分 Story）或 /qx-change create",
-  "/qx-stories": "/qx-sprint plan（Sprint 规划）",
-  "/qx-sprint": "/qx-change create（开始第一个变更）",
-  "/qx-prd": "/qx-review（三方评审）",
+  "/qx-gd-brainstorm": "/qx-gd-gdd 或 /qx-gd-narrative",
+  "/qx-gd-gdd": "/qx-meeting（三方评审）",
+  "/qx-gd-narrative": "/qx-meeting（三方评审）",
+  "/qx-meeting": "/qx-gd-stories（拆分 Story）或 /qx-dev-change create",
+  "/qx-gd-stories": "/qx-gd-sprint plan（Sprint 规划）",
+  "/qx-gd-sprint": "/qx-dev-change create（开始第一个变更）",
 
   // 变更生命周期
-  "/qx-change create": "/qx-change propose",
-  "/qx-change propose": "/qx-change design 或 /qx-review",
-  "/qx-change spec": "/qx-change design",
-  "/qx-change design": "/qx-plan（编写实施计划）",
-  "/qx-change verify": "/qx-finishing（收尾）",
-  "/qx-change archive": "/qx-compound（复合积累）",
+  "/qx-dev-change create": "/qx-dev-change propose",
+  "/qx-dev-change propose": "/qx-dev-change design 或 /qx-meeting",
+  "/qx-dev-change spec": "/qx-dev-change design",
+  "/qx-dev-change design": "/qx-dev-plan（编写实施计划）",
+  "/qx-dev-change verify": "/qx-finishing（收尾）",
+  "/qx-dev-change archive": "/qx-compound（复合积累）",
 
   // 实施阶段
-  "/qx-plan": "/qx-exec（执行计划）",
-  "/qx-exec": "/qx-verify（完成前验证）",
+  "/qx-dev-plan": "/qx-dev-exec（执行计划）",
+  "/qx-dev-exec": "/qx-verify（完成前验证）",
   "/qx-verify": "/qx-finishing（收尾）",
-  "/qx-finishing": "/qx-change archive（归档变更）",
-  "/qx-compound": "下一个 Story → /qx-change create",
+  "/qx-finishing": "/qx-dev-change archive（归档变更）",
+  "/qx-compound": "下一个 Story → /qx-dev-change create",
 
   // 其他
-  "/qx-impact": "根据影响分析结果决定下一步",
-  "/qx-debug": "修复后 → /qx-verify（验证修复）",
-  "/qx-test design": "/qx-test automate（自动化测试）",
-  "/qx-test automate": "/qx-test execute（执行测试）",
-  "/qx-test execute": "/qx-verify（验证结果）",
-  "/qx-ux": "/qx-review（评审 UX 方案）",
+  "/qx-dev-impact": "根据影响分析结果决定下一步",
+  "/qx-dev-debug": "修复后 → /qx-verify（验证修复）",
+  "/qx-qa-test design": "/qx-qa-test automate（自动化测试）",
+  "/qx-qa-test automate": "/qx-qa-test execute（执行测试）",
+  "/qx-qa-test execute": "/qx-verify（验证结果）",
+  "/qx-art-ux": "/qx-meeting（评审 UX 方案）",
 };
 
 // 这些子命令完成后需要提醒用户 git commit 变更文档
@@ -169,7 +167,7 @@ const nextLine = recommendedNext
 
 // 构建 git commit 提醒
 const commitReminder =
-  lastCommand === "/qx-change" && COMMIT_AFTER_SUBCOMMANDS.has(lastSubcommand)
+  lastCommand === "/qx-dev-change" && COMMIT_AFTER_SUBCOMMANDS.has(lastSubcommand)
     ? `\n\u{1F4A1} 变更文档已生成，请 git commit 相关文件（.change.yaml / proposal.md / design.md 等）\n`
     : "";
 

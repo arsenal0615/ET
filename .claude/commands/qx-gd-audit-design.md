@@ -1,9 +1,9 @@
 ---
-name: 'qx-audit-design'
+name: 'qx-gd-audit-design'
 description: '设计方案盲点挖掘。找出未完善、未决策、未被意识到的隐藏问题，按风险等级排序输出。'
 ---
 
-Invoke the `qx-audit-design` skill to perform blindspot analysis on a design document.
+Invoke the `qx-gd-audit-design` skill to perform blindspot analysis on a design document.
 
 对当前选中的文本或接下来提供的设计方案执行盲点挖掘。
 

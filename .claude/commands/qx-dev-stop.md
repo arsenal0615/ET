@@ -1,5 +1,5 @@
 ---
-name: 'qx-stop'
+name: 'qx-dev-stop'
 description: '停止持久化执行循环。将 loop 状态设为 inactive。'
 ---
 

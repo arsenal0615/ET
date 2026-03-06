@@ -1,5 +1,5 @@
 ---
-name: qx-ux-design
+name: qx-art-ux
 description: "用于规划 UX 模式、UI 布局、交互流程或游戏视觉方向。通过结构化探索推动协作式 UX 设计。"
 ---
 
@@ -11,7 +11,7 @@ description: "用于规划 UX 模式、UI 布局、交互流程或游戏视觉�
 
 **核心原则：** 协作式探索，而非基于假设的设计。未经用户输入不要生成内容。
 
-**开始时宣告：** "正在使用 qx-ux-design 来设计 UX 规格。"
+**开始时宣告：** "正在使用 qx-art-ux 来设计 UX 规格。"
 
 ## 适用场景
 
@@ -168,8 +168,8 @@ description: "用于规划 UX 模式、UI 布局、交互流程或游戏视觉�
 ## 设计完成后
 
 **过渡选项：**
-1. **实现：** 调用 `qx-writing-plans` 制定 UI 实现计划
-2. **评审：** 使用 `/qx-review` 进行多角度设计评审
+1. **实现：** 调用 `qx-dev-plan` 制定 UI 实现计划
+2. **评审：** 使用 `/qx-meeting` 进行多角度设计评审
 3. **原型：** 如果使用设计工具，根据此规格创建 Mockup
 
 ## 关键原则
@@ -183,6 +183,6 @@ description: "用于规划 UX 模式、UI 布局、交互流程或游戏视觉�
 
 ## 相关 Skills
 
-- **qx-brainstorm** — 用于 UX 设计前的初始功能构思
-- **qx-game-design** — GDD 为 UX 决策提供上下文
-- **qx-writing-plans** — 用于 UI 实现规划
+- **qx-gd-brainstorm** — 用于 UX 设计前的初始功能构思
+- **qx-gd-gdd** — GDD 为 UX 决策提供上下文
+- **qx-dev-plan** — 用于 UI 实现规划

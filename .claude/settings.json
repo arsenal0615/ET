@@ -20,5 +20,62 @@
   },
   "enabledPlugins": {
     "csharp-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-workflow-record-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-guard-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-skill-detect-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-loop-hook.mjs",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/qx/hooks/qx-workflow-stop-hook.mjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
   }
 }

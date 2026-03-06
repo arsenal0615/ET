@@ -181,7 +181,7 @@ Bug 修复 → /qx-dev-debug（找到解决方案）─────────�
 
 ## 相关 Skills
 
-- **qx-managing-changes** — 归档阶段触发复合积累
-- **qx-sprint** — 回顾阶段建议复合积累
-- **qx-debugging** — 调试经验注入复合积累
-- **qx-system-analysis** — 系统关系图是复合积累的关键目标
+- **qx-dev-change** — 归档阶段触发复合积累
+- **qx-gd-sprint** — 回顾阶段建议复合积累
+- **qx-dev-debug** — 调试经验注入复合积累
+- **qx-dev-impact** — 系统关系图是复合积累的关键目标

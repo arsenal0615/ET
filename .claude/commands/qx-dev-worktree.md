@@ -1,6 +1,6 @@
 ---
-name: qx-worktree
-description: 创建隔离 git worktree 进行功能开发。自动命名、安全检查、与 qx-change 集成。
+name: qx-dev-worktree
+description: 创建隔离 git worktree 进行功能开发。自动命名、安全检查、与 qx-dev-change 集成。
 allowed-tools: ["Bash", "Read", "Glob"]
 ---
 
@@ -44,7 +44,7 @@ Worktree 已创建：
 - 基于：{base-branch}
 
 接下来可以：
-- /qx-dev-exec "plan.md" — 在隔离环境中执行计划
+- /qx-dev-exec plan.md — 在隔离环境中执行计划
 - /qx-dev-change create — 创建新的技术变更
 - 直接开始开发
 

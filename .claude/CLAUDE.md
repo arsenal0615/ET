@@ -60,7 +60,7 @@
 - `/qx-qa-playtest` — 玩家测试计划
 
 ### [跨岗] 评审与验证
-- `/qx-review` — 开三方评审（多角色评审）
+- `/qx-meeting` — 开三方评审（多角色评审）
 - `/qx-verify` — 完成前验证
 
 ### [跨岗] 知识管理
@@ -77,7 +77,7 @@
 
 **变更核心流程:** proposal → specs → design → plan → exec → verify → archive
 **可选步骤（按需触发，非必经）:**
-- `/qx-review` 三方评审 — 跨角色交接或高风险变更时推荐
+- `/qx-meeting` 三方评审 — 跨角色交接或高风险变更时推荐
 - `/qx-qa-test` QA 测试 — 有正式测试需求时使用
 
 每个阶段之间需要人工确认触发。

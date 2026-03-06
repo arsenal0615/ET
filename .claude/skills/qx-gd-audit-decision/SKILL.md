@@ -1,5 +1,5 @@
 ---
-name: qx-audit-decision
+name: qx-gd-audit-decision
 description: "设计方案决策点审视。找出方案中每一个已做出的关键决策，与同类游戏常见做法对比，输出优化建议。"
 ---
 
@@ -11,7 +11,7 @@ description: "设计方案决策点审视。找出方案中每一个已做出的
 
 执行本 skill 时，输出结果为只读分析，禁止自行写入或修改任何文件。
 
-**开始时宣告：** "正在使用 qx-audit-decision 对方案进行决策点审视。"
+**开始时宣告：** "正在使用 qx-gd-audit-decision 对方案进行决策点审视。"
 
 ## 核心身份
 

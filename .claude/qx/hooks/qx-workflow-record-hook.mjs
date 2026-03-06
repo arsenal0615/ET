@@ -5,9 +5,9 @@
  *
  * 职责:
  * 1. 在用户输入时标记"本轮需要记录"（pending_record）
- * 2. 捕获 /qx-change 子命令（create/propose/design/verify/archive）
+ * 2. 捕获 /qx-dev-change 子命令（create/propose/design/verify/archive）
  * 3. 扫描 docs/changes/ 识别当前活跃变更
- * 4. 从 /qx-exec 参数提取 plan 文件路径
+ * 4. 从 /qx-dev-exec 参数提取 plan 文件路径
  *
  * 实际的记录+推荐下一步由 qx-workflow-stop-hook.mjs 在 AI 回答完后触发。
  *
@@ -41,15 +41,15 @@ const qxMatch = userPrompt.match(/^\s*\/(qx-[\w-]+)/);
 const isQxCommand = !!qxMatch;
 const commandName = qxMatch ? `/${qxMatch[1]}` : null;
 
-// 捕获 /qx-change 子命令: create, propose, spec, design, verify, archive, status, list
+// 捕获 /qx-dev-change 子命令: create, propose, spec, design, verify, archive, status, list
 const changeSubMatch = userPrompt.match(
-  /^\s*\/qx-change\s+(create|propose|spec|design|verify|archive|status|list)/i
+  /^\s*\/qx-dev-change\s+(create|propose|spec|design|verify|archive|status|list)/i
 );
 const subcommand = changeSubMatch ? changeSubMatch[1].toLowerCase() : null;
 
-// 从 /qx-exec <plan-path> 中提取 plan 文件路径
+// 从 /qx-dev-exec <plan-path> 中提取 plan 文件路径
 const planMatch = userPrompt.match(
-  /^\s*\/qx-exec\s+(?:--\S+\s+)*([\w.\/\\-]+plan[\w.\/\\-]*)/i
+  /^\s*\/qx-dev-exec\s+(?:--\S+\s+)*([\w.\/\\-]+plan[\w.\/\\-]*)/i
 );
 const planFile = planMatch ? planMatch[1] : null;
 
