@@ -151,7 +151,7 @@ AI 回答完成 → qx-workflow-stop-hook (Stop)
 ### 3.3 尚存的 Hook 设计问题
 
 **问题 A：转换表不完整**
-- `/qx-exec` → 推荐 `/qx-verify`（已修复，见 stop-hook 第 45 行）
+- `/qx-dev-exec` → 推荐 `/qx-verify`（已修复，见 stop-hook 第 45 行）
 - 但工作流转换表是**硬编码**在 hook 中的，每次流程变更需要同步修改两处（CLAUDE.md + hook）
 
 **问题 B：记录指令的价值存疑**
@@ -249,7 +249,7 @@ autochess-patterns.md 记录了 8 个开发模式。验证其传播效果：
 | 3 | stop-hook 移除逐步记录指令 | 信息量低，用 /qx-compound 一次性生成深度分析 |
 | 4 | 流程分级：轻量级（<= 8 任务）vs 完整（> 8 任务） | 避免小变更走重流程 |
 | 5 | workflow-record 增加跨变更历史 | 当前只记录最近会话，丢失全局视角 |
-| 6 | finishing 不承载修复职责 | hook 修复用 /qx-debug 独立处理 |
+| 6 | finishing 不承载修复职责 | hook 修复用 /qx-dev-debug 独立处理 |
 
 ### P2 — 长期优化
 

@@ -200,4 +200,4 @@ QX 使用两层系统分析方法：
 - **qx-dev-explore** — 用于开放式代码库探索
 - **qx-dev-plan** — 使用影响分析来指导实施计划
 - **qx-compound** — 在变更完成后更新系统图
-- **qx-three-party-review** — 在评审过程中可能触发影响分析
+- **qx-meeting** — 在评审过程中可能触发影响分析

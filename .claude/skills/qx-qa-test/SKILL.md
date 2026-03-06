@@ -247,6 +247,6 @@ E2E SCENARIO: [玩家旅程名称]
 ## 相关 Skills
 
 - **qx-tdd** -- 用于测试驱动实现测试场景
-- **qx-verification** -- 用于在声称完成之前验证测试结果
+- **qx-verify** -- 用于在声称完成之前验证测试结果
 - **qx-gd-gdd** -- GDD 提供待测试的功能
 - **qx-gd-sprint** -- Sprint 上下文决定测试范围

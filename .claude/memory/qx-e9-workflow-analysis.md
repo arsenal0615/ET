@@ -11,11 +11,11 @@
 
 | # | Skill | 输入 | 产出 | 结果 |
 |---|-------|------|------|------|
-| 1 | /qx-managing-changes | "E9 网络与同步" | proposal + 5 specs + design（6个技术决策） | 完成 |
-| 2 | /qx-writing-plans | design.md | plan.md（10组18任务） | 完成 |
-| 3 | /qx-exec | plan.md | 18任务全部实现，31文件，5436行 | 完成，修了 ET0031 |
-| 4 | /qx-verification | exec 完成后 | 4维验证全部 PASS | 通过 |
-| 5 | /qx-managing-changes archive | verify 通过 | 归档 + 5 specs 同步 | 完成 |
+| 1 | /qx-dev-change | "E9 网络与同步" | proposal + 5 specs + design（6个技术决策） | 完成 |
+| 2 | /qx-dev-plan | design.md | plan.md（10组18任务） | 完成 |
+| 3 | /qx-dev-exec | plan.md | 18任务全部实现，31文件，5436行 | 完成，修了 ET0031 |
+| 4 | /qx-verify | exec 完成后 | 4维验证全部 PASS | 通过 |
+| 5 | /qx-dev-change archive | verify 通过 | 归档 + 5 specs 同步 | 完成 |
 | 6 | /qx-compound | archive 完成 | system-map + MEMORY 更新 | 完成 |
 
 ---
@@ -39,7 +39,7 @@
 - 根因：子 Agent prompt 中未包含 ET0031 规则（Proto 必须用 `.Create()`）
 - 传播范围：4 个 Handler 文件 + 1 个 ProtoHelper 文件（共 5 个文件）
 - 修复成本：需要完全重写每个文件（对象初始化器语法无法简单替换）
-- 预防：在 qx-exec 的 static_context 中应明确包含 ET0031 规则
+- 预防：在 qx-dev-exec 的 static_context 中应明确包含 ET0031 规则
 
 **CombatDamageType.Physical / CombatWinner.None — 低传播性：**
 - 根因：子 Agent 猜测了不存在的枚举值

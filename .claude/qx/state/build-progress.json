@@ -35,13 +35,13 @@
       "completed_at": "2026-03-02T17:30:00Z",
       "mode": "并行子Agent（分2轮）",
       "tasks": [
-        { "id": 6, "name": "qx-exploring", "source": "Superpowers exploring", "status": "completed", "round": 1, "files": ["SKILL.md"], "lines": 285 },
-        { "id": 7, "name": "qx-managing-changes", "source": "Superpowers managing-changes", "status": "completed", "round": 1, "files": ["SKILL.md"], "lines": 442 },
+        { "id": 6, "name": "qx-dev-explore", "source": "Superpowers exploring", "status": "completed", "round": 1, "files": ["SKILL.md"], "lines": 285 },
+        { "id": 7, "name": "qx-dev-change", "source": "Superpowers managing-changes", "status": "completed", "round": 1, "files": ["SKILL.md"], "lines": 442 },
         { "id": 9, "name": "qx-tdd", "source": "Superpowers TDD", "status": "completed", "round": 1, "files": ["SKILL.md", "testing-anti-patterns.md"], "lines": 744 },
-        { "id": 10, "name": "qx-debugging", "source": "Superpowers debugging", "status": "completed", "round": 1, "files": ["SKILL.md", "root-cause-tracing.md", "defense-in-depth.md", "condition-based-waiting.md"], "lines": 801 },
-        { "id": 8, "name": "qx-writing-plans", "source": "Superpowers writing-plans", "status": "completed", "round": 2, "files": ["SKILL.md"], "lines": 287 },
+        { "id": 10, "name": "qx-dev-debug", "source": "Superpowers debugging", "status": "completed", "round": 1, "files": ["SKILL.md", "root-cause-tracing.md", "defense-in-depth.md", "condition-based-waiting.md"], "lines": 801 },
+        { "id": 8, "name": "qx-dev-plan", "source": "Superpowers writing-plans", "status": "completed", "round": 2, "files": ["SKILL.md"], "lines": 287 },
         { "id": 11, "name": "qx-code-review", "source": "Superpowers code-review", "status": "completed", "round": 2, "files": ["SKILL.md"], "lines": 234 },
-        { "id": 12, "name": "qx-verification", "source": "Superpowers verification", "status": "completed", "round": 2, "files": ["SKILL.md"], "lines": 232 },
+        { "id": 12, "name": "qx-verify", "source": "Superpowers verification", "status": "completed", "round": 2, "files": ["SKILL.md"], "lines": 232 },
         { "id": 25, "name": "3个知识库文件(通用方法论)", "source": "新建", "status": "completed", "round": 2, "files": ["game-design.md", "art-ux-standards.md", "qa-methodology.md"], "lines": 521, "note": "et-framework.md已删除——项目特有知识由CLAUDE.md+MEMORY.md渐进式披露，不嵌入QX工作流" }
       ],
       "round1_review": "通过 — 4个Skill共10个文件(2272行)，零源系统残留引用，ET框架特化到位",
@@ -53,11 +53,11 @@
       "completed_at": "2026-03-02T18:30:00Z",
       "mode": "并行子Agent（1轮）",
       "tasks": [
-        { "id": 13, "name": "qx-brainstorm", "source": "Superpowers brainstorming + BMAD GDS brainstorm", "status": "completed", "files": ["SKILL.md"], "lines": 152 },
-        { "id": 14, "name": "qx-game-design", "source": "BMAD GDS gdd/narrative", "status": "completed", "files": ["SKILL.md"], "lines": 214 },
-        { "id": 15, "name": "qx-sprint", "source": "BMAD BMM sprint", "status": "completed", "files": ["SKILL.md"], "lines": 189 },
-        { "id": 16, "name": "qx-ux-design", "source": "BMAD BMM ux-design", "status": "completed", "files": ["SKILL.md"], "lines": 188 },
-        { "id": 17, "name": "qx-test-design", "source": "BMAD GDS gametest", "status": "completed", "files": ["SKILL.md"], "lines": 252 },
+        { "id": 13, "name": "qx-gd-brainstorm", "source": "Superpowers brainstorming + BMAD GDS brainstorm", "status": "completed", "files": ["SKILL.md"], "lines": 152 },
+        { "id": 14, "name": "qx-gd-gdd", "source": "BMAD GDS gdd/narrative", "status": "completed", "files": ["SKILL.md"], "lines": 214 },
+        { "id": 15, "name": "qx-gd-sprint", "source": "BMAD BMM sprint", "status": "completed", "files": ["SKILL.md"], "lines": 189 },
+        { "id": 16, "name": "qx-art-ux", "source": "BMAD BMM ux-design", "status": "completed", "files": ["SKILL.md"], "lines": 188 },
+        { "id": 17, "name": "qx-qa-test", "source": "BMAD GDS gametest", "status": "completed", "files": ["SKILL.md"], "lines": 252 },
         { "id": 18, "name": "qx-finishing", "source": "Superpowers finishing", "status": "completed", "files": ["SKILL.md"], "lines": 185 }
       ],
       "review": "通过 — 6个Skill共6个文件(1180行)，零源系统残留引用(BMAD/Superpowers/OMC)，全部项目无关化"
@@ -68,10 +68,10 @@
       "completed_at": "2026-03-02T19:00:00Z",
       "mode": "主会话顺序执行",
       "tasks": [
-        { "id": 19, "name": "qx-three-party-review", "source": "BMAD party-mode + QX角色Agent", "status": "completed", "files": ["SKILL.md"], "lines": 202 },
-        { "id": 20, "name": "qx-system-analysis", "source": "QX新建", "status": "completed", "files": ["SKILL.md"], "lines": 195 },
+        { "id": 19, "name": "qx-meeting", "source": "BMAD party-mode + QX角色Agent", "status": "completed", "files": ["SKILL.md"], "lines": 202 },
+        { "id": 20, "name": "qx-dev-impact", "source": "QX新建", "status": "completed", "files": ["SKILL.md"], "lines": 195 },
         { "id": 21, "name": "qx-compound", "source": "QX新建（灵感: Compound Engineering）", "status": "completed", "files": ["SKILL.md"], "lines": 187 },
-        { "id": 22, "name": "qx-exec", "source": "OMC team + SP subagent-driven + SP executing-plans", "status": "completed", "files": ["SKILL.md"], "lines": 311 }
+        { "id": 22, "name": "qx-dev-exec", "source": "OMC team + SP subagent-driven + SP executing-plans", "status": "completed", "files": ["SKILL.md"], "lines": 311 }
       ],
       "review": "通过 — 4个Skill共4个文件(895行)，零源系统残留引用，全部项目无关化"
     },
@@ -107,7 +107,7 @@
       "completed_at": "2026-03-02T21:00:00Z",
       "mode": "顺序执行（需人工确认）",
       "tasks": [
-        { "id": 29, "name": "收集反馈调整", "status": "completed", "note": "补充了 qx-worktree 命令 + qx-exec --worktree 模式" },
+        { "id": 29, "name": "收集反馈调整", "status": "completed", "note": "补充了 qx-dev-worktree 命令 + qx-exec --worktree 模式" },
         { "id": 30, "name": "删除旧系统", "status": "completed", "note": "删除 72个bmad命令 + _bmad/ + _bmad-output/ + .omc/ + CLAUDE.md OMC块(288行) + settings.json旧插件引用" }
       ],
       "review": "通过 — 旧系统全部清除（BMAD 72命令+框架目录、OMC 配置块+状态目录、Superpowers 插件引用），QX 工作流独立运行"

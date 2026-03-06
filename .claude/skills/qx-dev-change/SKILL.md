@@ -80,7 +80,7 @@ status: active
     列出了 Capabilities 但没有 specs/?  → 创建规格（运行 SPEC）
   design.md 存在?    → 否  → 创建设计（运行 DESIGN）
   plan.md 存在?      → 否  → 创建计划（调用 qx-dev-plan skill）
-  plan.md 有 - [ ]?  → 是  → 恢复执行（调用 qx-exec skill）
+  plan.md 有 - [ ]?  → 是  → 恢复执行（调用 qx-dev-exec skill）
   所有任务 [x]?      → 是  → 建议验证/归档
 ```
 
@@ -97,7 +97,7 @@ status: active
 - 这是"持续说继续"的工作流 — 用户不需要知道下一个操作是什么
 - 如果 proposal 中列出了 capabilities 但 specs 是可选的（纯技术变更），跳到 design
 - 到达计划创建时，交给 `qx-dev-plan` skill
-- 到达执行时，交给 `qx-exec` skill
+- 到达执行时，交给 `qx-dev-exec` skill
 
 ---
 

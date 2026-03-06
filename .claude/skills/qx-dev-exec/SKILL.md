@@ -582,6 +582,6 @@ Agent(subagent_type="code-reviewer", prompt="""
 - **qx-dev-plan** — 创建本 Skill 执行的计划
 - **qx-tdd** — 实现者 Agent 遵循的 TDD 纪律
 - **qx-code-review** — 审查员 Agent 使用的审查方法论
-- **qx-verification** — 所有任务完成后的完整验证
+- **qx-verify** — 所有任务完成后的完整验证
 - **qx-finishing** — 执行完成后的分支收尾
 - **qx-dev-change** — 包装计划执行的变更生命周期

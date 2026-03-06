@@ -10,17 +10,17 @@
 
 | # | Skill | 输入 | 产出 | 耗时估计 | 结果 |
 |---|-------|------|------|----------|------|
-| 1 | /qx-managing-changes | a1-unit 完成后启动 | proposal + 5 specs + design（7个技术决策） | ~30min | 完成，有1个引导错误 |
-| 2 | /qx-writing-plans | design.md | plan.md（7阶段14任务） | ~15min | 完成，质量好 |
-| 3 | /qx-exec | plan.md | 14个任务全部实现，8个git提交，17个文件 | ~2h（跨会话） | 完成，Final Review 捕获1个Critical |
-| 4 | /qx-verification | exec 完成后 | 构建验证通过（12 errors 全预存） | ~5min | 通过 |
+| 1 | /qx-dev-change | a1-unit 完成后启动 | proposal + 5 specs + design（7个技术决策） | ~30min | 完成，有1个引导错误 |
+| 2 | /qx-dev-plan | design.md | plan.md（7阶段14任务） | ~15min | 完成，质量好 |
+| 3 | /qx-dev-exec | plan.md | 14个任务全部实现，8个git提交，17个文件 | ~2h（跨会话） | 完成，Final Review 捕获1个Critical |
+| 4 | /qx-verify | exec 完成后 | 构建验证通过（12 errors 全预存） | ~5min | 通过 |
 | 5 | /qx-finishing | verify 通过后 | hook修复 + 提交 + 收尾选项 | ~10min | 完成 |
 
 ---
 
 ## 二、逐步深度分析
 
-### Step 1: /qx-managing-changes (create+propose+spec+design)
+### Step 1: /qx-dev-change (create+propose+spec+design)
 
 **做对了什么：**
 - Proposal 精确划定了范围边界（本变更 vs E7 战斗模拟器），避免了范围蔓延
@@ -41,7 +41,7 @@
 
 ---
 
-### Step 2: /qx-writing-plans
+### Step 2: /qx-dev-plan
 
 **做对了什么：**
 - 任务粒度恰当：14个任务，每个 ~30min 可完成，适合单个 Agent 一次性处理
@@ -62,7 +62,7 @@
 
 ---
 
-### Step 3: /qx-exec (多 Agent 执行)
+### Step 3: /qx-dev-exec (多 Agent 执行)
 
 **做对了什么：**
 - 前 5 个数据模型任务（1.1~1.5）通过子 Agent 高效完成，每个任务一个 Agent，无上下文污染
@@ -77,7 +77,7 @@
 - **背景 Agent 通知风暴**：5个旧 Agent 的 task-notification 在恢复后集中到达，每个触发一轮 hook → 9+ 次重复 block（Issue #2/#3/#4）
 - **GC 分配问题（I1）和模板缓存问题（I2）**：质量审查发现了 Important 级别问题但未要求修复，记入 tech-debt
 
-**qx-exec 设计的有效性：**
+**qx-dev-exec 设计的有效性：**
 
 | 机制 | 有效性 | 证据 |
 |------|--------|------|
@@ -103,7 +103,7 @@ per-task 审查的视野局限在单个任务的文件范围内。SynergyCompone
 
 ---
 
-### Step 4: /qx-verification
+### Step 4: /qx-verify
 
 **做对了什么：**
 - 运行了完整构建（`dotnet build ET.sln`）
@@ -128,7 +128,7 @@ per-task 审查的视野局限在单个任务的文件范围内。SynergyCompone
 
 **引入的问题：**
 - finishing 阶段变成了"修复工作流本身"而非"收尾项目工作"，职责混淆
-- 理想情况下 hook 修复应该作为独立变更（/qx-debug），而非嵌入 finishing 流程
+- 理想情况下 hook 修复应该作为独立变更（/qx-dev-debug），而非嵌入 finishing 流程
 
 **收敛性评估：** 完成了收尾，但额外修复工作延长了流程。
 
@@ -196,13 +196,13 @@ exec → verify 保留度 ~100%（构建验证无损）
 
 | 步骤完成后 | Hook 推荐 | 实际需要 | 正确？ |
 |-----------|-----------|----------|--------|
-| /qx-change design | /qx-plan | /qx-plan | 正确 |
-| /qx-plan | /qx-exec | /qx-exec | 正确 |
-| /qx-exec | /qx-finishing | /qx-verify（应先验证） | 偏差 |
+| /qx-dev-change design | /qx-dev-plan | /qx-dev-plan | 正确 |
+| /qx-dev-plan | /qx-dev-exec | /qx-dev-exec | 正确 |
+| /qx-dev-exec | /qx-finishing | /qx-verify（应先验证） | 偏差 |
 | /qx-verify | /qx-finishing | /qx-finishing | 正确 |
-| /qx-finishing | /qx-change archive | /qx-change archive | 正确 |
+| /qx-finishing | /qx-dev-change archive | /qx-dev-change archive | 正确 |
 
-**Issue：exec 完成后应推荐 /qx-verify 而非直接 /qx-finishing。** 工作流转换表中 `/qx-exec → /qx-finishing` 跳过了验证步骤。
+**Issue：exec 完成后应推荐 /qx-verify 而非直接 /qx-finishing。** 工作流转换表中 `/qx-dev-exec → /qx-finishing` 跳过了验证步骤。
 
 ---
 
@@ -210,14 +210,14 @@ exec → verify 保留度 ~100%（构建验证无损）
 
 ### P0（应立即修复）
 
-1. **工作流转换表修正**：`/qx-exec` → 推荐 `/qx-verify` 而非 `/qx-finishing`
+1. **工作流转换表修正**：`/qx-dev-exec` → 推荐 `/qx-verify` 而非 `/qx-finishing`
 2. **Plan 模板增加 EntitySystem 检查项**：声明了 IAwake/IDestroy 的 Entity 必须有对应的 [EntitySystemOf] System 类 Task
 
 ### P1（下次迭代改进）
 
 3. **Design 新增类型清单应包含 System 类**：design.md 的"新增类型清单"只列了 Entity/数据类/Service，应增加 System 类列
-4. **Finishing 不应承载修复职责**：hook 修复应该通过 /qx-debug 独立处理，finishing 保持纯粹的收尾流程
-5. **exec 跨会话恢复指南**：在 qx-exec skill 中增加恢复协议（如何验证背景 Agent 产出）
+4. **Finishing 不应承载修复职责**：hook 修复应该通过 /qx-dev-debug 独立处理，finishing 保持纯粹的收尾流程
+5. **exec 跨会话恢复指南**：在 qx-dev-exec skill 中增加恢复协议（如何验证背景 Agent 产出）
 
 ### P2（长期优化）
 
@@ -231,21 +231,21 @@ exec → verify 保留度 ~100%（构建验证无损）
 
 | # | Skill | 摘要 | 问题 |
 |---|-------|------|------|
-| 21 | /qx-managing-changes | create 子命令启动，等待用户输入变更名称 | |
+| 21 | /qx-dev-change | create 子命令启动，等待用户输入变更名称 | |
 | 22 | (follow-up) | 追加记录行，继续等待用户输入变更名称 | |
 | 23 | (follow-up) | 分析依赖图，推断下一个变更为 a1-skill（E6 技能系统），等待用户确认 | |
-| 25 | /qx-managing-changes | propose 完成：发现配置层已完整，提案聚焦技能执行引擎（5 capabilities） | |
-| 26 | /qx-managing-changes | spec 完成：5 个 capability 共 17 需求 54 场景，覆盖触发/目标/效果/法力/执行管线 | |
-| 28 | /qx-writing-plans | plan 完成：8 组 15 任务，数据模型→HexUtil→Mana→Trigger→Target→Effect→Executor→集成 | |
-| 29 | /qx-exec | 开始执行：构建静态上下文，分派 Task 1.1/1.2/1.3 三个并行 Agent（数据模型层） | 进行中，尚未完成 |
-| 30-42 | /qx-exec | 16/16 任务全部完成，8 次提交，Final Review APPROVED，3 个 Important 记录到 tech-debt | 跨上下文续接（context compaction），stop hook 误触一次 |
+| 25 | /qx-dev-change | propose 完成：发现配置层已完整，提案聚焦技能执行引擎（5 capabilities） | |
+| 26 | /qx-dev-change | spec 完成：5 个 capability 共 17 需求 54 场景，覆盖触发/目标/效果/法力/执行管线 | |
+| 28 | /qx-dev-plan | plan 完成：8 组 15 任务，数据模型→HexUtil→Mana→Trigger→Target→Effect→Executor→集成 | |
+| 29 | /qx-dev-exec | 开始执行：构建静态上下文，分派 Task 1.1/1.2/1.3 三个并行 Agent（数据模型层） | 进行中，尚未完成 |
+| 30-42 | /qx-dev-exec | 16/16 任务全部完成，8 次提交，Final Review APPROVED，3 个 Important 记录到 tech-debt | 跨上下文续接（context compaction），stop hook 误触一次 |
 | 43 | /qx-verify | 16/16 任务 checkbox 全部 [x]，12 文件存在，编译零新增错误，验证通过 VERIFIED | |
 | 44 | /qx-finishing | 收尾确认：10 个提交已在 release9.0 上，无独立分支需合并，展示 4 选项等待用户选择 | |
 | 45 | (follow-up: /qx-finishing) | 用户询问下一步推荐，建议 compound → archive → sprint status 顺序 | |
 | 46 | git push | 推送 release9.0 到远程，10 个提交同步完成 | |
-| 47 | /qx-managing-changes | archive 完成：tech-debt 3项全部推迟，5个specs同步到docs/specs/，变更移至archive/2026-03-06-a1-skill/ | |
+| 47 | /qx-dev-change | archive 完成：tech-debt 3项全部推迟，5个specs同步到docs/specs/，变更移至archive/2026-03-06-a1-skill/ | |
 | 48 | /qx-compound | 提取经验：system-map新增技能子系统章节，MEMORY新增坑7+2个模式，验收进度更新 | |
-| 49 | /qx-managing-changes | create 子命令启动，无活跃变更，等待用户输入新变更名称 | |
-| 50 | (follow-up: /qx-managing-changes) | 创建 battle-system 变更目录和 .change.yaml，建议下一步 propose |
-| 51 | (follow-up: /qx-managing-changes) | 全自动模式：从 propose 一路执行到 compound 完成，含 proposal+10specs+design+plan(15task)+11新文件+5修改+5测试+archive+specs同步+system-map更新+知识提取 | 1个新增编译错误(SimpleRng ET0004)已修复(移到Model程序集)；IEnumerable不可索引需foreach+break | |
-| 57-63 | /qx-change create→compound | 全自动模式（e9-networking 网络与同步）：create→propose→5specs→design(6决策)→plan(10组18任务)→exec(31文件5436行)→verify(4维全PASS)→archive(5specs同步)→compound(system-map+MEMORY+5新坑模式) | ET0031(Proto new→Create)在5文件重复出现需完整重写；CombatDamageType/CombatWinner枚举值猜错；context compaction中途触发1次 |
+| 49 | /qx-dev-change | create 子命令启动，无活跃变更，等待用户输入新变更名称 | |
+| 50 | (follow-up: /qx-dev-change) | 创建 battle-system 变更目录和 .change.yaml，建议下一步 propose |
+| 51 | (follow-up: /qx-dev-change) | 全自动模式：从 propose 一路执行到 compound 完成，含 proposal+10specs+design+plan(15task)+11新文件+5修改+5测试+archive+specs同步+system-map更新+知识提取 | 1个新增编译错误(SimpleRng ET0004)已修复(移到Model程序集)；IEnumerable不可索引需foreach+break | |
+| 57-63 | /qx-dev-change create→compound | 全自动模式（e9-networking 网络与同步）：create→propose→5specs→design(6决策)→plan(10组18任务)→exec(31文件5436行)→verify(4维全PASS)→archive(5specs同步)→compound(system-map+MEMORY+5新坑模式) | ET0031(Proto new→Create)在5文件重复出现需完整重写；CombatDamageType/CombatWinner枚举值猜错；context compaction中途触发1次 |
