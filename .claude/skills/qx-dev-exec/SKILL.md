@@ -48,7 +48,7 @@ description: "在有已批准的实施计划时使用。读取计划，按任务
 │      e. 分派质量审查员（附带规则）                  │
 │      f. 标记任务完成（TodoWrite + 复选框）          │
 │  5.  所有任务完成后：分派最终审查                    │
-│  6.  提供 /qx-finishing 选项                       │
+│  6.  提供 /qx-dev-close 选项                       │
 │                                                    │
 │  --loop: 持续工作直到所有任务完成                    │
 │          （通过 hook 实现持久化模式）                │
@@ -425,7 +425,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 
 后续步骤:
 1. /qx-verify — 在宣称完成前运行完整验证
-2. /qx-finishing — 合并、PR 或保留分支
+2. /qx-dev-close — 验证+收尾+归档变更
 ```
 
 ## --loop 模式（持久化执行）
@@ -470,7 +470,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 **行为：**
 - 执行任务前，通过 `EnterWorktree` 创建隔离的 git worktree
 - 所有实现者子 Agent 在 worktree 中工作（不影响主工作区）
-- 完成后，用户通过 `/qx-finishing` 选择合并或丢弃
+- 完成后，用户通过 `/qx-dev-close` 选择合并或丢弃
 
 **何时使用：**
 - 可能破坏主工作区的大型或高风险变更
@@ -575,7 +575,7 @@ Agent(subagent_type="code-reviewer", prompt="""
 - 修复后重新审查（不要跳过重新审查循环）
 - 在 TodoWrite 和计划文件中双重跟踪进度（Change Mode）
 - 将实现者输出解析到 task_outputs 中用于依赖链
-- 所有任务完成时提供 `/qx-finishing` 选项
+- 所有任务完成时提供 `/qx-dev-close` 选项
 
 ## 相关 Skills
 
@@ -583,5 +583,6 @@ Agent(subagent_type="code-reviewer", prompt="""
 - **qx-tdd** — 实现者 Agent 遵循的 TDD 纪律
 - **qx-code-review** — 审查员 Agent 使用的审查方法论
 - **qx-verify** — 所有任务完成后的完整验证
-- **qx-finishing** — 执行完成后的分支收尾
-- **qx-dev-create/design/close** — 变更生命周期
+- **qx-dev-close** — 验证+收尾+归档变更
+- **qx-dev-worktree** — `--worktree` 模式的隔离工作区创建
+- **qx-dev-create/design** — 变更生命周期

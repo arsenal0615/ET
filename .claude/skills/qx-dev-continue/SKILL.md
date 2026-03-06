@@ -16,6 +16,8 @@ description: "自动推进变更到下一步。检测当前进度并调用对应
 
 ```
 proposal.md 不存在?  -> 调用 qx-dev-create
+proposal.md 存在但无 specs/ 且功能复杂?
+                     -> 提示: "此功能较复杂，建议先 /qx-dev-create spec 细化需求，或直接 /qx-dev-design"
 design.md 不存在?    -> 调用 qx-dev-design（简单变更可跳过）
 plan.md 不存在?      -> 调用 qx-dev-plan
 plan.md 有 - [ ]?    -> 调用 qx-dev-exec

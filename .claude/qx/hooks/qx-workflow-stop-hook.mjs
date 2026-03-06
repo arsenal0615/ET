@@ -31,7 +31,7 @@ const WORKFLOW_TRANSITIONS = {
   "/qx-gd-sprint": "/qx-dev-create（开始第一个变更）",
 
   // 变更生命周期
-  "/qx-dev-create": "/qx-dev-design 或 /qx-meeting",
+  "/qx-dev-create": "/qx-dev-design 或 /qx-dev-create spec（复杂功能细化需求）或 /qx-meeting",
   "/qx-dev-create spec": "/qx-dev-design",
   "/qx-dev-design": "/qx-dev-plan（编写实施计划）",
   "/qx-dev-close": "/qx-compound（复合积累）",
@@ -39,8 +39,7 @@ const WORKFLOW_TRANSITIONS = {
   // 实施阶段
   "/qx-dev-plan": "/qx-dev-exec（执行计划）",
   "/qx-dev-exec": "/qx-verify（完成前验证）",
-  "/qx-verify": "/qx-finishing（收尾）",
-  "/qx-finishing": "/qx-dev-close（验证并归档变更）",
+  "/qx-verify": "/qx-dev-close（验证+收尾+归档变更）",
   "/qx-compound": "下一个 Story → /qx-dev-create",
 
   // 其他

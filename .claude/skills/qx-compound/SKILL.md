@@ -19,7 +19,7 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 - Sprint 回顾后
 - 调试棘手问题后
 - 发现新模式或反模式后
-- `/qx-finishing` 或 `/qx-retro` 建议时
+- `/qx-dev-close` 或 `/qx-retro` 建议时
 
 ## 更新哪些知识库
 
