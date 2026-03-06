@@ -41,6 +41,7 @@ namespace ET.Server
             TestTargetSelector();
             TestEffectApplier();
             TestSkillExecutor();
+            TestSkillSystem();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1629,6 +1630,300 @@ namespace ET.Server
                 throw new System.Exception($"SkillExecutor NoSkill: expected NotTriggered, got {result4.Status}");
 
             Log.Info("[AutoChess] TestSkillExecutor passed.");
+        }
+
+        /// <summary>
+        /// 集成测试：完整技能管线端到端验证。
+        /// 覆盖 6 个典型技能场景 + Buff 生命周期。
+        /// </summary>
+        public static void TestSkillSystem()
+        {
+            AutoChessConfigLoader.Init();
+
+            // === 场景 1: 近战爆发 (SkillId=1, AttackTrait → NearestEnemy → Damage) ===
+            {
+                var caster = new CombatUnitState
+                {
+                    InstId = 1, TemplateId = 1, Star = 1, Hp = 500, MaxHp = 500,
+                    Atk = 100, AtkSpeed = 1.0f, Range = 1, MoveSpeed = 1.0f,
+                    CritChance = 0f, Mana = 0, ManaGainOnAttack = 10, ManaGainOnHit = 6,
+                    Col = 3, Row = 3, FacingCol = 3, FacingRow = 2,
+                    IsAlive = true, Side = 0, SkillDefId = 1,
+                    DamageMultiplier = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                // 近敌在相邻格
+                var nearEnemy = new CombatUnitState
+                {
+                    InstId = 10, Col = 3, Row = 2, Side = 1, IsAlive = true,
+                    Hp = 400, MaxHp = 400, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                // 远敌不应被选中
+                var farEnemy = new CombatUnitState
+                {
+                    InstId = 11, Col = 6, Row = 6, Side = 1, IsAlive = true,
+                    Hp = 400, MaxHp = 400, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var allUnits = new List<CombatUnitState> { caster, nearEnemy, farEnemy };
+
+                var result = SkillExecutor.TryExecute(caster, SkillTriggerType.AttackTrait, allUnits, null, 5);
+                if (result.Status != SkillExecutionStatus.Executed)
+                    throw new Exception($"SkillSystem Skill1: expected Executed, got {result.Status}");
+
+                // Skill1: Damage Value1=1.5, damage = floor(100 * 1.5 * 1.0) = 150
+                // nearEnemy HP: 400 - 150 = 250
+                if (nearEnemy.Hp != 250)
+                    throw new Exception($"SkillSystem Skill1: expected nearEnemy HP=250, got {nearEnemy.Hp}");
+                // farEnemy 不受影响
+                if (farEnemy.Hp != 400)
+                    throw new Exception($"SkillSystem Skill1: farEnemy should be untouched, HP={farEnemy.Hp}");
+            }
+
+            // === 场景 2: 王子冲锋 (SkillId=4, CombatStart → FarthestInRange → Damage+Stun) ===
+            {
+                var caster = new CombatUnitState
+                {
+                    InstId = 2, TemplateId = 4, Star = 1, Hp = 800, MaxHp = 800,
+                    Atk = 200, AtkSpeed = 1.5f, Range = 3, MoveSpeed = 1.0f,
+                    CritChance = 0.15f, Mana = 0, ManaGainOnAttack = 10, ManaGainOnHit = 6,
+                    Col = 0, Row = 0, FacingCol = 3, FacingRow = 0,
+                    IsAlive = true, Side = 0, SkillDefId = 4,
+                    DamageMultiplier = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                // 近敌 (距离1)
+                var closeEnemy = new CombatUnitState
+                {
+                    InstId = 20, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                    Hp = 600, MaxHp = 600, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                // 远敌 (距离3, 在 Range 内, 应被 FarthestInRange 选中)
+                var farEnemy = new CombatUnitState
+                {
+                    InstId = 21, Col = 3, Row = 0, Side = 1, IsAlive = true,
+                    Hp = 600, MaxHp = 600, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var allUnits = new List<CombatUnitState> { caster, closeEnemy, farEnemy };
+
+                var result = SkillExecutor.TryExecute(caster, SkillTriggerType.CombatStart, allUnits, null, 0);
+                if (result.Status != SkillExecutionStatus.Executed)
+                    throw new Exception($"SkillSystem Skill4: expected Executed, got {result.Status}");
+
+                // Damage: floor(200 * 2.0 * 1.0) = 400, farEnemy HP: 600 - 400 = 200
+                if (farEnemy.Hp != 200)
+                    throw new Exception($"SkillSystem Skill4: expected farEnemy HP=200, got {farEnemy.Hp}");
+                // closeEnemy 不受影响 (FarthestInRange 只选最远1个)
+                if (closeEnemy.Hp != 600)
+                    throw new Exception($"SkillSystem Skill4: closeEnemy should be untouched, HP={closeEnemy.Hp}");
+                // Stun buff
+                if (!farEnemy.IsStunned)
+                    throw new Exception("SkillSystem Skill4: farEnemy should be stunned");
+                // Stun Duration=1.0s → ticks = 1.0 * 20 = 20
+                if (farEnemy.Buffs[0].RemainingTicks != 20)
+                    throw new Exception($"SkillSystem Skill4: expected stun 20 ticks, got {farEnemy.Buffs[0].RemainingTicks}");
+            }
+
+            // === 场景 3: 女巫召唤 (SkillId=9, Interval → Self → Summon, 验证 allUnits 增长) ===
+            {
+                var caster = new CombatUnitState
+                {
+                    InstId = 3, TemplateId = 9, Star = 1, Hp = 400, MaxHp = 400,
+                    Atk = 80, AtkSpeed = 1.0f, Range = 2, MoveSpeed = 1.0f,
+                    CritChance = 0f, Mana = 0, ManaGainOnAttack = 10, ManaGainOnHit = 6,
+                    Col = 3, Row = 3, FacingCol = 3, FacingRow = 2,
+                    IsAlive = true, Side = 0, SkillDefId = 9,
+                    DamageMultiplier = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var enemy = new CombatUnitState
+                {
+                    InstId = 30, Col = 5, Row = 5, Side = 1, IsAlive = true,
+                    Hp = 300, MaxHp = 300, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var allUnits = new List<CombatUnitState> { caster, enemy };
+
+                // Skill9: Interval=5.0s → requiredTicks = 5.0 * 20 = 100
+                // tick=0, LastIntervalTick=0, (0-0)=0 >= 100? No → NotTriggered...
+                // Wait: (0-0)=0 >= 100 → false. Need tick >= 100.
+                var result0 = SkillExecutor.TryExecute(caster, SkillTriggerType.Interval, allUnits, null, 0);
+                if (result0.Status != SkillExecutionStatus.NotTriggered)
+                    throw new Exception($"SkillSystem Skill9 tick=0: expected NotTriggered, got {result0.Status}");
+
+                // tick=100: (100-0)=100 >= 100 → true, triggers
+                int countBefore = allUnits.Count;
+                var result1 = SkillExecutor.TryExecute(caster, SkillTriggerType.Interval, allUnits, null, 100);
+                if (result1.Status != SkillExecutionStatus.Executed)
+                    throw new Exception($"SkillSystem Skill9 tick=100: expected Executed, got {result1.Status}");
+                // Summon Value1=1 → 1 unit added
+                if (allUnits.Count != countBefore + 1)
+                    throw new Exception($"SkillSystem Skill9: expected allUnits +1, got {allUnits.Count - countBefore}");
+                // Summoned unit should be on same side
+                var summoned = allUnits[allUnits.Count - 1];
+                if (summoned.Side != caster.Side)
+                    throw new Exception($"SkillSystem Skill9: summoned unit side mismatch");
+                if (!summoned.IsAlive)
+                    throw new Exception("SkillSystem Skill9: summoned unit should be alive");
+            }
+
+            // === 场景 4: 骷髅龙克隆 (SkillId=11, OnDeath → Self → Clone) ===
+            {
+                var caster = new CombatUnitState
+                {
+                    InstId = 4, TemplateId = 11, Star = 2, Hp = 200, MaxHp = 600,
+                    Atk = 120, AtkSpeed = 1.0f, Range = 1, MoveSpeed = 1.0f,
+                    CritChance = 0f, Mana = 0, ManaGainOnAttack = 10, ManaGainOnHit = 6,
+                    Col = 3, Row = 3, FacingCol = 3, FacingRow = 2,
+                    IsAlive = true, Side = 0, SkillDefId = 11,
+                    DamageMultiplier = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var enemy = new CombatUnitState
+                {
+                    InstId = 40, Col = 6, Row = 6, Side = 1, IsAlive = true,
+                    Hp = 500, MaxHp = 500, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var allUnits = new List<CombatUnitState> { caster, enemy };
+                int countBefore = allUnits.Count;
+
+                var result = SkillExecutor.TryExecute(caster, SkillTriggerType.OnDeath, allUnits, null, 50);
+                if (result.Status != SkillExecutionStatus.Executed)
+                    throw new Exception($"SkillSystem Skill11: expected Executed, got {result.Status}");
+
+                // Clone Value1=2, Value2=0.5 → 2 clones, each HP = floor(200 * 0.5) = 100
+                if (allUnits.Count != countBefore + 2)
+                    throw new Exception($"SkillSystem Skill11: expected allUnits +2, got {allUnits.Count - countBefore}");
+
+                var clone1 = allUnits[countBefore];
+                var clone2 = allUnits[countBefore + 1];
+                if (clone1.Hp != 100)
+                    throw new Exception($"SkillSystem Skill11: clone1 HP expected 100, got {clone1.Hp}");
+                if (clone2.Hp != 100)
+                    throw new Exception($"SkillSystem Skill11: clone2 HP expected 100, got {clone2.Hp}");
+                if (clone1.Side != caster.Side || clone2.Side != caster.Side)
+                    throw new Exception("SkillSystem Skill11: clones should be same side as caster");
+                if (clone1.Atk != caster.Atk)
+                    throw new Exception($"SkillSystem Skill11: clone Atk should match caster, got {clone1.Atk}");
+            }
+
+            // === 场景 5: 法力满触发 (SkillId=12, ManaFull → ClusterLargest → Projectile) ===
+            {
+                var caster = new CombatUnitState
+                {
+                    InstId = 5, TemplateId = 12, Star = 1, Hp = 500, MaxHp = 500,
+                    Atk = 150, AtkSpeed = 1.0f, Range = 4, MoveSpeed = 1.0f,
+                    CritChance = 0f, Mana = 100, ManaGainOnAttack = 10, ManaGainOnHit = 6,
+                    Col = 0, Row = 0, FacingCol = 3, FacingRow = 3,
+                    IsAlive = true, Side = 0, SkillDefId = 12,
+                    DamageMultiplier = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                // 3 个敌人聚集在一起 (Projectile Value2=3 选最远3个)
+                var e1 = new CombatUnitState
+                {
+                    InstId = 50, Col = 4, Row = 4, Side = 1, IsAlive = true,
+                    Hp = 500, MaxHp = 500, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+                var e2 = new CombatUnitState
+                {
+                    InstId = 51, Col = 5, Row = 4, Side = 1, IsAlive = true,
+                    Hp = 500, MaxHp = 500, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+                var e3 = new CombatUnitState
+                {
+                    InstId = 52, Col = 4, Row = 5, Side = 1, IsAlive = true,
+                    Hp = 500, MaxHp = 500, Range = 1, DamageReduction = 0f,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+                };
+
+                var allUnits = new List<CombatUnitState> { caster, e1, e2, e3 };
+
+                var result = SkillExecutor.TryExecute(caster, SkillTriggerType.ManaFull, allUnits, null, 10);
+                if (result.Status != SkillExecutionStatus.Executed)
+                    throw new Exception($"SkillSystem Skill12: expected Executed, got {result.Status}");
+
+                // Projectile: Value1=2.0, damage = floor(150 * 2.0 * 1.0) = 300 per target
+                // Value2=3 → hits up to 3 targets
+                int hitCount = 0;
+                for (int i = 0; i < result.EffectResults.Count; i++)
+                {
+                    if (result.EffectResults[i].EffectType == SkillEffectType.Projectile)
+                        hitCount++;
+                }
+                if (hitCount < 1)
+                    throw new Exception($"SkillSystem Skill12: expected at least 1 projectile hit, got {hitCount}");
+
+                // Mana should be consumed after ManaFull
+                if (caster.Mana != 0)
+                    throw new Exception($"SkillSystem Skill12: expected Mana=0 after ManaFull, got {caster.Mana}");
+            }
+
+            // === 场景 6: Buff 生命周期 (Stun 持续 N ticks 后消失) ===
+            {
+                var unit = new CombatUnitState
+                {
+                    InstId = 6, Col = 2, Row = 2, Side = 0, IsAlive = true,
+                    Hp = 300, MaxHp = 300, Range = 1,
+                    DamageMultiplier = 1.0f, AtkSpeed = 1.0f, MoveSpeed = 1.0f,
+                    Buffs = new List<ActiveBuff>
+                    {
+                        new ActiveBuff { Type = BuffType.Stun, RemainingTicks = 3 }
+                    },
+                    Trigger = new TriggerState()
+                };
+
+                // 初始状态: stunned
+                if (!unit.IsStunned)
+                    throw new Exception("SkillSystem Buff: unit should start stunned");
+
+                // Tick 1: RemainingTicks 3→2
+                SkillExecutor.TickBuffs(unit);
+                if (!unit.IsStunned)
+                    throw new Exception("SkillSystem Buff: unit should still be stunned after tick 1");
+                if (unit.Buffs[0].RemainingTicks != 2)
+                    throw new Exception($"SkillSystem Buff: expected 2 ticks after tick 1, got {unit.Buffs[0].RemainingTicks}");
+
+                // Tick 2: RemainingTicks 2→1
+                SkillExecutor.TickBuffs(unit);
+                if (!unit.IsStunned)
+                    throw new Exception("SkillSystem Buff: unit should still be stunned after tick 2");
+
+                // Tick 3: RemainingTicks 1→0 → removed
+                SkillExecutor.TickBuffs(unit);
+                if (unit.IsStunned)
+                    throw new Exception("SkillSystem Buff: stun should have expired after tick 3");
+                if (unit.Buffs.Count != 0)
+                    throw new Exception($"SkillSystem Buff: expected 0 buffs after expiry, got {unit.Buffs.Count}");
+            }
+
+            Log.Info("[AutoChess] TestSkillSystem passed.");
         }
     }
 }
