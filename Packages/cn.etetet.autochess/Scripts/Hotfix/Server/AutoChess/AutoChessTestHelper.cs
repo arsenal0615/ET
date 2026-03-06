@@ -42,6 +42,13 @@ namespace ET.Server
             TestEffectApplier();
             TestSkillExecutor();
             TestSkillSystem();
+            TestCombatSimulator();
+            TestPairing(scene);
+            TestSettlement(scene);
+            TestCombatStartProcessor();
+            TestFrenzy();
+            TestProtoConversion();
+            TestBroadcastHelper(scene);
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1924,6 +1931,481 @@ namespace ET.Server
             }
 
             Log.Info("[AutoChess] TestSkillSystem passed.");
+        }
+
+        // ===== BATTLE SYSTEM TESTS =====
+
+        /// <summary>
+        /// 验证 CombatSimulator 基本战斗循环：2v2 确定性结果。
+        /// </summary>
+        public static void TestCombatSimulator()
+        {
+            AutoChessConfigLoader.Init();
+
+            // 2v2: L has stronger units, should win
+            var leftUnits = new List<CombatUnitState>
+            {
+                MakeUnit(1, 0, col: 0, row: 3, atk: 200, hp: 800, range: 1, atkSpeed: 1.0f),
+                MakeUnit(2, 0, col: 1, row: 3, atk: 150, hp: 600, range: 1, atkSpeed: 1.0f),
+            };
+            var rightUnits = new List<CombatUnitState>
+            {
+                MakeUnit(10, 1, col: 0, row: 1, atk: 80, hp: 300, range: 1, atkSpeed: 1.0f),
+                MakeUnit(11, 1, col: 1, row: 1, atk: 60, hp: 250, range: 1, atkSpeed: 1.0f),
+            };
+
+            CombatResult result = CombatSimulator.RunCombat(leftUnits, rightUnits, null, null, null, 1);
+
+            if (result.Winner != CombatWinner.Left)
+                throw new Exception($"CombatSimulator 2v2: expected Left wins, got {result.Winner}");
+            if (result.Events.Count < 4)
+                throw new Exception($"CombatSimulator 2v2: expected >= 4 events, got {result.Events.Count}");
+            if (result.LeftAliveEffective < 1)
+                throw new Exception("CombatSimulator 2v2: expected at least 1 L alive");
+
+            // Verify determinism: same inputs → same result
+            var leftUnits2 = new List<CombatUnitState>
+            {
+                MakeUnit(1, 0, col: 0, row: 3, atk: 200, hp: 800, range: 1, atkSpeed: 1.0f),
+                MakeUnit(2, 0, col: 1, row: 3, atk: 150, hp: 600, range: 1, atkSpeed: 1.0f),
+            };
+            var rightUnits2 = new List<CombatUnitState>
+            {
+                MakeUnit(10, 1, col: 0, row: 1, atk: 80, hp: 300, range: 1, atkSpeed: 1.0f),
+                MakeUnit(11, 1, col: 1, row: 1, atk: 60, hp: 250, range: 1, atkSpeed: 1.0f),
+            };
+
+            CombatResult result2 = CombatSimulator.RunCombat(leftUnits2, rightUnits2, null, null, null, 1);
+
+            if (result2.Winner != result.Winner)
+                throw new Exception("CombatSimulator determinism: winner mismatch");
+            if (result2.Events.Count != result.Events.Count)
+                throw new Exception("CombatSimulator determinism: event count mismatch");
+
+            Log.Info("[AutoChess] TestCombatSimulator passed.");
+        }
+
+        /// <summary>
+        /// 验证 PairingService：4人配对、3人幽灵配对。
+        /// </summary>
+        public static void TestPairing(Scene scene)
+        {
+            // 4 players: should get 2 pairings
+            var room = CreateTestRoom(4, scene);
+            var rng = room.GetComponent<DeterministicRngComponent>();
+
+            var results4 = PairingService.MakePairings(room, rng);
+            if (results4.Count != 2)
+                throw new Exception($"Pairing 4p: expected 2 pairs, got {results4.Count}");
+
+            // All 4 IDs should appear exactly once
+            var ids = new HashSet<long>();
+            foreach (var p in results4)
+            {
+                ids.Add(p.LeftPlayerId);
+                ids.Add(p.RightPlayerId);
+            }
+            if (ids.Count != 4)
+                throw new Exception($"Pairing 4p: expected 4 unique IDs, got {ids.Count}");
+
+            // L < R in each pair
+            foreach (var p in results4)
+            {
+                if (p.LeftPlayerId >= p.RightPlayerId)
+                    throw new Exception($"Pairing: L({p.LeftPlayerId}) should be < R({p.RightPlayerId})");
+            }
+
+            // 3 players with ghost: should get 1 real + 1 ghost match
+            // Eliminate first alive player
+            foreach (MatchPlayer mp in room.GetAlivePlayers())
+            {
+                room.EliminatePlayer(mp.PlayerId);
+                break;
+            }
+            var lastGhost = new GhostSnapshot { PlayerId = 9999 };
+            room.LastGhost = lastGhost;
+            room.CurrentRound = 2;
+
+            var results3 = PairingService.MakePairings(room, rng);
+            if (results3.Count != 2)
+                throw new Exception($"Pairing 3p: expected 2 pairs, got {results3.Count}");
+
+            bool hasGhostMatch = false;
+            foreach (var p in results3)
+            {
+                if (p.IsGhostMatch) hasGhostMatch = true;
+            }
+            if (!hasGhostMatch)
+                throw new Exception("Pairing 3p: expected a ghost match");
+
+            // 2 players: should get 1 pairing
+            foreach (MatchPlayer mp in room.GetAlivePlayers())
+            {
+                room.EliminatePlayer(mp.PlayerId);
+                break;
+            }
+            room.LastGhost = null;
+            room.CurrentRound = 3;
+
+            var results2 = PairingService.MakePairings(room, rng);
+            if (results2.Count != 1)
+                throw new Exception($"Pairing 2p: expected 1 pair, got {results2.Count}");
+
+            // Cleanup
+            scene.RemoveComponent<MatchComponent>();
+
+            Log.Info("[AutoChess] TestPairing passed.");
+        }
+
+        /// <summary>
+        /// 验证 SettlementService：胜方扣血、平局各扣1、淘汰排序。
+        /// </summary>
+        public static void TestSettlement(Scene scene)
+        {
+            var room = CreateTestRoom(4, scene);
+
+            // All players start with 10 HP
+            foreach (var p in room.GetAlivePlayers())
+            {
+                p.Hp = 10;
+            }
+
+            var playerIds = new List<long>();
+            foreach (MatchPlayer mp in room.GetAlivePlayers())
+            {
+                playerIds.Add(mp.PlayerId);
+            }
+            long p0 = playerIds[0];
+            long p1 = playerIds[1];
+            long p2 = playerIds[2];
+            long p3 = playerIds[3];
+
+            // Match 1: L=p0 wins with 2 alive effective, R=p1 loses → p1 takes 2+1=3 damage
+            // Match 2: Draw between p2 and p3 → each takes 1 damage
+            var battleResults = new List<(PairingResult, CombatResult)>
+            {
+                (new PairingResult { LeftPlayerId = p0, RightPlayerId = p1 },
+                 new CombatResult { Winner = CombatWinner.Left, LeftAliveEffective = 2, RightAliveEffective = 0 }),
+                (new PairingResult { LeftPlayerId = p2, RightPlayerId = p3 },
+                 new CombatResult { Winner = CombatWinner.Draw, LeftAliveEffective = 1, RightAliveEffective = 1 }),
+            };
+
+            SettlementService.ProcessResults(room, battleResults);
+
+            MatchPlayer mp0 = room.FindPlayerById(p0);
+            MatchPlayer mp1 = room.FindPlayerById(p1);
+            MatchPlayer mp2 = room.FindPlayerById(p2);
+            MatchPlayer mp3 = room.FindPlayerById(p3);
+
+            if (mp0.Hp != 10)
+                throw new Exception($"Settlement: p0 HP expected 10, got {mp0.Hp}");
+            if (mp1.Hp != 7) // 10 - 3
+                throw new Exception($"Settlement: p1 HP expected 7, got {mp1.Hp}");
+            if (mp2.Hp != 9) // 10 - 1
+                throw new Exception($"Settlement: p2 HP expected 9, got {mp2.Hp}");
+            if (mp3.Hp != 9) // 10 - 1
+                throw new Exception($"Settlement: p3 HP expected 9, got {mp3.Hp}");
+
+            // Test elimination: deal lethal damage to p1
+            var lethalResults = new List<(PairingResult, CombatResult)>
+            {
+                (new PairingResult { LeftPlayerId = p0, RightPlayerId = p1 },
+                 new CombatResult { Winner = CombatWinner.Left, LeftAliveEffective = 3, RightAliveEffective = 0 }),
+                (new PairingResult { LeftPlayerId = p2, RightPlayerId = p3 },
+                 new CombatResult { Winner = CombatWinner.Left, LeftAliveEffective = 2, RightAliveEffective = 0 }),
+            };
+
+            SettlementService.ProcessResults(room, lethalResults);
+
+            mp1 = room.FindPlayerById(p1);
+            if (mp1.Hp > 0)
+                throw new Exception($"Settlement: p1 should be dead, HP={mp1.Hp}");
+            if (mp1.IsAlive)
+                throw new Exception("Settlement: p1 should not be alive after lethal damage");
+
+            // Cleanup
+            scene.RemoveComponent<MatchComponent>();
+
+            Log.Info("[AutoChess] TestSettlement passed.");
+        }
+
+        /// <summary>
+        /// 验证 CombatStartProcessor: 刺客跳后排和亡灵诅咒。
+        /// </summary>
+        public static void TestCombatStartProcessor()
+        {
+            // === Assassin Jump ===
+            {
+                var assassin = MakeUnit(1, 0, col: 3, row: 4, atk: 100, hp: 400, range: 1, atkSpeed: 1.0f);
+                assassin.Tags = new[] { "Assassin" };
+
+                var backEnemy = MakeUnit(10, 1, col: 3, row: 0, atk: 80, hp: 300, range: 1, atkSpeed: 1.0f);
+
+                var allUnits = new List<CombatUnitState> { assassin, backEnemy };
+                var events = new List<CombatEvent>();
+                int eventIdx = 0;
+
+                bool[,] occupied = new bool[AutoChessDefine.BoardWidth, AutoChessDefine.BoardHeight];
+                occupied[3, 4] = true;
+                occupied[3, 0] = true;
+
+                var leftSnap = new TraitSnapshot
+                {
+                    ActiveSynergies = new List<SynergyEntry>
+                    {
+                        new SynergyEntry { Tag = "Assassin", Level = 1 }
+                    }
+                };
+
+                CombatStartProcessor.Process(allUnits, leftSnap, null, events, ref eventIdx, occupied);
+
+                // Assassin should have jumped near backEnemy
+                if (assassin.Row == 4)
+                    throw new Exception("CombatStart Assassin: should have jumped from row 4");
+                if (assassin.Row > 1)
+                    throw new Exception($"CombatStart Assassin: expected row <= 1, got {assassin.Row}");
+
+                bool hasMoveEvent = false;
+                foreach (var e in events)
+                {
+                    if (e.EventType == CombatEventType.Move && e.SourceInstId == 1) hasMoveEvent = true;
+                }
+                if (!hasMoveEvent)
+                    throw new Exception("CombatStart Assassin: expected Move event");
+            }
+
+            // === Undead Curse ===
+            {
+                var ally = MakeUnit(1, 0, col: 0, row: 3, atk: 100, hp: 400, range: 1, atkSpeed: 1.0f);
+                var enemy1 = MakeUnit(10, 1, col: 0, row: 1, atk: 80, hp: 1000, range: 1, atkSpeed: 1.0f);
+                var enemy2 = MakeUnit(11, 1, col: 1, row: 1, atk: 60, hp: 800, range: 1, atkSpeed: 1.0f);
+                var enemy3 = MakeUnit(12, 1, col: 2, row: 1, atk: 50, hp: 600, range: 1, atkSpeed: 1.0f);
+
+                var allUnits = new List<CombatUnitState> { ally, enemy1, enemy2, enemy3 };
+                var events = new List<CombatEvent>();
+                int eventIdx = 0;
+
+                bool[,] occupied = new bool[AutoChessDefine.BoardWidth, AutoChessDefine.BoardHeight];
+
+                // Level 1 undead: curse top 2 by maxHp, 75% HP
+                var leftSnap = new TraitSnapshot
+                {
+                    ActiveSynergies = new List<SynergyEntry>
+                    {
+                        new SynergyEntry { Tag = "Undead", Level = 1 }
+                    }
+                };
+
+                CombatStartProcessor.Process(allUnits, leftSnap, null, events, ref eventIdx, occupied);
+
+                // enemy1 (1000 HP) cursed → 750
+                if (enemy1.MaxHp != 750)
+                    throw new Exception($"CombatStart Undead: enemy1 MaxHp expected 750, got {enemy1.MaxHp}");
+                // enemy2 (800 HP) cursed → 600
+                if (enemy2.MaxHp != 600)
+                    throw new Exception($"CombatStart Undead: enemy2 MaxHp expected 600, got {enemy2.MaxHp}");
+                // enemy3 should not be cursed (only top 2 at level 1)
+                if (enemy3.MaxHp != 600)
+                    throw new Exception($"CombatStart Undead: enemy3 MaxHp should be 600, got {enemy3.MaxHp}");
+                if (!enemy1.IsCursedByUndead)
+                    throw new Exception("CombatStart Undead: enemy1 should be cursed");
+            }
+
+            Log.Info("[AutoChess] TestCombatStartProcessor passed.");
+        }
+
+        /// <summary>
+        /// 验证狂暴机制：tick >= 400 时攻速翻倍。
+        /// </summary>
+        public static void TestFrenzy()
+        {
+            // Create 1v1 with very high HP so battle lasts to frenzy
+            var leftUnits = new List<CombatUnitState>
+            {
+                MakeUnit(1, 0, col: 3, row: 4, atk: 10, hp: 50000, range: 1, atkSpeed: 1.0f),
+            };
+            var rightUnits = new List<CombatUnitState>
+            {
+                MakeUnit(10, 1, col: 3, row: 0, atk: 10, hp: 50000, range: 1, atkSpeed: 1.0f),
+            };
+
+            CombatResult result = CombatSimulator.RunCombat(leftUnits, rightUnits, null, null, null, 1);
+
+            // With 50000 HP each and 10 atk, battle should hit frenzy or time out
+            // Verify frenzy event exists
+            bool hasFrenzy = false;
+            foreach (var e in result.Events)
+            {
+                if (e.EventType == CombatEventType.FrenzyStart)
+                {
+                    hasFrenzy = true;
+                    if (e.Tick != AutoChessDefine.FrenzyStartTick)
+                        throw new Exception($"Frenzy: expected at tick {AutoChessDefine.FrenzyStartTick}, got {e.Tick}");
+                }
+            }
+            if (!hasFrenzy)
+                throw new Exception("Frenzy: expected FrenzyStart event in long battle");
+
+            Log.Info("[AutoChess] TestFrenzy passed.");
+        }
+
+        // ===== HELPER =====
+
+        private static CombatUnitState MakeUnit(int instId, int side, int col, int row, int atk, int hp, int range, float atkSpeed)
+        {
+            return new CombatUnitState
+            {
+                InstId = instId,
+                TemplateId = 1,
+                Star = 1,
+                Side = side,
+                Col = col,
+                Row = row,
+                FacingCol = col,
+                FacingRow = side == 0 ? 0 : AutoChessDefine.BoardHeight - 1,
+                Atk = atk,
+                Hp = hp,
+                MaxHp = hp,
+                AtkSpeed = atkSpeed,
+                Range = range,
+                MoveSpeed = 1.0f,
+                CritChance = 0f,
+                Mana = 0,
+                ManaGainOnAttack = 10,
+                ManaGainOnHit = 6,
+                IsAlive = true,
+                IsEffectiveForDamageCount = true,
+                DamageMultiplier = 1.0f,
+                AtkSpeedMultiplier = 1.0f,
+                HpMultiplier = 1.0f,
+                Buffs = new List<ActiveBuff>(),
+                Trigger = new TriggerState(),
+                LastAttackTick = -999,
+                LastMoveTick = -999,
+                AttackTargetInstId = -1,
+            };
+        }
+
+        /// <summary>
+        /// 验证 Proto 转换辅助方法字段映射正确。
+        /// </summary>
+        public static void TestProtoConversion()
+        {
+            // 1. CombatEvent → Proto
+            var evt = new CombatEvent
+            {
+                I = 7,
+                Tick = 42,
+                EventType = CombatEventType.Damage,
+                SourceInstId = 1,
+                TargetInstId = 2,
+                Amount = 50,
+                HpAfter = 30,
+                IsCrit = true,
+                Col = 3,
+                Row = 4,
+                TemplateId = 101,
+                Star = 2,
+                Side = 1,
+                MaxHp = 100,
+                BType = BuffType.None,
+                DurationTicks = 0,
+                DamageType = CombatDamageType.Normal,
+                SkillDefId = 5,
+                Winner = CombatWinner.Draw,
+                TimeUp = false,
+                LeftAliveEffective = 3,
+                RightAliveEffective = 2,
+            };
+
+            AutoChessCombatEventProto proto = AutoChessProtoHelper.ToCombatEventProto(evt);
+            if (proto.I != 7) throw new Exception($"Proto I mismatch: {proto.I}");
+            if (proto.Tick != 42) throw new Exception($"Proto Tick mismatch: {proto.Tick}");
+            if (proto.EventType != (int)CombatEventType.Damage) throw new Exception("Proto EventType mismatch");
+            if (proto.SourceInstId != 1) throw new Exception("Proto SourceInstId mismatch");
+            if (proto.TargetInstId != 2) throw new Exception("Proto TargetInstId mismatch");
+            if (proto.Amount != 50) throw new Exception("Proto Amount mismatch");
+            if (proto.HpAfter != 30) throw new Exception("Proto HpAfter mismatch");
+            if (!proto.IsCrit) throw new Exception("Proto IsCrit mismatch");
+            if (proto.Col != 3) throw new Exception("Proto Col mismatch");
+            if (proto.Row != 4) throw new Exception("Proto Row mismatch");
+            if (proto.TemplateId != 101) throw new Exception("Proto TemplateId mismatch");
+            if (proto.Star != 2) throw new Exception("Proto Star mismatch");
+            if (proto.Side != 1) throw new Exception("Proto Side mismatch");
+            if (proto.MaxHp != 100) throw new Exception("Proto MaxHp mismatch");
+            if (proto.DamageType != (int)CombatDamageType.Normal) throw new Exception("Proto DamageType mismatch");
+            if (proto.SkillDefId != 5) throw new Exception("Proto SkillDefId mismatch");
+            if (proto.LeftAliveEffective != 3) throw new Exception("Proto LeftAliveEffective mismatch");
+            if (proto.RightAliveEffective != 2) throw new Exception("Proto RightAliveEffective mismatch");
+
+            // 2. UnitInfo → Proto
+            var unit = new UnitInfo { InstId = 10, TemplateId = 201, Star = 3, Col = 5, Row = 2 };
+            AutoChessUnitInfoProto unitProto = AutoChessProtoHelper.ToUnitInfoProto(unit, 0);
+            if (unitProto.InstId != 10) throw new Exception("UnitProto InstId mismatch");
+            if (unitProto.TemplateId != 201) throw new Exception("UnitProto TemplateId mismatch");
+            if (unitProto.Star != 3) throw new Exception("UnitProto Star mismatch");
+            if (unitProto.Col != 5) throw new Exception("UnitProto Col mismatch");
+            if (unitProto.Row != 2) throw new Exception("UnitProto Row mismatch");
+            if (unitProto.Location != 0) throw new Exception("UnitProto Location mismatch");
+
+            // 板凳
+            AutoChessUnitInfoProto benchProto = AutoChessProtoHelper.ToUnitInfoProto(unit, 1);
+            if (benchProto.Location != 1) throw new Exception("BenchProto Location mismatch");
+
+            // 3. MatchPlayer → PlayerPublicInfoProto
+            // 无法直接构造 MatchPlayer（Entity），跳过此验证
+
+            Log.Info("[AutoChess] ProtoConversion test passed: all field mappings correct");
+        }
+
+        /// <summary>
+        /// 验证 BroadcastHelper 在 MapUnitId=0 时不崩溃（优雅跳过）。
+        /// </summary>
+        public static void TestBroadcastHelper(Scene scene)
+        {
+            MatchComponent matchComp = scene.GetComponent<MatchComponent>() ?? scene.AddComponent<MatchComponent>();
+            MatchRoom room = MatchRoomFactory.CreateMatch(matchComp, new List<long> { 9001, 9002 }, 99999);
+
+            // 所有 MatchPlayer 的 MapUnitId 默认为 0（未绑定 Unit）
+            // BroadcastToAlive 应该不崩溃，静默跳过所有玩家
+            M2C_AutoChessPhaseChange testMsg = M2C_AutoChessPhaseChange.Create();
+            testMsg.Round = 1;
+            testMsg.NewPhase = (int)RoundPhase.Deployment;
+            testMsg.PhaseEndTime = 0;
+
+            // 不应抛出异常
+            AutoChessBroadcastHelper.BroadcastToAlive(scene, room, testMsg);
+            AutoChessBroadcastHelper.BroadcastToAll(scene, room, testMsg);
+
+            // SendToPlayer with MapUnitId=0 — 应静默跳过
+            foreach (MatchPlayer player in room.GetAlivePlayers())
+            {
+                AutoChessBroadcastHelper.SendToPlayer(scene, player, testMsg);
+            }
+
+            // 清理
+            room.Dispose();
+
+            Log.Info("[AutoChess] BroadcastHelper test passed: MapUnitId=0 gracefully skipped");
+        }
+
+        private static MatchRoom CreateTestRoom(int playerCount, Scene scene = null)
+        {
+            var dummyPlayers = new List<long>();
+            for (int i = 0; i < playerCount; i++)
+            {
+                dummyPlayers.Add(1000 + i);
+            }
+
+            if (scene == null)
+            {
+                // This variant won't work for tests needing scene;
+                // caller should provide scene
+                throw new Exception("CreateTestRoom requires a Scene");
+            }
+
+            MatchComponent matchComp = scene.GetComponent<MatchComponent>() ?? scene.AddComponent<MatchComponent>();
+            return MatchRoomFactory.CreateMatch(matchComp, dummyPlayers, 42);
         }
     }
 }

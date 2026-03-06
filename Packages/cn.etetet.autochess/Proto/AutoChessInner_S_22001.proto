@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ET;
+
+// ResponseType Map2Match_CreateAutoChessGameResponse
+message Match2Map_CreateAutoChessGame // IRequest
+{
+	int32 RpcId = 1;
+	repeated int64 PlayerIds = 2;
+	uint32 MatchSeed = 3;
+}
+
+message Map2Match_CreateAutoChessGameResponse // IResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	int64 MatchRoomId = 4;
+}
+
+message Map2Match_AutoChessGameOver // IMessage
+{
+	int64 MatchRoomId = 1;
+	repeated AutoChessPlayerRankProto Rankings = 2;
+}
+
+message AutoChessPlayerRankProto
+{
+	int64 PlayerId = 1;
+	int32 Rank = 2;
+}

@@ -1,0 +1,201 @@
+syntax = "proto3";
+package ET;
+
+// ============================================================
+// 辅助 message（纯数据结构）
+// ============================================================
+
+message AutoChessUnitInfoProto
+{
+	int32 InstId = 1;
+	int32 TemplateId = 2;
+	int32 Star = 3;
+	int32 Col = 4;
+	int32 Row = 5;
+	int32 Location = 6; // 0=Board, 1=Bench
+}
+
+message AutoChessShopOfferProto
+{
+	int32 SlotIndex = 1;
+	int32 TemplateId = 2;
+	int32 Cost = 3;
+}
+
+message AutoChessPlayerPublicInfoProto
+{
+	int64 PlayerId = 1;
+	int32 Hp = 2;
+	bool IsAlive = 3;
+	int32 Rank = 4;
+}
+
+message AutoChessSynergyProto
+{
+	int32 SynergyId = 1;
+	int32 Count = 2;
+	int32 Level = 3;
+}
+
+message AutoChessCombatEventProto
+{
+	int32 I = 1;
+	int32 Tick = 2;
+	int32 EventType = 3;
+	int32 SourceInstId = 4;
+	int32 TargetInstId = 5;
+	int32 Amount = 6;
+	int32 HpAfter = 7;
+	bool IsCrit = 8;
+	int32 Col = 9;
+	int32 Row = 10;
+	int32 TemplateId = 11;
+	int32 Star = 12;
+	int32 Side = 13;
+	int32 MaxHp = 14;
+	int32 BType = 15;
+	int32 DurationTicks = 16;
+	int32 DamageType = 17;
+	int32 SkillDefId = 18;
+	int32 Winner = 19;
+	bool TimeUp = 20;
+	int32 LeftAliveEffective = 21;
+	int32 RightAliveEffective = 22;
+}
+
+message AutoChessPlayerRoundResultProto
+{
+	int64 PlayerId = 1;
+	int64 OpponentId = 2;
+	bool Won = 3;
+	int32 HpChange = 4;
+	int32 HpAfter = 5;
+}
+
+message AutoChessBuyResultProto
+{
+	AutoChessUnitInfoProto NewUnit = 1;
+	int32 Elixir = 2;
+	repeated AutoChessShopOfferProto ShopOffers = 3;
+}
+
+// ============================================================
+// C2M 操作消息（ILocationMessage）
+// ============================================================
+
+message C2M_AutoChessBuy // ILocationMessage
+{
+	int32 RpcId = 90;
+	int32 SlotIndex = 1;
+}
+
+message C2M_AutoChessSell // ILocationMessage
+{
+	int32 RpcId = 90;
+	int32 InstId = 1;
+}
+
+message C2M_AutoChessPlace // ILocationMessage
+{
+	int32 RpcId = 90;
+	int32 InstId = 1;
+	int32 Col = 2;
+	int32 Row = 3;
+}
+
+message C2M_AutoChessSwap // ILocationMessage
+{
+	int32 RpcId = 90;
+	int32 InstId1 = 1;
+	int32 InstId2 = 2;
+}
+
+// ============================================================
+// C2M 进入对局（ILocationRequest + IResponse）
+// ============================================================
+
+// ResponseType M2C_AutoChessEnterGame
+message C2M_AutoChessEnterGame // ILocationRequest
+{
+	int32 RpcId = 1;
+}
+
+message M2C_AutoChessEnterGame // ILocationResponse
+{
+	int32 RpcId = 1;
+	int32 Error = 2;
+	string Message = 3;
+	int32 Round = 4;
+	int32 Phase = 5;
+	int64 PhaseEndTime = 6;
+	int32 Elixir = 7;
+	int32 PopCap = 8;
+	int32 PopUsed = 9;
+	repeated AutoChessShopOfferProto ShopOffers = 10;
+	repeated AutoChessUnitInfoProto BoardUnits = 11;
+	repeated AutoChessUnitInfoProto BenchUnits = 12;
+	repeated AutoChessSynergyProto Synergies = 13;
+	repeated AutoChessPlayerPublicInfoProto AllPlayers = 14;
+}
+
+// ============================================================
+// M2C 推送消息（IMessage）
+// ============================================================
+
+message M2C_AutoChessOpResult // IMessage
+{
+	int32 OpType = 1;
+	int32 ErrorCode = 2;
+	AutoChessBuyResultProto BuyResult = 3;
+	int32 RemovedInstId = 4;
+	int32 Elixir = 5;
+	int32 MovedInstId = 6;
+	int32 NewCol = 7;
+	int32 NewRow = 8;
+	int32 PopUsed = 9;
+	int32 SwapInstId1 = 10;
+	int32 SwapInstId2 = 11;
+	int32 Swap1Col = 12;
+	int32 Swap1Row = 13;
+	int32 Swap2Col = 14;
+	int32 Swap2Row = 15;
+}
+
+message M2C_AutoChessPhaseChange // IMessage
+{
+	int32 Round = 1;
+	int32 NewPhase = 2;
+	int64 PhaseEndTime = 3;
+}
+
+message M2C_AutoChessRoundState // IMessage
+{
+	int32 Round = 1;
+	int32 Phase = 2;
+	int64 PhaseEndTime = 3;
+	int32 Elixir = 4;
+	int32 PopCap = 5;
+	int32 PopUsed = 6;
+	repeated AutoChessShopOfferProto ShopOffers = 7;
+	repeated AutoChessUnitInfoProto BoardUnits = 8;
+	repeated AutoChessUnitInfoProto BenchUnits = 9;
+	repeated AutoChessSynergyProto Synergies = 10;
+	repeated AutoChessPlayerPublicInfoProto AllPlayers = 11;
+}
+
+message M2C_AutoChessCombatEvents // IMessage
+{
+	int64 OpponentId = 1;
+	repeated AutoChessCombatEventProto Events = 2;
+}
+
+message M2C_AutoChessRoundResult // IMessage
+{
+	repeated AutoChessPlayerRoundResultProto Results = 1;
+	repeated int64 EliminatedPlayerIds = 2;
+}
+
+message M2C_AutoChessMatchResult // IMessage
+{
+	repeated AutoChessPlayerPublicInfoProto Rankings = 1;
+}
