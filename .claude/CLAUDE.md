@@ -45,7 +45,11 @@
 ### [程序] 开发
 - `/qx-dev-explore` — 代码库探索（自由探索 + 架构可视化）
 - `/qx-dev-impact` — 系统影响分析
-- `/qx-dev-change` — 技术变更全生命周期（create|propose|spec|design|verify|archive）
+- `/qx-dev-create` — 创建变更 + 提案（可选: spec 细化需求）
+- `/qx-dev-design` — 编写技术方案
+- `/qx-dev-continue` — 自动推进变更到下一步
+- `/qx-dev-status` — 查看变更状态 / 列出所有变更
+- `/qx-dev-close` — 验证并归档变更
 - `/qx-dev-plan` — 编写实施计划
 - `/qx-dev-exec` — 多 Agent 执行计划（--loop 持久化，--worktree 隔离）
 - `/qx-dev-worktree` — 创建隔离 worktree 进行功能开发
@@ -75,8 +79,9 @@
      [可选: 三方评审]  [可选: 多维审查/QA测试]
 ```
 
-**变更核心流程:** proposal → specs → design → plan → exec → verify → archive
+**变更核心流程:** /qx-dev-create → /qx-dev-design → /qx-dev-plan → /qx-dev-exec → /qx-dev-close
 **可选步骤（按需触发，非必经）:**
+- `/qx-dev-create spec` — 仅复杂功能需要细化需求
 - `/qx-meeting` 三方评审 — 跨角色交接或高风险变更时推荐
 - `/qx-qa-test` QA 测试 — 有正式测试需求时使用
 

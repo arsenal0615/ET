@@ -18,7 +18,7 @@ description: "在完成任务、实现重大功能或合并前使用，验证工
 **必须：**
 - 完成重大功能或计划任务组后
 - 合并到主分支前
-- 完成变更后（`/qx-dev-change verify` 会触发此操作）
+- 完成变更后（`/qx-dev-close` 会触发此操作）
 
 **可选但有价值：**
 - 卡住时（换个视角）
@@ -194,7 +194,7 @@ HEAD_SHA=$(git rev-parse HEAD)
 - 在问题复合之前发现它们
 - 在进入下一组之前修复
 
-**变更生命周期（`/qx-dev-change verify`）：**
+**变更生命周期（`/qx-dev-close`）：**
 - 完整的三维度审查
 - 作为验证阶段的一部分
 
@@ -219,6 +219,6 @@ HEAD_SHA=$(git rev-parse HEAD)
 ## 相关 Skills
 
 - **qx-verify** — 在宣称完成前的验证
-- **qx-dev-change** — 变更生命周期（验证阶段触发审查）
+- **qx-dev-close** — 变更生命周期（验证阶段触发审查）
 - **qx-dev-debug** — 当审查发现需要调查的 Bug 时
 - **qx-tdd** — 编写测试以覆盖审查中发现的缺口

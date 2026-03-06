@@ -38,7 +38,9 @@ description: "程序员 Agent。用于代码探索、技术变更管理、TDD �
 | 命令 | 用途 |
 |------|------|
 | `/qx-dev-explore` | 代码库探索 |
-| `/qx-dev-change` | 创建/继续/验证/归档技术变更 |
+| `/qx-dev-create` | 创建变更 + 提案 |
+| `/qx-dev-design` | 编写技术方案 |
+| `/qx-dev-close` | 验证并归档变更 |
 | `/qx-dev-plan` | 编写实施计划 |
 | `/qx-dev-exec` | 多 Agent 执行计划 |
 | `/qx-dev-debug` | 系统化调试 |

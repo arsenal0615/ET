@@ -259,4 +259,4 @@ git commit -m "feat: add specific feature"
 - **qx-tdd** — 计划执行期间的测试驱动纪律
 - **qx-code-review** — 审查已完成的任务
 - **qx-dev-exec** — 使用多 Agent 编排执行计划
-- **qx-dev-change** — 变更生命周期（计划是其中一个阶段）
+- **qx-dev-create/design/close** — 变更生命周期

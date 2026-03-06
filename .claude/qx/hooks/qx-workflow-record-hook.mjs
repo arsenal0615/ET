@@ -5,7 +5,7 @@
  *
  * 职责:
  * 1. 在用户输入时标记"本轮需要记录"（pending_record）
- * 2. 捕获 /qx-dev-change 子命令（create/propose/design/verify/archive）
+ * 2. 捕获 /qx-dev-create 子命令（create/propose/design/verify/archive）
  * 3. 扫描 docs/changes/ 识别当前活跃变更
  * 4. 从 /qx-dev-exec 参数提取 plan 文件路径
  *
@@ -41,9 +41,9 @@ const qxMatch = userPrompt.match(/^\s*\/(qx-[\w-]+)/);
 const isQxCommand = !!qxMatch;
 const commandName = qxMatch ? `/${qxMatch[1]}` : null;
 
-// 捕获 /qx-dev-change 子命令: create, propose, spec, design, verify, archive, status, list
+// 捕获 /qx-dev-create 子命令 (spec)
 const changeSubMatch = userPrompt.match(
-  /^\s*\/qx-dev-change\s+(create|propose|spec|design|verify|archive|status|list)/i
+  /^\s*\/qx-dev-create\s+(spec)/i
 );
 const subcommand = changeSubMatch ? changeSubMatch[1].toLowerCase() : null;
 

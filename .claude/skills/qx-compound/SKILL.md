@@ -15,7 +15,7 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 
 ## 何时使用
 
-- 变更验证并归档后（`/qx-dev-change archive`）
+- 变更验证并归档后（`/qx-dev-close`）
 - Sprint 回顾后
 - 调试棘手问题后
 - 发现新模式或反模式后
@@ -160,7 +160,7 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 ## 与 QX 工作流的集成
 
 ```
-功能完成 → /qx-dev-change verify → /qx-dev-change archive → /qx-compound
+功能完成 → /qx-dev-close → /qx-compound
                                                        ↓
 Sprint 完成 → /qx-gd-sprint retro ──────────────────→ /qx-compound
                                                        ↓
@@ -181,7 +181,7 @@ Bug 修复 → /qx-dev-debug（找到解决方案）─────────�
 
 ## 相关 Skills
 
-- **qx-dev-change** — 归档阶段触发复合积累
+- **qx-dev-close** — 归档阶段触发复合积累
 - **qx-gd-sprint** — 回顾阶段建议复合积累
 - **qx-dev-debug** — 调试经验注入复合积累
 - **qx-dev-impact** — 系统关系图是复合积累的关键目标

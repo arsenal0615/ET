@@ -168,7 +168,7 @@ Sprint N 状态更新 — [日期]
 
 ```
 GDD → /qx-gd-stories → Stories → /qx-gd-sprint plan → Sprint 计划
-→ /qx-dev-change create（每个 Story）→ 开发 → /qx-gd-sprint status
+→ /qx-dev-create（每个 Story）→ 开发 → /qx-gd-sprint status
 → Sprint 完成 → /qx-gd-sprint retro → /qx-compound
 → 下个 Sprint → /qx-gd-sprint plan
 ```
@@ -185,5 +185,5 @@ GDD → /qx-gd-stories → Stories → /qx-gd-sprint plan → Sprint 计划
 
 - **qx-gd-brainstorm** — 用于 Sprint 规划前的功能构思
 - **qx-gd-gdd** — GDD 提供 Story 待办列表的来源
-- **qx-dev-change** — 每个 Story 在执行时变为一个变更
+- **qx-dev-create** — 每个 Story 在执行时变为一个变更
 - **qx-dev-plan** — 用于为每个 Story 创建实施计划

@@ -198,4 +198,4 @@ dotnet test -v n
 - **qx-code-review** — 多维审查（在验证过程中触发）
 - **qx-tdd** — 红-绿循环是一种验证形式
 - **qx-dev-debug** — 当验证揭示了失败时
-- **qx-dev-change** — 变更生命周期中的验证阶段
+- **qx-dev-close** — 变更生命周期中的验证阶段

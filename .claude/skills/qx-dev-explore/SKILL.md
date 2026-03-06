@@ -225,7 +225,7 @@ You: [读 change artifacts]
 当事情结晶并且用户准备行动时，建议适当的下一步：
 
 - **准备进入结构化变更：** "要创建一个变更吗？我可以建立 `docs/changes/<name>/` 并根据我们讨论的内容起草提案。"
-  → 转到 `qx-dev-change` skill
+  → 转到 `qx-dev-create` skill
 - **准备快速实现：** "这足够简单，可以用快速模式。要直接进入头脑风暴 → 计划 → 执行吗？"
   → 转到 `qx-gd-brainstorm` skill
 - **还没准备好：** "我们可以继续探索。不着急。"
@@ -253,7 +253,7 @@ You: [读 change artifacts]
 **开放问题**: [如果有剩余]
 
 **下一步**（如果准备好了）:
-- 创建变更: /qx-dev-change create
+- 创建变更: /qx-dev-create
 - 快速模式: /qx-gd-brainstorm
 - 继续探索: 继续聊
 ```

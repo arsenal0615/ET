@@ -15,7 +15,7 @@ description: "在有已批准的实施计划时使用。读取计划，按任务
 
 ## 何时使用
 
-- 你有一个已批准的计划文件（来自 `/qx-dev-plan` 或 `/qx-dev-change design`）
+- 你有一个已批准的计划文件（来自 `/qx-dev-plan` 或 `/qx-dev-design`）
 - 任务大多独立（可由不同 Agent 分别处理）
 - 你希望有系统化的执行和质量关卡
 
@@ -584,4 +584,4 @@ Agent(subagent_type="code-reviewer", prompt="""
 - **qx-code-review** — 审查员 Agent 使用的审查方法论
 - **qx-verify** — 所有任务完成后的完整验证
 - **qx-finishing** — 执行完成后的分支收尾
-- **qx-dev-change** — 包装计划执行的变更生命周期
+- **qx-dev-create/design/close** — 变更生命周期

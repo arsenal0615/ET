@@ -3,8 +3,8 @@
 /**
  * QX Skill Detect Hook — 检测 AI 内部调用 QX Skill（PreToolUse: Skill）
  *
- * 场景: 用户输入"下一步"→ AI 调用 Skill(qx-dev-change, args="design")
- *        → 本 hook 将 workflow-record 状态更新为 /qx-dev-change design
+ * 场景: 用户输入"下一步"→ AI 调用 Skill(qx-dev-design)
+ *        → 本 hook 将 workflow-record 状态更新为 /qx-dev-design
  *        → stop hook 就能正确推荐下一步 + 触发 git commit 提醒
  *
  * 不影响用户直接输入 /qx-* 的场景（UserPromptSubmit hook 已处理，
@@ -40,12 +40,10 @@ if (!skillName.startsWith("qx-")) {
 
 const commandName = `/${skillName}`;
 
-// 对 qx-dev-change，从 args 提取子命令
+// 对 qx-dev-create，从 args 提取子命令 (spec)
 let subcommand = "";
-if (skillName === "qx-dev-change") {
-  const subMatch = skillArgs.match(
-    /^\s*(create|propose|spec|design|verify|archive|status|list)/i
-  );
+if (skillName === "qx-dev-create") {
+  const subMatch = skillArgs.match(/^\s*(spec)/i);
   subcommand = subMatch ? subMatch[1].toLowerCase() : "";
 }
 
