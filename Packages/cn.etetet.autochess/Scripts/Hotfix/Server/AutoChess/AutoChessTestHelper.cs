@@ -38,6 +38,7 @@ namespace ET.Server
             TestHexUtil();
             TestMana();
             TestTriggerChecker();
+            TestTargetSelector();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1126,6 +1127,111 @@ namespace ET.Server
                 throw new Exception("TriggerChecker: OnDeath should always trigger");
 
             Log.Info("[AutoChess] TestTriggerChecker passed.");
+        }
+
+        public static void TestTargetSelector()
+        {
+            // 构建单位
+            var caster = new CombatUnitState
+            {
+                InstId = 1, Col = 0, Row = 0, Side = 0, IsAlive = true, Range = 3,
+                Hp = 200, MaxHp = 200,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            // enemy1: 距离1 (col=1,row=0), hp=100
+            var enemy1 = new CombatUnitState
+            {
+                InstId = 10, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                Hp = 100, MaxHp = 100,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            // enemy2: 距离3 (col=3,row=0), hp=50
+            var enemy2 = new CombatUnitState
+            {
+                InstId = 11, Col = 3, Row = 0, Side = 1, IsAlive = true,
+                Hp = 50, MaxHp = 100,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            // enemy3: 距离2 (col=2,row=0), hp=80
+            var enemy3 = new CombatUnitState
+            {
+                InstId = 12, Col = 2, Row = 0, Side = 1, IsAlive = true,
+                Hp = 80, MaxHp = 100,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            var allUnits = new List<CombatUnitState> { caster, enemy1, enemy2, enemy3 };
+
+            // === NearestEnemy: 应返回 enemy1（距离最近=1） ===
+            var skill = new SkillDefData { TargetType = SkillTargetType.NearestEnemy };
+            var targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 10)
+                throw new Exception($"TargetSelector: NearestEnemy expected InstId=10, got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === NearestEnemy tiebreaker: 相同距离按 InstId 升序 ===
+            var enemySameDist = new CombatUnitState
+            {
+                InstId = 5, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                Hp = 100, MaxHp = 100,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var unitsWithTie = new List<CombatUnitState> { caster, enemy1, enemySameDist };
+            targets = TargetSelector.Select(caster, skill, unitsWithTie);
+            if (targets.Count != 1 || targets[0].InstId != 5)
+                throw new Exception($"TargetSelector: NearestEnemy tiebreaker expected InstId=5, got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === 隐身单位被排除 ===
+            var invisEnemy = new CombatUnitState
+            {
+                InstId = 2, Col = 0, Row = 1, Side = 1, IsAlive = true,
+                Hp = 10, MaxHp = 100,
+                Buffs = new List<ActiveBuff> { new ActiveBuff { Type = BuffType.Invisibility, RemainingTicks = 10 } },
+                Trigger = new TriggerState()
+            };
+            var unitsWithInvis = new List<CombatUnitState> { caster, invisEnemy, enemy2 };
+            targets = TargetSelector.Select(caster, skill, unitsWithInvis);
+            // invisEnemy 被排除，应返回 enemy2
+            if (targets.Count != 1 || targets[0].InstId != 11)
+                throw new Exception($"TargetSelector: invisible enemy should be excluded, got InstId={( targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === Self: 返回自己 ===
+            skill = new SkillDefData { TargetType = SkillTargetType.Self };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 1)
+                throw new Exception($"TargetSelector: Self expected InstId=1, got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === LowestHp: 返回血量最低的（enemy2 hp=50） ===
+            skill = new SkillDefData { TargetType = SkillTargetType.LowestHp };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 11)
+                throw new Exception($"TargetSelector: LowestHp expected InstId=11 (hp=50), got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === FarthestInRadius: 半径2内最远的（enemy3 距离=2） ===
+            skill = new SkillDefData
+            {
+                TargetType = SkillTargetType.FarthestInRadius,
+                Effects = new SkillEffectData[] { new SkillEffectData { Value2 = 2f } }
+            };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 12)
+                throw new Exception($"TargetSelector: FarthestInRadius(2) expected InstId=12 (dist=2), got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === FarthestInRange: caster.Range=3 范围内最远的（enemy2 距离=3） ===
+            skill = new SkillDefData { TargetType = SkillTargetType.FarthestInRange };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 11)
+                throw new Exception($"TargetSelector: FarthestInRange(3) expected InstId=11 (dist=3), got {(targets.Count > 0 ? targets[0].InstId : -1)}");
+
+            // === 未实现类型返回空列表 ===
+            skill = new SkillDefData { TargetType = SkillTargetType.ClusterLargest };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 0)
+                throw new Exception($"TargetSelector: unimplemented type should return empty list, got {targets.Count}");
+
+            Log.Info("[AutoChess] TestTargetSelector passed.");
         }
     }
 }
