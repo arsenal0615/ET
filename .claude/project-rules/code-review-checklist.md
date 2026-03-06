@@ -23,6 +23,7 @@
 
 ## 属性和标注
 
+- [ ] 声明了 IAwake/IDestroy/IDeserialize 的 Entity 有对应的 [EntitySystemOf] System 类（缺失则生命周期方法静默不触发）
 - [ ] System 类有 `partial` 关键字
 - [ ] System 类有 [EntitySystemOf(typeof(Component))]
 - [ ] System 类有 [FriendOf(typeof(Component))]

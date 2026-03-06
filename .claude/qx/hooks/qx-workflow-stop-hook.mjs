@@ -42,7 +42,7 @@ const WORKFLOW_TRANSITIONS = {
 
   // 实施阶段
   "/qx-plan": "/qx-exec（执行计划）",
-  "/qx-exec": "/qx-finishing（收尾）",
+  "/qx-exec": "/qx-verify（完成前验证）",
   "/qx-verify": "/qx-finishing（收尾）",
   "/qx-finishing": "/qx-change archive（归档变更）",
   "/qx-compound": "下一个 Story → /qx-change create",
