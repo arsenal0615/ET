@@ -1424,11 +1424,96 @@ namespace ET.Server
             if (Math.Abs(speedTarget.Buffs[0].Value1 - 1.5f) > 0.001f)
                 throw new Exception($"EffectApplier SpeedBuff: expected Value1=1.5, got {speedTarget.Buffs[0].Value1}");
 
-            // === 未实现类型返回空列表 ===
-            var summonEffect = new SkillEffectData { EffectType = SkillEffectType.Summon };
-            results = EffectApplier.Apply(caster, speedTargets, summonEffect, speedAllUnits, 0);
-            if (results.Count != 0)
-                throw new Exception($"EffectApplier: unimplemented type should return empty, got {results.Count}");
+            // === Summon: 召唤 1 个单位 ===
+            var sumCaster = new CombatUnitState
+            {
+                InstId = 60, TemplateId = 5, Star = 2, Col = 3, Row = 3, Side = 0, IsAlive = true,
+                Atk = 200, Hp = 1000, MaxHp = 1000, AtkSpeed = 1.0f, Range = 1, MoveSpeed = 1.0f,
+                DamageMultiplier = 1.0f,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var sumAllUnits = new List<CombatUnitState> { sumCaster };
+            int beforeCount = sumAllUnits.Count;
+            var summonEffect = new SkillEffectData { EffectType = SkillEffectType.Summon, Value1 = 1f };
+            results = EffectApplier.Apply(sumCaster, new List<CombatUnitState>(), summonEffect, sumAllUnits, 0);
+            if (sumAllUnits.Count != beforeCount + 1)
+                throw new Exception($"EffectApplier Summon: expected {beforeCount + 1} units, got {sumAllUnits.Count}");
+            var summoned = sumAllUnits[sumAllUnits.Count - 1];
+            if (summoned.IsEffectiveForDamageCount)
+                throw new Exception("EffectApplier Summon: summoned unit should have IsEffectiveForDamageCount=false");
+            if (summoned.MaxHp != (int)(sumCaster.MaxHp * 0.3f))
+                throw new Exception($"EffectApplier Summon: expected MaxHp={sumCaster.MaxHp * 0.3f}, got {summoned.MaxHp}");
+            if (summoned.Side != sumCaster.Side)
+                throw new Exception("EffectApplier Summon: summoned unit should be on caster's side");
+
+            // === Clone: 2 个克隆体, Value2=0.5 ===
+            var cloneCaster = new CombatUnitState
+            {
+                InstId = 70, TemplateId = 6, Star = 2, Col = 3, Row = 3, Side = 0, IsAlive = true,
+                Atk = 150, Hp = 800, MaxHp = 800, AtkSpeed = 1.0f, Range = 1, MoveSpeed = 1.0f,
+                DamageMultiplier = 1.0f,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var cloneAllUnits = new List<CombatUnitState> { cloneCaster };
+            int casterHpBefore = cloneCaster.Hp;
+            var cloneEffect = new SkillEffectData { EffectType = SkillEffectType.Clone, Value1 = 2f, Value2 = 0.5f };
+            results = EffectApplier.Apply(cloneCaster, new List<CombatUnitState>(), cloneEffect, cloneAllUnits, 0);
+            if (cloneAllUnits.Count != 3)
+                throw new Exception($"EffectApplier Clone: expected 3 units, got {cloneAllUnits.Count}");
+            int expectedCloneHp = (int)(casterHpBefore * 0.5f);
+            if (cloneAllUnits[1].Hp != expectedCloneHp)
+                throw new Exception($"EffectApplier Clone: expected clone HP={expectedCloneHp}, got {cloneAllUnits[1].Hp}");
+            // caster HP = 800 * (1 - 0.5*2) = 0
+            int expectedCasterHp = (int)(casterHpBefore * (1f - 0.5f * 2));
+            if (cloneCaster.Hp != expectedCasterHp)
+                throw new Exception($"EffectApplier Clone: expected caster HP={expectedCasterHp}, got {cloneCaster.Hp}");
+            if (cloneAllUnits[1].IsEffectiveForDamageCount)
+                throw new Exception("EffectApplier Clone: clone should have IsEffectiveForDamageCount=false");
+
+            // === HealOverTime: 添加后 tick 20 次，HP 恢复 ===
+            var hotTarget = new CombatUnitState
+            {
+                InstId = 80, Col = 2, Row = 2, Side = 0, IsAlive = true,
+                Hp = 500, MaxHp = 1000,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            // Value1=0.05 表示每秒恢复 5% MaxHp，Duration=2.0s → 40 ticks
+            var hotEffect = new SkillEffectData { EffectType = SkillEffectType.HealOverTime, Value1 = 0.05f, Duration = 2.0f };
+            var hotTargets = new List<CombatUnitState> { hotTarget };
+            var hotAllUnits = new List<CombatUnitState> { hotTarget };
+            results = EffectApplier.Apply(caster, hotTargets, hotEffect, hotAllUnits, 0);
+            if (hotTarget.Buffs.Count != 1 || hotTarget.Buffs[0].Type != BuffType.HealOverTime)
+                throw new Exception("EffectApplier HealOverTime: buff not added correctly");
+            // tick 20 次（1秒），每 tick 恢复 floor(1000 * 0.05 / 20) = 2 HP
+            int hpBefore = hotTarget.Hp;
+            for (int ti = 0; ti < 20; ti++)
+            {
+                EffectApplier.TickBuff(hotTarget);
+            }
+            int expectedHeal = (int)(hotTarget.MaxHp * 0.05f / AutoChessDefine.CombatTickRate) * 20;
+            if (hotTarget.Hp != hpBefore + expectedHeal)
+                throw new Exception($"EffectApplier HealOverTime: expected HP={hpBefore + expectedHeal} after 20 ticks, got {hotTarget.Hp}");
+
+            // === TickBuff: Stun buff tick 到 0 后消失 ===
+            var tickUnit = new CombatUnitState
+            {
+                InstId = 90, Col = 1, Row = 1, Side = 0, IsAlive = true,
+                Hp = 300, MaxHp = 300,
+                Buffs = new List<ActiveBuff>
+                {
+                    new ActiveBuff { Type = BuffType.Stun, RemainingTicks = 3 }
+                },
+                Trigger = new TriggerState()
+            };
+            if (!tickUnit.IsStunned)
+                throw new Exception("EffectApplier TickBuff: unit should be stunned initially");
+            EffectApplier.TickBuff(tickUnit);
+            EffectApplier.TickBuff(tickUnit);
+            EffectApplier.TickBuff(tickUnit);
+            if (tickUnit.IsStunned)
+                throw new Exception("EffectApplier TickBuff: stun should be removed after 3 ticks");
+            if (tickUnit.Buffs.Count != 0)
+                throw new Exception($"EffectApplier TickBuff: expected 0 buffs, got {tickUnit.Buffs.Count}");
 
             Log.Info("[AutoChess] TestEffectApplier passed.");
         }
