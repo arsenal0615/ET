@@ -32,7 +32,7 @@ description: "美术/UX Agent。用于 UX 设计、UI 原型、交互规范和�
 
 | 命令 | 用途 |
 |------|------|
-| `/qx-ux` | UX 设计 |
+| `/qx-art-ux` | UX 设计 |
 
 ## 可用工具
 

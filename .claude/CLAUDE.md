@@ -26,37 +26,44 @@
 
 ## QX 命令索引
 
-### 策划
-- `/qx-brainstorm` — 游戏创意头脑风暴
-- `/qx-gdd` — 创建/编辑游戏设计文档
-- `/qx-narrative` — 叙事设计
-- `/qx-game-arch` — 游戏系统架构
-- `/qx-stories` — 拆分 Epic 和 Story
-- `/qx-sprint` — Sprint 规划/状态
-- `/qx-prd` — 产品需求文档
+### [策划] 设计文档
+- `/qx-gd-gdd` — 创建/编辑游戏设计文档（阶段感知 + 草稿缓存）
+- `/qx-gd-brainstorm` — 创意发散 + 隐藏决策点
+- `/qx-gd-narrative` — 叙事设计
 
-### 评审
+### [策划] 文档审查与精修
+- `/qx-gd-audit-design` — 盲点挖掘（未完善/未决策/隐含假设）
+- `/qx-gd-audit-decision` — 决策点审视（同类对标 + 优化建议）
+- `/qx-gd-ambiguity` — 三阶段歧义审查
+- `/qx-gd-refine` — 中文文本精炼
+- `/qx-gd-prototype` — HTML 原型可视化验证
+
+### [策划] 规划
+- `/qx-gd-stories` — 拆分 Epic 和 Story
+- `/qx-gd-sprint` — Sprint 规划/状态
+
+### [程序] 开发
+- `/qx-dev-explore` — 代码库探索（自由探索 + 架构可视化）
+- `/qx-dev-impact` — 系统影响分析
+- `/qx-dev-change` — 技术变更全生命周期（create|propose|spec|design|verify|archive）
+- `/qx-dev-plan` — 编写实施计划
+- `/qx-dev-exec` — 多 Agent 执行计划（--loop 持久化，--worktree 隔离）
+- `/qx-dev-worktree` — 创建隔离 worktree 进行功能开发
+- `/qx-dev-stop` — 停止持久化循环
+- `/qx-dev-debug` — 系统化调试
+
+### [美术] UX
+- `/qx-art-ux` — UX 设计
+
+### [QA] 测试
+- `/qx-qa-test` — 测试设计/自动化/执行（design|automate|execute）
+- `/qx-qa-playtest` — 玩家测试计划
+
+### [跨岗] 评审与验证
 - `/qx-review` — 开三方评审（多角色评审）
-- `/qx-impact` — 系统影响分析
-
-### 程序员
-- `/qx-explore` — 代码库探索
-- `/qx-change create|propose|spec|design|verify|archive` — 技术变更全生命周期
-- `/qx-plan` — 编写实施计划
-- `/qx-exec [--loop] [--worktree]` — 多 Agent 执行计划（--loop 持久化，--worktree 隔离）
-- `/qx-worktree` — 创建隔离 worktree 进行功能开发
-- `/qx-stop` — 停止持久化循环
-- `/qx-debug` — 系统化调试
-
-### 美术/UX
-- `/qx-ux` — UX 设计
-
-### QA
-- `/qx-test design|automate|execute` — 测试设计/自动化/执行
-- `/qx-playtest` — 玩家测试计划
-
-### 通用
 - `/qx-verify` — 完成前验证
+
+### [跨岗] 知识管理
 - `/qx-compound` — 复合积累（提取知识更新知识库）
 - `/qx-retro` — Sprint 回顾
 
@@ -71,7 +78,7 @@
 **变更核心流程:** proposal → specs → design → plan → exec → verify → archive
 **可选步骤（按需触发，非必经）:**
 - `/qx-review` 三方评审 — 跨角色交接或高风险变更时推荐
-- `/qx-test` QA 测试 — 有正式测试需求时使用
+- `/qx-qa-test` QA 测试 — 有正式测试需求时使用
 
 每个阶段之间需要人工确认触发。
 

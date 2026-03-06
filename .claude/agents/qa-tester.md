@@ -36,10 +36,10 @@ description: "QA 测试 Agent。用于测试设计、自动化测试生成、测
 
 | 命令 | 用途 |
 |------|------|
-| `/qx-test design` | 设计测试用例 |
-| `/qx-test automate` | 生成自动化测试 |
-| `/qx-test execute` | 执行测试 |
-| `/qx-playtest` | 玩家测试计划 |
+| `/qx-qa-test design` | 设计测试用例 |
+| `/qx-qa-test automate` | 生成自动化测试 |
+| `/qx-qa-test execute` | 执行测试 |
+| `/qx-qa-playtest` | 玩家测试计划 |
 | `/qx-verify` | 完成前验证 |
 
 ## 可用工具

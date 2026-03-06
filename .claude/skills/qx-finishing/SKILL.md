@@ -47,7 +47,7 @@ dotnet test    # 或项目特定的测试命令
 
 检测是否在变更生命周期内工作：
 1. 检查 `docs/changes/` 中是否有与本次工作匹配的活跃变更
-2. 如果找到，建议先运行 `/qx-change verify`
+2. 如果找到，建议先运行 `/qx-dev-change verify`
 
 ### 步骤 3：确定基准分支
 
@@ -150,7 +150,7 @@ git worktree list
 ### 步骤 7：更新变更状态
 
 如果在变更生命周期内工作（`docs/changes/[name]/`）：
-- 选项 1（合并）：建议运行 `/qx-change archive`
+- 选项 1（合并）：建议运行 `/qx-dev-change archive`
 - 选项 2（PR）：说明应在 PR 合并后再归档
 - 选项 4（丢弃）：建议清理变更目录
 

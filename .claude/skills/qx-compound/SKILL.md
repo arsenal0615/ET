@@ -15,7 +15,7 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 
 ## 何时使用
 
-- 变更验证并归档后（`/qx-change archive`）
+- 变更验证并归档后（`/qx-dev-change archive`）
 - Sprint 回顾后
 - 调试棘手问题后
 - 发现新模式或反模式后
@@ -29,7 +29,7 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 | **MEMORY.md** (`~/.claude/projects/.../memory/MEMORY.md`) | 代码模式、常见陷阱、调试经验 | 添加已验证的模式，更新过时条目 |
 | **记忆主题文件** (`~/.claude/projects/.../memory/*.md`) | 按主题的详细知识 | 添加深度发现 |
 | **QX 知识库** (`qx/knowledge/*.md`) | 通用方法论改进 | 更新流程洞察（少见） |
-| **Sprint 数据** (`docs/sprints/`) | 速度、估算准确度 | 由 `/qx-sprint retro` 更新 |
+| **Sprint 数据** (`docs/sprints/`) | 速度、估算准确度 | 由 `/qx-gd-sprint retro` 更新 |
 
 ## 流程
 
@@ -160,11 +160,11 @@ description: "在完成功能开发、修复 Bug 或结束 Sprint 后使用，�
 ## 与 QX 工作流的集成
 
 ```
-功能完成 → /qx-change verify → /qx-change archive → /qx-compound
+功能完成 → /qx-dev-change verify → /qx-dev-change archive → /qx-compound
                                                        ↓
-Sprint 完成 → /qx-sprint retro ──────────────────→ /qx-compound
+Sprint 完成 → /qx-gd-sprint retro ──────────────────→ /qx-compound
                                                        ↓
-Bug 修复 → /qx-debug（找到解决方案）──────────────→ /qx-compound
+Bug 修复 → /qx-dev-debug（找到解决方案）──────────────→ /qx-compound
                                                        ↓
                                                   更新知识库
                                                   下次工作更快启动

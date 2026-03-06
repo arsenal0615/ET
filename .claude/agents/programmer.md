@@ -37,11 +37,11 @@ description: "程序员 Agent。用于代码探索、技术变更管理、TDD �
 
 | 命令 | 用途 |
 |------|------|
-| `/qx-explore` | 代码库探索 |
-| `/qx-change` | 创建/继续/验证/归档技术变更 |
-| `/qx-plan` | 编写实施计划 |
-| `/qx-exec` | 多 Agent 执行计划 |
-| `/qx-debug` | 系统化调试 |
+| `/qx-dev-explore` | 代码库探索 |
+| `/qx-dev-change` | 创建/继续/验证/归档技术变更 |
+| `/qx-dev-plan` | 编写实施计划 |
+| `/qx-dev-exec` | 多 Agent 执行计划 |
+| `/qx-dev-debug` | 系统化调试 |
 | `/qx-verify` | 完成前验证 |
 | `/qx-compound` | 复合积累 |
 

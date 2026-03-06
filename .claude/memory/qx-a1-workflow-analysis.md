@@ -224,3 +224,28 @@ exec → verify 保留度 ~100%（构建验证无损）
 6. **per-task 审查增加跨文件检查**：至少检查 "本 Task 创建的 Entity 是否有对应的 System 注册类"
 7. **Hook 状态隔离**：每个会话有独立的 hook 状态，避免跨会话干扰
 8. **exec 进度持久化**：exec.json 应记录每个 Task 的 agent 输出摘要，跨会话恢复时不需要重新验证
+
+---
+
+## 工作流步骤记录
+
+| # | Skill | 摘要 | 问题 |
+|---|-------|------|------|
+| 21 | /qx-managing-changes | create 子命令启动，等待用户输入变更名称 | |
+| 22 | (follow-up) | 追加记录行，继续等待用户输入变更名称 | |
+| 23 | (follow-up) | 分析依赖图，推断下一个变更为 a1-skill（E6 技能系统），等待用户确认 | |
+| 25 | /qx-managing-changes | propose 完成：发现配置层已完整，提案聚焦技能执行引擎（5 capabilities） | |
+| 26 | /qx-managing-changes | spec 完成：5 个 capability 共 17 需求 54 场景，覆盖触发/目标/效果/法力/执行管线 | |
+| 28 | /qx-writing-plans | plan 完成：8 组 15 任务，数据模型→HexUtil→Mana→Trigger→Target→Effect→Executor→集成 | |
+| 29 | /qx-exec | 开始执行：构建静态上下文，分派 Task 1.1/1.2/1.3 三个并行 Agent（数据模型层） | 进行中，尚未完成 |
+| 30-42 | /qx-exec | 16/16 任务全部完成，8 次提交，Final Review APPROVED，3 个 Important 记录到 tech-debt | 跨上下文续接（context compaction），stop hook 误触一次 |
+| 43 | /qx-verify | 16/16 任务 checkbox 全部 [x]，12 文件存在，编译零新增错误，验证通过 VERIFIED | |
+| 44 | /qx-finishing | 收尾确认：10 个提交已在 release9.0 上，无独立分支需合并，展示 4 选项等待用户选择 | |
+| 45 | (follow-up: /qx-finishing) | 用户询问下一步推荐，建议 compound → archive → sprint status 顺序 | |
+| 46 | git push | 推送 release9.0 到远程，10 个提交同步完成 | |
+| 47 | /qx-managing-changes | archive 完成：tech-debt 3项全部推迟，5个specs同步到docs/specs/，变更移至archive/2026-03-06-a1-skill/ | |
+| 48 | /qx-compound | 提取经验：system-map新增技能子系统章节，MEMORY新增坑7+2个模式，验收进度更新 | |
+| 49 | /qx-managing-changes | create 子命令启动，无活跃变更，等待用户输入新变更名称 | |
+| 50 | (follow-up: /qx-managing-changes) | 创建 battle-system 变更目录和 .change.yaml，建议下一步 propose |
+| 51 | (follow-up: /qx-managing-changes) | 全自动模式：从 propose 一路执行到 compound 完成，含 proposal+10specs+design+plan(15task)+11新文件+5修改+5测试+archive+specs同步+system-map更新+知识提取 | 1个新增编译错误(SimpleRng ET0004)已修复(移到Model程序集)；IEnumerable不可索引需foreach+break | |
+| 57-63 | /qx-change create→compound | 全自动模式（e9-networking 网络与同步）：create→propose→5specs→design(6决策)→plan(10组18任务)→exec(31文件5436行)→verify(4维全PASS)→archive(5specs同步)→compound(system-map+MEMORY+5新坑模式) | ET0031(Proto new→Create)在5文件重复出现需完整重写；CombatDamageType/CombatWinner枚举值猜错；context compaction中途触发1次 |
