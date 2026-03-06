@@ -36,6 +36,8 @@ namespace ET.Server
             TestSynergySnapshot(scene);
             TestGoblinGift(scene);
             TestHexUtil();
+            TestMana();
+            TestTriggerChecker();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1003,6 +1005,127 @@ namespace ET.Server
                 throw new Exception("IsInBounds(-1,0) should be false");
 
             Log.Info("[AutoChess] TestHexUtil passed.");
+        }
+
+        /// <summary>
+        /// 验证 ManaService 法力值累积/消耗/溢出保护
+        /// </summary>
+        public static void TestMana()
+        {
+            var unit = new CombatUnitState
+            {
+                Mana = 0,
+                ManaGainOnAttack = AutoChessDefine.DefaultManaGainOnAttack, // 10
+                ManaGainOnHit = AutoChessDefine.DefaultManaGainOnHit,       // 6
+            };
+
+            // GainOnAttack 10次 → mana=100, IsFull=true
+            for (int i = 0; i < 10; i++)
+            {
+                ManaService.GainOnAttack(unit);
+            }
+            if (unit.Mana != AutoChessDefine.ManaMax)
+                throw new Exception($"TestMana: after 10x GainOnAttack expected {AutoChessDefine.ManaMax}, got {unit.Mana}");
+            if (!ManaService.IsFull(unit))
+                throw new Exception("TestMana: IsFull should be true at ManaMax");
+
+            // Consume → mana=0
+            ManaService.Consume(unit);
+            if (unit.Mana != 0)
+                throw new Exception($"TestMana: after Consume expected 0, got {unit.Mana}");
+
+            // GainOnHit 溢出保护: mana=95, +6 → clamped to 100
+            unit.Mana = 95;
+            ManaService.GainOnHit(unit);
+            if (unit.Mana != AutoChessDefine.ManaMax)
+                throw new Exception($"TestMana: after GainOnHit from 95 expected {AutoChessDefine.ManaMax}, got {unit.Mana}");
+
+            Log.Info("[AutoChess] TestMana passed.");
+        }
+
+        /// <summary>
+        /// 验证 TriggerChecker 各触发类型判定
+        /// </summary>
+        public static void TestTriggerChecker()
+        {
+            // === CombatStart ===
+            var unit = new CombatUnitState { IsAlive = true, Trigger = new TriggerState() };
+            var skill = new SkillDefData { TriggerType = SkillTriggerType.CombatStart };
+
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.CombatStart, 0))
+                throw new Exception("TriggerChecker: CombatStart should trigger at tick 0");
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.CombatStart, 1))
+                throw new Exception("TriggerChecker: CombatStart should NOT trigger at tick > 0");
+
+            // === OnHitCount ===
+            unit.Trigger.Reset();
+            skill = new SkillDefData { TriggerType = SkillTriggerType.OnHitCount, HitCountRequired = 3 };
+
+            TriggerChecker.IncrementHitCount(unit);
+            TriggerChecker.IncrementHitCount(unit);
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.OnHitCount, 10))
+                throw new Exception("TriggerChecker: OnHitCount should NOT trigger at 2 hits (need 3)");
+
+            TriggerChecker.IncrementHitCount(unit);
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.OnHitCount, 10))
+                throw new Exception("TriggerChecker: OnHitCount should trigger at 3 hits");
+            if (unit.Trigger.HitCount != 0)
+                throw new Exception("TriggerChecker: OnHitCount should reset counter after trigger");
+
+            // === OnHpBelow ===
+            unit.Trigger.Reset();
+            unit.MaxHp = 100;
+            unit.Hp = 60;
+            skill = new SkillDefData { TriggerType = SkillTriggerType.OnHpBelow, HpThresholdPct = 0.5f };
+
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.OnHpBelow, 5))
+                throw new Exception("TriggerChecker: OnHpBelow should NOT trigger when Hp=60 >= 50");
+
+            unit.Hp = 40;
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.OnHpBelow, 5))
+                throw new Exception("TriggerChecker: OnHpBelow should trigger when Hp=40 < 50");
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.OnHpBelow, 6))
+                throw new Exception("TriggerChecker: OnHpBelow should NOT trigger twice");
+
+            // === OnKill ===
+            unit.Trigger.Reset();
+            skill = new SkillDefData { TriggerType = SkillTriggerType.OnKill, ChainLimit = 2 };
+
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.OnKill, 10))
+                throw new Exception("TriggerChecker: OnKill should trigger (1st)");
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.OnKill, 20))
+                throw new Exception("TriggerChecker: OnKill should trigger (2nd)");
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.OnKill, 30))
+                throw new Exception("TriggerChecker: OnKill should NOT trigger after ChainLimit reached");
+
+            // === Interval ===
+            unit.Trigger.Reset();
+            skill = new SkillDefData { TriggerType = SkillTriggerType.Interval, IntervalSeconds = 2.0f };
+            // 2.0s * 20 ticks/s = 40 ticks required
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.Interval, 39))
+                throw new Exception("TriggerChecker: Interval should NOT trigger at tick 39 (need 40)");
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.Interval, 40))
+                throw new Exception("TriggerChecker: Interval should trigger at tick 40");
+            if (unit.Trigger.LastIntervalTick != 40)
+                throw new Exception("TriggerChecker: Interval should update LastIntervalTick to 40");
+
+            // === Event mismatch ===
+            skill = new SkillDefData { TriggerType = SkillTriggerType.AttackTrait };
+            if (TriggerChecker.Check(unit, skill, SkillTriggerType.OnDeath, 0))
+                throw new Exception("TriggerChecker: mismatched triggerEvent should return false");
+
+            // === AttackTrait / ManaFull / OnDeath ===
+            skill = new SkillDefData { TriggerType = SkillTriggerType.AttackTrait };
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.AttackTrait, 0))
+                throw new Exception("TriggerChecker: AttackTrait should always trigger");
+            skill = new SkillDefData { TriggerType = SkillTriggerType.ManaFull };
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.ManaFull, 0))
+                throw new Exception("TriggerChecker: ManaFull should always trigger");
+            skill = new SkillDefData { TriggerType = SkillTriggerType.OnDeath };
+            if (!TriggerChecker.Check(unit, skill, SkillTriggerType.OnDeath, 0))
+                throw new Exception("TriggerChecker: OnDeath should always trigger");
+
+            Log.Info("[AutoChess] TestTriggerChecker passed.");
         }
     }
 }
