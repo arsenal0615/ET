@@ -39,6 +39,7 @@ namespace ET.Server
             TestMana();
             TestTriggerChecker();
             TestTargetSelector();
+            TestEffectApplier();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -1225,13 +1226,211 @@ namespace ET.Server
             if (targets.Count != 1 || targets[0].InstId != 11)
                 throw new Exception($"TargetSelector: FarthestInRange(3) expected InstId=11 (dist=3), got {(targets.Count > 0 ? targets[0].InstId : -1)}");
 
-            // === 未实现类型返回空列表 ===
-            skill = new SkillDefData { TargetType = SkillTargetType.ClusterLargest };
+            // === MultiTargets: N=2 时返回最近的 2 个 (enemy1 dist=1, enemy3 dist=2) ===
+            skill = new SkillDefData
+            {
+                TargetType = SkillTargetType.MultiTargets,
+                Effects = new SkillEffectData[] { new SkillEffectData { Value2 = 2f } }
+            };
             targets = TargetSelector.Select(caster, skill, allUnits);
-            if (targets.Count != 0)
-                throw new Exception($"TargetSelector: unimplemented type should return empty list, got {targets.Count}");
+            if (targets.Count != 2)
+                throw new Exception($"TargetSelector: MultiTargets(2) expected 2, got {targets.Count}");
+            if (targets[0].InstId != 10 || targets[1].InstId != 12)
+                throw new Exception($"TargetSelector: MultiTargets(2) expected [10,12], got [{targets[0].InstId},{targets[1].InstId}]");
+
+            // === ClusterLargest: 3 个敌人聚集 vs 1 个孤立 ===
+            // clustered: (2,0),(3,0),(2,1) 互相距离<=1; isolated: (7,0)
+            var ce1 = new CombatUnitState { InstId = 20, Col = 2, Row = 0, Side = 1, IsAlive = true, Hp = 100, MaxHp = 100, Buffs = new List<ActiveBuff>(), Trigger = new TriggerState() };
+            var ce2 = new CombatUnitState { InstId = 21, Col = 3, Row = 0, Side = 1, IsAlive = true, Hp = 100, MaxHp = 100, Buffs = new List<ActiveBuff>(), Trigger = new TriggerState() };
+            var ce3 = new CombatUnitState { InstId = 22, Col = 2, Row = 1, Side = 1, IsAlive = true, Hp = 100, MaxHp = 100, Buffs = new List<ActiveBuff>(), Trigger = new TriggerState() };
+            var isolated = new CombatUnitState { InstId = 30, Col = 7, Row = 0, Side = 1, IsAlive = true, Hp = 100, MaxHp = 100, Buffs = new List<ActiveBuff>(), Trigger = new TriggerState() };
+            var clusterUnits = new List<CombatUnitState> { caster, ce1, ce2, ce3, isolated };
+            skill = new SkillDefData
+            {
+                TargetType = SkillTargetType.ClusterLargest,
+                Effects = new SkillEffectData[] { new SkillEffectData { Value2 = 1f } }
+            };
+            targets = TargetSelector.Select(caster, skill, clusterUnits);
+            // 聚集区域应该包含 3 个 (ce1,ce2,ce3)，不包含 isolated
+            if (targets.Count != 3)
+                throw new Exception($"TargetSelector: ClusterLargest expected 3, got {targets.Count}");
+            bool hasIsolated = false;
+            for (int i = 0; i < targets.Count; i++) { if (targets[i].InstId == 30) hasIsolated = true; }
+            if (hasIsolated)
+                throw new Exception("TargetSelector: ClusterLargest should not include isolated enemy");
+
+            // === AreaRadius: radius=1 时返回 caster 相邻格的敌人 ===
+            // caster at (0,0), enemy1 at (1,0) dist=1, enemy2 at (3,0) dist=3, enemy3 at (2,0) dist=2
+            skill = new SkillDefData
+            {
+                TargetType = SkillTargetType.AreaRadius,
+                Effects = new SkillEffectData[] { new SkillEffectData { Value2 = 1f } }
+            };
+            targets = TargetSelector.Select(caster, skill, allUnits);
+            if (targets.Count != 1 || targets[0].InstId != 10)
+                throw new Exception($"TargetSelector: AreaRadius(1) expected [10], got count={targets.Count}");
 
             Log.Info("[AutoChess] TestTargetSelector passed.");
+        }
+
+        public static void TestEffectApplier()
+        {
+            // === Damage: atk=100, Value1=1.5, DamageMultiplier=1.0 → damage=150, HP 500→350 ===
+            var caster = new CombatUnitState
+            {
+                InstId = 1, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Atk = 100, Hp = 500, MaxHp = 500, DamageMultiplier = 1.0f,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            var target1 = new CombatUnitState
+            {
+                InstId = 10, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                Hp = 500, MaxHp = 500, DamageReduction = 0f,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+
+            var damageEffect = new SkillEffectData { EffectType = SkillEffectType.Damage, Value1 = 1.5f };
+            var targets = new List<CombatUnitState> { target1 };
+            var allUnits = new List<CombatUnitState> { caster, target1 };
+
+            var results = EffectApplier.Apply(caster, targets, damageEffect, allUnits, 0);
+            if (results.Count != 1)
+                throw new Exception($"EffectApplier Damage: expected 1 result, got {results.Count}");
+            if (results[0].Value != 150)
+                throw new Exception($"EffectApplier Damage: expected 150 damage, got {results[0].Value}");
+            if (target1.Hp != 350)
+                throw new Exception($"EffectApplier Damage: expected HP=350, got {target1.Hp}");
+
+            // === Damage with DamageReduction=0.4 → actual = floor(150*0.6) = 90 ===
+            target1.Hp = 500;
+            target1.DamageReduction = 0.4f;
+            results = EffectApplier.Apply(caster, targets, damageEffect, allUnits, 0);
+            if (results[0].Value != 90)
+                throw new Exception($"EffectApplier Damage+Reduction: expected 90 damage, got {results[0].Value}");
+            if (target1.Hp != 410)
+                throw new Exception($"EffectApplier Damage+Reduction: expected HP=410, got {target1.Hp}");
+
+            // === Damage: 致死 → IsAlive=false ===
+            target1.Hp = 50;
+            target1.DamageReduction = 0f;
+            results = EffectApplier.Apply(caster, targets, damageEffect, allUnits, 0);
+            if (target1.IsAlive)
+                throw new Exception("EffectApplier Damage: target should be dead");
+            if (target1.Hp != 0)
+                throw new Exception($"EffectApplier Damage: HP should be 0, got {target1.Hp}");
+
+            // === Stun: buff 添加成功 ===
+            var stunTarget = new CombatUnitState
+            {
+                InstId = 20, Col = 2, Row = 0, Side = 1, IsAlive = true,
+                Hp = 300, MaxHp = 300,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var stunEffect = new SkillEffectData { EffectType = SkillEffectType.Stun, Duration = 1.5f };
+            var stunTargets = new List<CombatUnitState> { stunTarget };
+            var stunAllUnits = new List<CombatUnitState> { caster, stunTarget };
+
+            results = EffectApplier.Apply(caster, stunTargets, stunEffect, stunAllUnits, 0);
+            int expectedStunTicks = (int)(1.5f * AutoChessDefine.CombatTickRate); // 30
+            if (results.Count != 1 || results[0].Value != expectedStunTicks)
+                throw new Exception($"EffectApplier Stun: expected ticks={expectedStunTicks}, got {(results.Count > 0 ? results[0].Value : -1)}");
+            if (!stunTarget.IsStunned)
+                throw new Exception("EffectApplier Stun: target should be stunned");
+
+            // === Knockback: 推 2 格 ===
+            // caster at (0,0), target at (1,0) — 推远离 caster 方向
+            var kbCaster = new CombatUnitState
+            {
+                InstId = 30, Col = 0, Row = 0, Side = 0, IsAlive = true,
+                Hp = 500, MaxHp = 500,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var kbTarget = new CombatUnitState
+            {
+                InstId = 31, Col = 1, Row = 0, Side = 1, IsAlive = true,
+                Hp = 300, MaxHp = 300,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var kbEffect = new SkillEffectData { EffectType = SkillEffectType.Knockback, Value1 = 2f };
+            var kbTargets = new List<CombatUnitState> { kbTarget };
+            var kbAllUnits = new List<CombatUnitState> { kbCaster, kbTarget };
+
+            results = EffectApplier.Apply(kbCaster, kbTargets, kbEffect, kbAllUnits, 0);
+            if (results.Count != 1)
+                throw new Exception($"EffectApplier Knockback: expected 1 result, got {results.Count}");
+            // 目标应该被推了 2 格，距离 caster 更远
+            int kbDist = HexUtil.HexDistance(kbCaster.Col, kbCaster.Row, kbTarget.Col, kbTarget.Row);
+            if (kbDist < 3)
+                throw new Exception($"EffectApplier Knockback: expected distance>=3 after 2-step knockback, got {kbDist}");
+
+            // === Knockback: 边界阻挡 — 在边界附近推 ===
+            var kbEdgeTarget = new CombatUnitState
+            {
+                InstId = 32, Col = 7, Row = 0, Side = 1, IsAlive = true,
+                Hp = 300, MaxHp = 300,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var kbEdgeCaster = new CombatUnitState
+            {
+                InstId = 33, Col = 6, Row = 0, Side = 0, IsAlive = true,
+                Hp = 500, MaxHp = 500,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var kbEdgeTargets = new List<CombatUnitState> { kbEdgeTarget };
+            var kbEdgeAllUnits = new List<CombatUnitState> { kbEdgeCaster, kbEdgeTarget };
+            var kbEdgeEffect = new SkillEffectData { EffectType = SkillEffectType.Knockback, Value1 = 5f };
+
+            results = EffectApplier.Apply(kbEdgeCaster, kbEdgeTargets, kbEdgeEffect, kbEdgeAllUnits, 0);
+            // 目标应该停在棋盘内
+            if (!HexUtil.IsInBounds(kbEdgeTarget.Col, kbEdgeTarget.Row))
+                throw new Exception($"EffectApplier Knockback: target went out of bounds ({kbEdgeTarget.Col},{kbEdgeTarget.Row})");
+
+            // === Invisibility ===
+            var invisTarget = new CombatUnitState
+            {
+                InstId = 40, Col = 3, Row = 0, Side = 0, IsAlive = true,
+                Hp = 200, MaxHp = 200,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var invisEffect = new SkillEffectData { EffectType = SkillEffectType.Invisibility, Duration = 2.0f };
+            var invisTargets = new List<CombatUnitState> { invisTarget };
+            var invisAllUnits = new List<CombatUnitState> { caster, invisTarget };
+
+            results = EffectApplier.Apply(caster, invisTargets, invisEffect, invisAllUnits, 0);
+            if (!invisTarget.IsInvisible)
+                throw new Exception("EffectApplier Invisibility: target should be invisible");
+            int expectedInvisTicks = (int)(2.0f * AutoChessDefine.CombatTickRate); // 40
+            if (results.Count != 1 || results[0].Value != expectedInvisTicks)
+                throw new Exception($"EffectApplier Invisibility: expected ticks={expectedInvisTicks}, got {(results.Count > 0 ? results[0].Value : -1)}");
+
+            // === SpeedBuff ===
+            var speedTarget = new CombatUnitState
+            {
+                InstId = 50, Col = 4, Row = 0, Side = 0, IsAlive = true,
+                Hp = 200, MaxHp = 200,
+                Buffs = new List<ActiveBuff>(), Trigger = new TriggerState()
+            };
+            var speedEffect = new SkillEffectData { EffectType = SkillEffectType.SpeedBuff, Value1 = 1.5f, Duration = 3.0f };
+            var speedTargets = new List<CombatUnitState> { speedTarget };
+            var speedAllUnits = new List<CombatUnitState> { caster, speedTarget };
+
+            results = EffectApplier.Apply(caster, speedTargets, speedEffect, speedAllUnits, 0);
+            int expectedSpeedTicks = (int)(3.0f * AutoChessDefine.CombatTickRate); // 60
+            if (results.Count != 1 || results[0].Value != expectedSpeedTicks)
+                throw new Exception($"EffectApplier SpeedBuff: expected ticks={expectedSpeedTicks}, got {(results.Count > 0 ? results[0].Value : -1)}");
+            if (speedTarget.Buffs.Count != 1 || speedTarget.Buffs[0].Type != BuffType.SpeedBuff)
+                throw new Exception("EffectApplier SpeedBuff: buff not added correctly");
+            if (Math.Abs(speedTarget.Buffs[0].Value1 - 1.5f) > 0.001f)
+                throw new Exception($"EffectApplier SpeedBuff: expected Value1=1.5, got {speedTarget.Buffs[0].Value1}");
+
+            // === 未实现类型返回空列表 ===
+            var summonEffect = new SkillEffectData { EffectType = SkillEffectType.Summon };
+            results = EffectApplier.Apply(caster, speedTargets, summonEffect, speedAllUnits, 0);
+            if (results.Count != 0)
+                throw new Exception($"EffectApplier: unimplemented type should return empty, got {results.Count}");
+
+            Log.Info("[AutoChess] TestEffectApplier passed.");
         }
     }
 }
