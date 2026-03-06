@@ -2,7 +2,7 @@
 
 > 中粒度（Component/System 级别）。由 `/qx-compound` 执行时检查并更新。
 >
-> 最后更新：2026-03-06（a1-skill：SkillExecutor、TriggerChecker、TargetSelector、EffectApplier、ManaService、CombatUnitState、HexUtil）
+> 最后更新：2026-03-06（e9-networking：Proto 定义、操作 Handler、状态广播、客户端 Handler、对局创建/加入）
 
 ---
 
@@ -228,8 +228,49 @@
 - **TargetSelector** (静态服务类, Hotfix/Server) — 10 种目标选取算法（Self/NearestEnemy/FarthestInRadius/FarthestInRange/LowestHp/MultiTargets/AreaRadius/ClusterLargest/LinePierce/Cone）
 - **EffectApplier** (静态服务类, Hotfix/Server) — 10 种效果应用（Damage/Stun/Knockback/Invisibility/SpeedBuff/Summon/Clone/Reflect/HealOverTime/Projectile）+ TickBuff 生命周期
 - **SkillExecutor** (门面类, Hotfix/Server) — 唯一入口，编排 Trigger→Target→Effect 管线 + Superstar 连发（DeriveSubSeed(SkillChain)）
-- **集成点**: E7 战斗模拟器每 tick 调用 SkillExecutor.TryExecute + TickBuffs；CombatUnitState 从 UnitInfo + UnitBattleModifiers 初始化
+- **集成点**: CombatSimulator 每 tick 调用 SkillExecutor.TryExecute + TickBuffs；CombatUnitState 从 UnitInfo + UnitBattleModifiers 初始化
 - **测试**: AutoChessTestHelper — HexUtil / Mana / TriggerChecker / TargetSelector / EffectApplier / SkillExecutor / SkillSystem（7+6 个测试）
+
+### 战斗系统（battle-system）
+
+- **CombatSimulator** (静态服务类, Hotfix/Server) — 确定性战斗 Tick 循环
+  - `RunCombat(leftUnits, rightUnits, leftSnapshot, rightSnapshot, rng, round) → CombatResult`
+  - 20 ticks/s，最大 600 ticks（30s），tick≥400 进入 Frenzy（攻速翻倍）
+  - 每 tick：TickBuffs → Interval 触发 → 单位行动（instId ASC）→ 死亡清理 → 胜负检测
+  - 攻击公式：damage = floor(atk × damageMultiplier × (1-damageReduction))，暴击 ×1.5
+  - 移动：贪心六边形移动（距离最短→instId），攻击间隔和移动间隔独立冷却
+  - 动态羁绊效果：Ace 队长/吸血、Ranger 攻速叠加、Clan 低血爆发、P.E.K.K.A 击杀增伤、Undead 击杀增伤
+  - 技能集成：CombatStart/Interval/AttackTrait/ManaFull/OnKill/OnHpBelow/OnDeath 触发点
+- **CombatUnitInit** (静态服务类, Hotfix/Server) — UnitInfo + TraitSnapshot → CombatUnitState
+  - `InitSide(roster, snapshot, side, outUnits)` — 从 RosterComponent 初始化，R 方 y 镜像
+  - `InitFromGhost(ghost, side, outUnits)` — 从 GhostSnapshot 初始化
+  - 应用星级倍率（StarMultipliers[star]）、UnitBattleModifiers（HpMultiplier/DamageReduction/AtkSpeedMultiplier 等）
+- **CombatStartProcessor** (静态服务类, Hotfix/Server) — tick=0 开战特效
+  - 刺客跳后排（Assassin synergy，instId ASC 序，落点：目标身后→同行→邻居→放弃）
+  - 亡灵诅咒（Undead synergy，level 1: top2 75% maxHp，level 2: top3 50% maxHp）
+- **PairingService** (静态服务类, Hotfix/Server) — 确定性配对
+  - `MakePairings(room, rng) → List<PairingResult>`
+  - Fisher-Yates 洗牌（sub-seed: PrngPurpose.Pairing + round）
+  - 4人→2对，3人→1对+1 Ghost 对，2人→1对
+  - L < R（playerId 排序）
+- **SettlementService** (静态服务类, Hotfix/Server) — 回合结算
+  - `ProcessResults(room, battleResults)` — 扣血 + 淘汰 + Ghost 记录
+  - 伤害 = aliveEffective + 1；平局各扣 1
+  - Ghost 规则：赢 Ghost 不扣血，输 Ghost 正常扣
+  - 同回合淘汰排名：hp DESC → hpBefore DESC → aliveEffective DESC → playerId ASC
+  - 淘汰时记录 GhostSnapshot（playerId 最大者）
+- **SimpleRng** (数据类, Model/Server, `[EnableClass]`) — xorshift32 轻量 RNG（避免污染主 PRNG）
+- **数据类** (Model/Share, namespace ET, `[EnableClass]`)
+  - **CombatEvent** — 战斗事件（12 种类型：RoundStart/Spawn/Move/Attack/Cast/Damage/Heal/BuffAdd/BuffRemove/Death/FrenzyStart/RoundEnd）
+  - **CombatResult** — 战斗结果（Winner/TimeUp/Events/LeftAliveEffective/RightAliveEffective）
+  - **CombatEventType** (enum) — 12 种事件类型
+  - **CombatDamageType** (enum) — Normal=0, Skill=1, Dot=2
+  - **CombatWinner** (enum) — Left=0, Right=1, Draw=2
+- **数据类** (Model/Server, namespace ET.Server, `[EnableClass]`)
+  - **PairingResult** — 配对结果（LeftPlayerId/RightPlayerId/IsGhostMatch/GhostSide）
+  - **GhostSnapshot** — 幽灵快照（PlayerId/Units/Snapshot）
+- **AutoChessDefine 新增常量** — MaxCombatTicks=600, FrenzyStartTick=400, FrenzyAtkSpeedMultiplier=2.0f, DrawHpLoss=1, DefaultCritMultiplier=1.5f, StarMultipliers
+- **测试**: AutoChessTestHelper — CombatSimulator / Pairing / Settlement / CombatStartProcessor / Frenzy（5 个测试）
 
 ### 事件
 
@@ -238,6 +279,8 @@
   - **PhaseChangedEventHandler_Shop** `[Event(SceneType.Map)]` — 订阅 RoundStart 刷新所有玩家商店 Offer；Round 1 额外执行首回合礼包 + UnitService.CreateFirstRoundGift
   - **PhaseChangedEventHandler_Unit** `[Event(SceneType.Map)]` — 订阅 Deployment（MergeService.RunMergeChain）+ PreBattle（PreBattleService.ValidateAndFix）
   - **PhaseChangedEventHandler_Synergy** `[Event(SceneType.Map)]` — 订阅 Deployment（Recalculate）+ PreBattle（GenerateSnapshot）+ RoundStart≥2（TryGiveGifts）
+  - **PhaseChangedEventHandler_Battle** `[Event(SceneType.Map)]` — 订阅 Battle（PairingService→CombatUnitInit→CombatSimulator→SettlementService→EndMatch 检查 + 广播 CombatEvents/RoundResult/MatchResult）
+  - **PhaseChangedEventHandler_Broadcast** `[Event(SceneType.Map)]` — 所有阶段切换广播 PhaseChange；Deployment 阶段推送 RoundState 个人快照
 - **ElixirChangedEvent** — EconomyService.ApplyDelta 发布；供 E9 网络层订阅推送客户端
 - **SynergyChangedEvent** — SynergyService.Recalculate 发布；供 E9 网络层订阅推送客户端
 
@@ -254,7 +297,45 @@
 
 - **MatchRoomFactory** — CreateMatch(matchComp, playerIds, seed)：创建 MatchRoom + 按序赋值 PlayerIndex + 添加 EconomyLogComponent + ShopComponent + RosterComponent + SynergyComponent + SharedPoolComponent + DeterministicRngComponent + RoundFSMComponent
 - **MatchRoomSystem** — GetAlivePlayers()、FindPlayerById()、StartMatch()、EliminatePlayer()（含归还 Offer + RosterService.RecoverAllToPool）、EndMatch()
-- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery / SynergyCounting / SynergySnapshot / GoblinGift / HexUtil / Mana / TriggerChecker / TargetSelector / EffectApplier / SkillExecutor / SkillSystem（22 个测试）
+- **AutoChessTestHelper** — 集成测试：ConfigLoader / Prng / EntityTree / PhaseGate / Economy / Shop / Roster / Placement / Merge / PreBattle / UnitService / EliminationRecovery / SynergyCounting / SynergySnapshot / GoblinGift / HexUtil / Mana / TriggerChecker / TargetSelector / EffectApplier / SkillExecutor / SkillSystem / CombatSimulator / Pairing / Settlement / CombatStartProcessor / Frenzy / ProtoConversion / BroadcastHelper（29 个测试）
+
+### 网络与同步层（e9-networking）
+
+- **Proto 消息** (AutoChessOuter_C_12001.proto, Opcode 12001+)
+  - C2M 操作（ILocationMessage，RpcId=90）：C2M_AutoChessBuy / Sell / Place / Swap
+  - C2M 进入（ILocationRequest）：C2M_AutoChessEnterGame / M2C_AutoChessEnterGame
+  - M2C 推送（IMessage）：M2C_AutoChessOpResult / PhaseChange / RoundState / CombatEvents / RoundResult / MatchResult
+  - 辅助 message：AutoChessUnitInfoProto / ShopOfferProto / PlayerPublicInfoProto / SynergyProto / CombatEventProto / PlayerRoundResultProto / BuyResultProto
+- **Proto 消息** (AutoChessInner_S_22001.proto, Opcode 22001+)
+  - Match2Map_CreateAutoChessGame (IRequest) / Map2Match_AutoChessGameOver (IMessage) / AutoChessPlayerRankProto
+- **AutoChessOpError** (enum, Model/Share) — OK=0 到 MATCH_NOT_FOUND=10，11 种错误码
+- **AutoChessUnitComponent** (ComponentOf: Unit, Model/Server) — Map Unit ↔ MatchPlayer 绑定（MatchRoomId, PlayerIndex, PlayerId）
+  - GetMatchRoom() / GetMatchPlayer() 辅助方法
+- **AutoChessBroadcastHelper** (静态辅助类, Hotfix/Server) — 消息推送封装
+  - SendToPlayer(scene, player, msg) — MapUnitId=0 跳过（测试兼容）
+  - BroadcastToAlive(scene, room, msg) — 遍历存活玩家
+  - BroadcastToAll(scene, room, msg) — 遍历所有玩家（含已淘汰）
+- **PhaseGateHelper** (静态辅助类, Hotfix/Server) — 操作阶段门控
+  - CanBuy/CanSell: Deployment + Battle
+  - CanSellFromBoard/CanPlace/CanSwap: 仅 Deployment
+- **AutoChessProtoHelper** (静态辅助类, Hotfix/Server) — 数据↔Proto 转换
+  - ToUnitInfoProto / ToShopOfferProto / ToPlayerPublicInfoProto / ToSynergyProto / ToCombatEventProto
+  - BuildRoundState(room, player) → M2C_AutoChessRoundState 完整快照
+- **服务端 Handler** (Hotfix/Server, SceneType.Map)
+  - Match2Map_CreateAutoChessGameHandler — 创建 MatchRoom + Unit + 绑定 + 启动 RoundFSM
+  - C2M_AutoChessEnterGameHandler — 返回初始状态快照
+  - C2M_AutoChessBuyHandler / SellHandler / PlaceHandler / SwapHandler — 操作处理（PhaseGate→校验→Service→广播）
+- **PhaseChangedEventHandler_Broadcast** `[Event(SceneType.Map)]` — 阶段切换广播 PhaseChange + Deployment 推送 RoundState
+- **PhaseChangedEventHandler_Battle 扩展** — 战斗后广播 CombatEvents（参战双方）/ RoundResult（存活玩家）/ MatchResult（所有玩家）
+- **AutoChessClientComponent** (ComponentOf: Scene, Model/Client) — 客户端状态缓存
+  - CurrentRound / CurrentPhase / PhaseEndTime / Elixir / PopCap / PopUsed
+  - ShopOffers / BoardUnits / BenchUnits / Synergies / AllPlayers / PendingCombatEvents
+  - Apply* 扩展方法（ApplyPhaseChange / ApplyRoundState / ApplyOpResult / ApplyCombatEvents / ApplyRoundResult / ApplyMatchResult）
+- **客户端 Handler** (Hotfix/Client, SceneType.StateSync)
+  - M2C_AutoChessPhaseChangeHandler / RoundStateHandler / OpResultHandler / CombatEventsHandler / RoundResultHandler / MatchResultHandler
+- **AutoChessOperationHelper** (静态辅助类, Hotfix/Client) — 客户端操作发送
+  - SendBuy / SendSell / SendPlace / SendSwap（fire-and-forget via ClientSenderComponent.Send）
+  - SendEnterGame（RPC via ClientSenderComponent.Call）
 
 ### SceneType
 
@@ -276,6 +357,8 @@
 | 20001–20099 | 内部登录消息 | LoginInner_S_20001.proto |
 | 20100–20199 | Actor Location | ActorLocation_S_20100.proto |
 | 21001–21999 | 内部状态同步 | StateSyncInner_S_21001.proto |
+| 12001–12999 | 外部自走棋消息 | AutoChessOuter_C_12001.proto |
+| 22001–22999 | 内部自走棋消息 | AutoChessInner_S_22001.proto |
 
 ## 系统依赖全景
 
