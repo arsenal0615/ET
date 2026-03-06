@@ -35,6 +35,7 @@ namespace ET.Server
             TestSynergyCounting(scene);
             TestSynergySnapshot(scene);
             TestGoblinGift(scene);
+            TestHexUtil();
             Log.Info("[AutoChess] All integration tests passed!");
         }
 
@@ -951,6 +952,57 @@ namespace ET.Server
                 if (e.Tag == tag) return e;
             }
             return null;
+        }
+        /// <summary>
+        /// 验证 HexUtil 坐标转换和距离计算
+        /// </summary>
+        public static void TestHexUtil()
+        {
+            // 相邻格距离 = 1
+            int dist1 = HexUtil.HexDistance(0, 0, 1, 0);
+            if (dist1 != 1)
+                throw new Exception($"HexDistance adjacent expected 1, got {dist1}");
+
+            // 对角格距离 = 2: (0,0)->(1,2)
+            int dist2 = HexUtil.HexDistance(0, 0, 1, 2);
+            if (dist2 != 2)
+                throw new Exception($"HexDistance diagonal expected 2, got {dist2}");
+
+            // (0,0) -> (7,4) 距离
+            // axial(0,0)=(0,0), axial(7,4)=(5,4), dist=(|5|+|4|+|9|)/2=9
+            int dist3 = HexUtil.HexDistance(0, 0, 7, 4);
+            if (dist3 != 9)
+                throw new Exception($"HexDistance (0,0)-(7,4) expected 9, got {dist3}");
+
+            // GetNeighbors(0,0) — 偶行，6 个邻居中应有合法的
+            List<int> ncols = new List<int>();
+            List<int> nrows = new List<int>();
+            HexUtil.GetNeighbors(0, 0, ncols, nrows);
+            if (ncols.Count != 6)
+                throw new Exception($"GetNeighbors(0,0) expected 6 neighbors, got {ncols.Count}");
+
+            // 过滤出界后，(0,0) 偶行邻居: (+1,0),(0,-1),(-1,-1),(-1,0),(-1,+1),(0,+1)
+            // 合法的只有 (1,0) 和 (0,1)
+            int inBoundsCount = 0;
+            for (int i = 0; i < ncols.Count; i++)
+            {
+                if (HexUtil.IsInBounds(ncols[i], nrows[i]))
+                    inBoundsCount++;
+            }
+            if (inBoundsCount != 2)
+                throw new Exception($"GetNeighbors(0,0) in-bounds expected 2, got {inBoundsCount}");
+
+            // IsInBounds 边界检查
+            if (!HexUtil.IsInBounds(0, 0))
+                throw new Exception("IsInBounds(0,0) should be true");
+            if (!HexUtil.IsInBounds(7, 4))
+                throw new Exception("IsInBounds(7,4) should be true");
+            if (HexUtil.IsInBounds(8, 0))
+                throw new Exception("IsInBounds(8,0) should be false");
+            if (HexUtil.IsInBounds(-1, 0))
+                throw new Exception("IsInBounds(-1,0) should be false");
+
+            Log.Info("[AutoChess] TestHexUtil passed.");
         }
     }
 }
