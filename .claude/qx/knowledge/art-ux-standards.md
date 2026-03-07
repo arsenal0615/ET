@@ -1,140 +1,140 @@
-# Art & UX Standards Knowledge Base
+# 美术 & UX 标准知识库
 
-> Injected into artist-ux agent context. Contains UI/UX design standards and asset production guidelines for Unity games.
+> 注入到 artist-ux Agent 上下文中。包含 Unity 游戏的 UI/UX 设计标准和美术资源制作指南。
 
-## UX Design Principles
+## UX 设计原则
 
-### Player-Centered Design
-- Minimize cognitive load: players should spend brain power on gameplay, not UI
-- Progressive disclosure: show only what's needed NOW, reveal complexity as players advance
-- Consistent patterns: same action → same visual feedback everywhere
-- Accessibility: consider colorblind modes, font sizes, control remapping
+### 以玩家为中心的设计
+- 最小化认知负担：玩家的脑力应该花在玩法上，而不是 UI 上
+- 渐进式信息展示：只展示当前需要的内容，随玩家进展逐步揭示复杂度
+- 一致的模式：相同操作 → 相同视觉反馈，处处如此
+- 无障碍访问：考虑色盲模式、字体大小、按键重映射
 
-### Information Hierarchy
-1. **Critical** — Health, ammo, minimap (always visible, HUD-level)
-2. **Important** — Quest objectives, cooldowns (semi-persistent)
-3. **Reference** — Inventory, stats, settings (on-demand screens)
-4. **Detail** — Tooltips, lore entries, achievement progress (deep dive)
+### 信息层级
+1. **关键信息** — 血量、弹药、小地图（始终可见，HUD 级别）
+2. **重要信息** — 任务目标、技能冷却（半持久显示）
+3. **参考信息** — 背包、属性、设置（按需打开的界面）
+4. **详细信息** — 工具提示、传说条目、成就进度（深度查看）
 
-### Feedback Loops
-- Every player action needs acknowledgment within 100ms
-- Visual → Audio → Haptic (layer feedback channels)
-- Positive feedback > negative feedback (reward, don't punish)
-- Error states: clear message + clear recovery path
+### 反馈循环
+- 每个玩家操作需要在 100ms 内得到响应
+- 视觉 → 音频 → 触觉（分层反馈通道）
+- 正向反馈 > 负向反馈（奖励，而非惩罚）
+- 错误状态：清晰的信息 + 清晰的恢复路径
 
-## UI Architecture
+## UI 架构
 
-### UI Framework Integration
-> **Note:** Read the project's CLAUDE.md for the specific UI framework (FairyGUI, UGUI, UIToolkit, etc.) and its integration patterns. This section covers universal UI architecture principles.
+### UI 框架集成
+> **注意：** 阅读项目的 CLAUDE.md 了解具体 UI 框架（FairyGUI、UGUI、UIToolkit 等）及其集成模式。本节涵盖通用 UI 架构原则。
 
-### UI Component Naming Convention
-| Type | Pattern | Example |
-|------|---------|---------|
-| Window | `UI{Feature}Window` | `UIBagWindow` |
-| Panel | `UI{Feature}Panel` | `UISkillPanel` |
-| Item | `UI{Feature}Item` | `UIItemSlot` |
-| Popup | `UI{Feature}Popup` | `UIConfirmPopup` |
-| HUD element | `UI{Feature}HUD` | `UIHealthHUD` |
+### UI 组件命名规范
+| 类型 | 模式 | 示例 |
+|------|------|------|
+| 窗口 | `UI{功能}Window` | `UIBagWindow` |
+| 面板 | `UI{功能}Panel` | `UISkillPanel` |
+| 条目 | `UI{功能}Item` | `UIItemSlot` |
+| 弹窗 | `UI{功能}Popup` | `UIConfirmPopup` |
+| HUD 元素 | `UI{功能}HUD` | `UIHealthHUD` |
 
-### Screen Layout Guidelines
-- **Safe area**: Respect mobile notch/cutout safe areas
-- **Aspect ratios**: Design for 16:9, adapt for 18:9, 21:9, 4:3
-- **Touch targets**: Minimum 44x44 dp (mobile), generous click areas (PC)
-- **Z-ordering**: HUD (top) > Popups > Windows > World UI
+### 屏幕布局指南
+- **安全区域**：遵守移动端刘海/挖孔屏安全区域
+- **宽高比**：以 16:9 为基准设计，适配 18:9、21:9、4:3
+- **触摸目标**：最小 44x44 dp（移动端），充裕的点击区域（PC）
+- **Z 序**：HUD（最顶层）> 弹窗 > 窗口 > 世界 UI
 
-## Visual Design Standards
+## 视觉设计标准
 
-### Color System
+### 色彩系统
 ```
-Primary:    Game-specific brand color
-Secondary:  Supporting actions, less emphasis
-Success:    #4CAF50 (green) — positive outcomes
-Warning:    #FF9800 (orange) — caution states
-Error:      #F44336 (red) — failures, damage
-Info:       #2196F3 (blue) — informational
-Text:       #FFFFFF (light theme) / #212121 (dark theme)
-Disabled:   50% opacity of normal state
+主色:      游戏品牌专属色
+辅助色:    次要操作，较低强调
+成功:      #4CAF50（绿色）— 正面结果
+警告:      #FF9800（橙色）— 注意状态
+错误:      #F44336（红色）— 失败、伤害
+信息:      #2196F3（蓝色）— 提示信息
+文字:      #FFFFFF（浅色主题）/ #212121（深色主题）
+禁用:      正常状态的 50% 不透明度
 ```
 
-### Typography Hierarchy
-| Level | Usage | Size (relative) |
-|-------|-------|-----------------|
-| H1 | Screen titles | 1.5x base |
-| H2 | Section headers | 1.25x base |
-| Body | General text | 1x base (14-16sp mobile) |
-| Caption | Secondary info | 0.85x base |
-| Micro | Timestamps, IDs | 0.7x base |
+### 字体层级
+| 级别 | 用途 | 字号（相对值） |
+|------|------|----------------|
+| H1 | 界面标题 | 1.5x 基准 |
+| H2 | 区块标题 | 1.25x 基准 |
+| 正文 | 通用文本 | 1x 基准（移动端 14-16sp） |
+| 注释 | 次要信息 | 0.85x 基准 |
+| 微小 | 时间戳、ID | 0.7x 基准 |
 
-### Icon Standards
-- Consistent style across all icons (outline vs filled — pick one)
-- Minimum 32x32 for mobile, 24x24 for PC
-- Provide @1x, @2x, @3x for resolution independence
-- Colorize programmatically when possible (reduce asset count)
+### 图标标准
+- 所有图标风格一致（线框风 vs 填充风 — 二选一）
+- 最小 32x32（移动端），24x24（PC）
+- 提供 @1x、@2x、@3x 以适配不同分辨率
+- 尽可能通过代码着色（减少资源数量）
 
-## Animation & Motion
+## 动画与动效
 
-### Timing Guidelines
-| Animation Type | Duration | Easing |
-|---------------|----------|--------|
-| Button press | 50-100ms | ease-out |
-| Panel slide in | 200-300ms | ease-out |
-| Panel slide out | 150-250ms | ease-in |
-| Fade in | 200ms | linear |
-| Fade out | 150ms | linear |
-| Tooltip appear | 100-150ms | ease-out |
-| Loading spinner | continuous | linear rotation |
+### 时间指南
+| 动画类型 | 时长 | 缓动方式 |
+|----------|------|----------|
+| 按钮按下 | 50-100ms | ease-out |
+| 面板滑入 | 200-300ms | ease-out |
+| 面板滑出 | 150-250ms | ease-in |
+| 淡入 | 200ms | linear |
+| 淡出 | 150ms | linear |
+| 工具提示出现 | 100-150ms | ease-out |
+| 加载旋转 | 持续 | linear 旋转 |
 
-### Motion Principles
-- Entrance: elements come FROM the direction of their source
-- Exit: elements go TO their destination or fade
-- Never animate without purpose (decoration is not purpose)
-- Disable animations option for accessibility
+### 动效原则
+- 入场：元素从其来源方向进入
+- 离场：元素朝目的地离开或淡出
+- 无目的不动画（装饰不是目的）
+- 提供关闭动画选项以保障无障碍访问
 
-## Responsive Design
+## 响应式设计
 
-### Resolution Strategy
-- Base design at 1920x1080 (PC) or 1080x1920 (mobile portrait)
-- Use relative positioning (% of parent, not absolute pixels)
-- Use the UI framework's layout/relation system for responsive layouts
-- Test at minimum: 1280x720, 1920x1080, 2560x1440
+### 分辨率策略
+- 基准设计：1920x1080（PC）或 1080x1920（移动端竖屏）
+- 使用相对定位（父容器百分比，非绝对像素）
+- 使用 UI 框架的布局/关联系统实现响应式布局
+- 最少测试分辨率：1280x720、1920x1080、2560x1440
 
-### Platform Adaptations
-| Aspect | Mobile | PC |
-|--------|--------|-----|
-| Input | Touch, swipe, pinch | Mouse, keyboard, gamepad |
-| Info density | Lower (bigger elements) | Higher (more data visible) |
-| Navigation | Bottom tabs, hamburger | Side nav, top menu |
-| Text input | Minimize (auto-complete) | Standard |
-| Hover states | N/A | Required for discoverability |
+### 平台适配
+| 方面 | 移动端 | PC |
+|------|--------|-----|
+| 输入 | 触摸、滑动、捏合 | 鼠标、键盘、手柄 |
+| 信息密度 | 较低（元素更大） | 较高（可见数据更多） |
+| 导航 | 底部标签栏、汉堡菜单 | 侧边栏、顶部菜单 |
+| 文本输入 | 尽量减少（自动补全） | 标准输入 |
+| 悬停状态 | 不适用 | 必须有（提高可发现性） |
 
-## Asset Production Pipeline
+## 美术资源制作流程
 
-### Sprite Workflow
-1. Design in vector tool (Figma/Sketch) → export @1x, @2x, @3x PNG
-2. Import to UI editor → create components → set 9-slice where needed
-3. Publish UI package → integrate with project's asset pipeline
-4. Asset management system handles loading and caching
+### 精灵工作流
+1. 在矢量工具中设计（Figma/Sketch）→ 导出 @1x、@2x、@3x PNG
+2. 导入 UI 编辑器 → 创建组件 → 按需设置九宫格切片
+3. 发布 UI 包 → 与项目资源管线集成
+4. 资源管理系统处理加载和缓存
 
-### Atlas Guidelines
-- Group related sprites into atlases (one atlas per UI screen)
-- Max atlas size: 2048x2048 (mobile), 4096x4096 (PC)
-- Separate frequently-changing sprites from static ones
-- Use texture compression: ASTC (mobile), DXT (PC)
+### 图集指南
+- 将相关精灵分组到同一图集（每个 UI 界面一个图集）
+- 最大图集尺寸：2048x2048（移动端），4096x4096（PC）
+- 频繁变化的精灵与静态精灵分离
+- 使用纹理压缩：ASTC（移动端），DXT（PC）
 
-## Quality Checklist
+## 质量检查清单
 
-### Before Handoff to Development
-- [ ] All states designed (normal, hover, pressed, disabled, loading, error, empty)
-- [ ] Responsive behavior defined for target resolutions
-- [ ] Animation specs documented (duration, easing, triggers)
-- [ ] Color values extracted (hex codes, not "that blue")
-- [ ] Font specifications documented (family, weight, size, line-height)
-- [ ] Touch/click target sizes verified (44dp minimum mobile)
-- [ ] Accessibility reviewed (contrast ratios, screen reader labels)
+### 交付开发前
+- [ ] 所有状态已设计（正常、悬停、按下、禁用、加载中、错误、空状态）
+- [ ] 已定义目标分辨率下的响应式行为
+- [ ] 已记录动画规格（时长、缓动、触发条件）
+- [ ] 已提取颜色值（十六进制代码，而非"那个蓝色"）
+- [ ] 已记录字体规格（字族、字重、字号、行高）
+- [ ] 已验证触摸/点击目标尺寸（移动端最小 44dp）
+- [ ] 已审查无障碍访问（对比度、屏幕阅读器标签）
 
-### Before Release
-- [ ] Tested on all target devices/resolutions
-- [ ] Localization text fits in all languages
-- [ ] Performance: UI doesn't cause frame drops
-- [ ] Memory: atlas sizes within budget
-- [ ] Consistent with existing UI patterns in the game
+### 发布前
+- [ ] 已在所有目标设备/分辨率上测试
+- [ ] 本地化文本在所有语言下都能放下
+- [ ] 性能：UI 不会导致掉帧
+- [ ] 内存：图集尺寸在预算内
+- [ ] 与游戏中现有 UI 模式保持一致

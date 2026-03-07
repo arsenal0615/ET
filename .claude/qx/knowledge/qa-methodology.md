@@ -1,240 +1,240 @@
-# QA Methodology Knowledge Base
+# QA 方法论知识库
 
-> Injected into qa-tester agent context. Contains testing methodology and quality assurance best practices for Unity game projects.
+> 注入到 qa-tester Agent 上下文中。包含 Unity 游戏项目的测试方法论和质量保障最佳实践。
 
-## Testing Philosophy
+## 测试理念
 
-### Core Principles
-1. **Test what matters** — Focus on player-facing behavior, not implementation details
-2. **Automate the repetitive** — Manual testing for exploration, automation for regression
-3. **Shift left** — Find bugs earlier (design review > code review > testing > production)
-4. **Risk-based priority** — Test high-impact, high-probability scenarios first
+### 核心原则
+1. **测试重要的东西** — 聚焦玩家可感知的行为，而非实现细节
+2. **自动化重复工作** — 手动测试用于探索，自动化用于回归
+3. **左移** — 越早发现 Bug 越好（设计审查 > 代码审查 > 测试 > 线上）
+4. **基于风险排优先级** — 优先测试高影响、高概率的场景
 
-### Testing Pyramid (adapted for games)
+### 测试金字塔（游戏适配版）
 
 ```
-        /  Playtest  \          (Manual, exploratory)
-       / Integration  \         (Multi-system, network)
-      /   Component    \        (Single system behavior)
-     /     Unit         \       (Individual functions)
-    /   Static Analysis  \      (Analyzers, build checks)
+        /   玩测    \          （手动、探索性）
+       /  集成测试   \         （多系统、网络）
+      /   组件测试    \        （单系统行为）
+     /    单元测试     \       （独立函数）
+    /    静态分析       \      （分析器、构建检查）
 ```
 
-> **Note:** Check the project's build system for available static analysis tools (Roslyn Analyzers, linters, etc.). Many bugs can be caught at compile time — know what your toolchain already covers so you don't duplicate effort in tests.
+> **注意：** 检查项目的构建系统了解可用的静态分析工具（Roslyn 分析器、Linter 等）。很多 Bug 可以在编译期捕获 — 了解工具链已覆盖的内容，避免在测试中重复劳动。
 
-## Test Categories
+## 测试分类
 
-### Unit Tests
-- Test individual functions and methods in isolation
-- Test pure calculation logic (damage formulas, pathfinding, stat calculations)
-- Test data structure state transitions
-- **Fast**, run in milliseconds
+### 单元测试
+- 隔离测试单个函数和方法
+- 测试纯计算逻辑（伤害公式、寻路、属性计算）
+- 测试数据结构状态转换
+- **速度快**，毫秒级运行
 
-### Component Tests
-- Test a single component + its logic together
-- Test lifecycle (initialization → operations → cleanup)
-- Test edge cases (empty, null, overflow, boundary values)
+### 组件测试
+- 测试单个组件及其逻辑
+- 测试生命周期（初始化 → 操作 → 清理）
+- 测试边界情况（空值、null、溢出、边界值）
 
-### Integration Tests
-- Test multiple components interacting
-- Test network message flow (client → server → response)
-- Test cross-process or cross-thread communication
-- **Slower**, may need server startup
+### 集成测试
+- 测试多个组件的交互
+- 测试网络消息流（客户端 → 服务端 → 响应）
+- 测试跨进程或跨线程通信
+- **速度较慢**，可能需要启动服务端
 
-### Playtest / Exploration Tests
-- Manual testing with specific goals
-- "Can a player complete the tutorial in 10 minutes?"
-- "What happens if player disconnects during trade?"
-- Document findings as bug reports or test cases
+### 玩测 / 探索性测试
+- 带有明确目标的手动测试
+- "玩家能在 10 分钟内完成新手引导吗？"
+- "玩家在交易过程中断线会怎样？"
+- 将发现记录为 Bug 报告或测试用例
 
-## Test Strategy
+## 测试策略
 
-### What to Test
-Focus automated testing on areas that static analysis and the compiler can't catch:
-- Business logic correctness (damage calculations, buff stacking, economy)
-- Network handler behavior (correct response for given request)
-- State machine transitions (AI states, game phase states)
-- Race conditions in async code
-- Config-driven behavior (do data values produce expected results?)
-- Cross-process communication paths
-- Client-server round-trip scenarios
+### 测什么
+将自动化测试聚焦在静态分析和编译器无法捕获的领域：
+- 业务逻辑正确性（伤害计算、Buff 叠加、经济系统）
+- 网络处理器行为（给定请求的正确响应）
+- 状态机转换（AI 状态、游戏阶段状态）
+- 异步代码中的竞态条件
+- 配置驱动行为（数据值是否产生预期结果？）
+- 跨进程通信路径
+- 客户端-服务端往返场景
 
-### What NOT to Test (if your toolchain catches it)
-Check your project's static analysis capabilities. Common things that compilers/analyzers catch:
-- Type mismatches and missing references
-- Structural rule violations (framework-specific)
-- Namespace separation issues
-- API misuse patterns
+### 不需要测什么（如果工具链已覆盖）
+检查项目的静态分析能力。编译器/分析器通常能捕获：
+- 类型不匹配和缺失引用
+- 结构规则违反（框架特定）
+- 命名空间分离问题
+- API 误用模式
 
-> **Note:** Read the project's CLAUDE.md to understand which rules are enforced at compile time.
+> **注意：** 阅读项目的 CLAUDE.md 了解哪些规则在编译期强制执行。
 
-## Test Design Patterns
+## 测试设计模式
 
-### Arrange-Act-Assert (AAA)
+### 准备-执行-断言（AAA）
 ```csharp
 [Test]
 public void DamageSystem_ApplyDamage_ReducesHealth()
 {
-    // Arrange
+    // 准备
     int initialHealth = 100;
     int damage = 30;
 
-    // Act
+    // 执行
     int result = DamageCalculation.Apply(initialHealth, damage);
 
-    // Assert
+    // 断言
     Assert.AreEqual(70, result);
 }
 ```
 
-### Given-When-Then (BDD style)
+### 给定-当-那么（BDD 风格）
 ```csharp
 [Test]
 public void GivenPlayerInMap_WhenDisconnects_ThenUnitRemovedAfterTimeout()
 {
-    // Given: player is in map with a unit
-    // When: session disconnects
-    // Then: unit is removed after timeout period
+    // 给定：玩家在地图中有一个单位
+    // 当：会话断开连接
+    // 那么：单位在超时后被移除
 }
 ```
 
-### Test Data Patterns
-| Pattern | Use When |
-|---------|----------|
-| Minimal valid | Happy path tests |
-| Boundary values | Edge case tests (0, max, min+1, max-1) |
-| Invalid input | Error handling tests (null, empty, negative) |
-| Realistic data | Integration tests |
-| Worst case | Performance tests |
+### 测试数据模式
+| 模式 | 适用场景 |
+|------|----------|
+| 最小有效数据 | 正常路径测试 |
+| 边界值 | 边界情况测试（0、最大值、最小值+1、最大值-1） |
+| 无效输入 | 错误处理测试（null、空值、负数） |
+| 真实数据 | 集成测试 |
+| 最坏情况 | 性能测试 |
 
-## Bug Report Template
+## Bug 报告模板
 
 ```markdown
-## Bug: [Short description]
+## Bug: [简短描述]
 
-**Severity:** Critical / Major / Minor / Cosmetic
-**Priority:** P0 / P1 / P2 / P3
-**Found in:** [Version/Build/Branch]
+**严重程度：** 严重 / 重要 / 一般 / 外观
+**优先级：** P0 / P1 / P2 / P3
+**发现于：** [版本/构建/分支]
 
-### Steps to Reproduce
-1. [Exact step]
-2. [Exact step]
-3. [Exact step]
+### 复现步骤
+1. [精确步骤]
+2. [精确步骤]
+3. [精确步骤]
 
-### Expected Result
-[What should happen]
+### 预期结果
+[应该发生什么]
 
-### Actual Result
-[What actually happens]
+### 实际结果
+[实际发生了什么]
 
-### Evidence
-- Screenshot/Video: [link]
-- Log excerpt: [relevant lines]
-- Server/Client: [which side]
+### 证据
+- 截图/视频：[链接]
+- 日志摘录：[相关行]
+- 服务端/客户端：[哪一侧]
 
-### Environment
-- Build type: [Editor/Standalone/Mobile]
-- Server config: [if applicable]
-- Platform: [Windows/iOS/Android/etc]
+### 环境
+- 构建类型：[编辑器/独立运行/移动端]
+- 服务端配置：[如适用]
+- 平台：[Windows/iOS/Android 等]
 
-### Additional Context
-- Reproducibility: [Always / Sometimes / Rare]
-- Regression: [Was this working before? Which commit?]
-- Workaround: [Any temporary fix?]
+### 补充信息
+- 可复现性：[必现 / 偶现 / 罕见]
+- 是否回归：[之前是否正常？哪个提交？]
+- 临时解决方案：[有无临时修复？]
 ```
 
-## Test Plan Structure
+## 测试计划结构
 
-### For Each Feature/Sprint
+### 每个功能/Sprint 的测试计划
 ```markdown
-# Test Plan: [Feature Name]
+# 测试计划: [功能名称]
 
-## Scope
-- What's being tested
-- What's NOT being tested (out of scope)
+## 范围
+- 测试内容
+- 不测试的内容（超出范围）
 
-## Test Matrix
+## 测试矩阵
 
-| Test Case | Type | Priority | Automated? | Status |
-|-----------|------|----------|-----------|--------|
-| Happy path login | Integration | P0 | Yes | Pass |
-| Invalid password | Component | P1 | Yes | Pass |
-| Server down | Integration | P1 | No | Not tested |
+| 测试用例 | 类型 | 优先级 | 已自动化？ | 状态 |
+|----------|------|--------|-----------|------|
+| 正常路径登录 | 集成 | P0 | 是 | 通过 |
+| 无效密码 | 组件 | P1 | 是 | 通过 |
+| 服务端宕机 | 集成 | P1 | 否 | 未测试 |
 
-## Risk Areas
-- [High-risk areas requiring extra attention]
+## 风险区域
+- [需要额外关注的高风险区域]
 
-## Test Environment
-- Server config: [configuration used]
-- Client config: [build type, settings]
-- Test data: [config files needed]
+## 测试环境
+- 服务端配置：[使用的配置]
+- 客户端配置：[构建类型、设置]
+- 测试数据：[需要的配置文件]
 
-## Exit Criteria
-- [ ] All P0 tests pass
-- [ ] All P1 tests pass or have documented workarounds
-- [ ] No Critical bugs open
-- [ ] Performance within budget
+## 退出标准
+- [ ] 所有 P0 测试通过
+- [ ] 所有 P1 测试通过或有文档化的临时方案
+- [ ] 无严重 Bug 未关闭
+- [ ] 性能在预算范围内
 ```
 
-## Performance Testing
+## 性能测试
 
-### Key Metrics for Game Servers
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Server tick time | <50ms per frame | Log tick duration |
-| Message round-trip | <100ms (LAN), <300ms (WAN) | Client timestamp diff |
-| Entity creation | <1ms per entity | Profile factory method |
-| Scene load time | <3s (client) | Measure from request to ready |
-| Memory per process | Monitor growth | Track over extended play sessions |
+### 游戏服务端关键指标
+| 指标 | 目标 | 测量方式 |
+|------|------|----------|
+| 服务端 tick 时间 | 每帧 <50ms | 记录 tick 耗时 |
+| 消息往返时间 | <100ms（局域网），<300ms（广域网） | 客户端时间戳差值 |
+| 实体创建 | 每个实体 <1ms | 对工厂方法做性能分析 |
+| 场景加载时间 | <3s（客户端） | 从请求到就绪的耗时 |
+| 每进程内存 | 监控增长趋势 | 在长时间游玩中跟踪 |
 
-### Load Testing Approach
-1. Define player capacity target (e.g., 1000 concurrent per process)
-2. Simulate bot clients sending realistic message patterns
-3. Monitor: CPU, memory, message queue depth, tick time
-4. Find breaking point, then optimize
+### 负载测试方法
+1. 定义玩家容量目标（如每进程 1000 并发）
+2. 用机器人客户端模拟真实消息模式
+3. 监控：CPU、内存、消息队列深度、tick 时间
+4. 找到崩溃点，然后优化
 
-## Regression Testing Strategy
+## 回归测试策略
 
-### When to Run Full Regression
-- Before release builds
-- After major refactors
-- After merging long-lived branches
+### 何时运行完整回归
+- 发布构建前
+- 大规模重构后
+- 合并长期分支后
 
-### When to Run Targeted Regression
-- After bug fix (test the fix + related areas)
-- After feature completion (test the feature + integration points)
-- After config/protocol changes (test affected systems)
+### 何时运行定向回归
+- Bug 修复后（测试修复 + 相关区域）
+- 功能完成后（测试功能 + 集成点）
+- 配置/协议变更后（测试受影响系统）
 
-### Automated Regression Suite
-> **Note:** Use the project's specific test runner commands. Common patterns:
+### 自动化回归套件
+> **注意：** 使用项目特定的测试运行命令。常见模式：
 ```bash
-# Full test suite (adapt command to your project)
-dotnet test -v n        # .NET projects
-# or: Unity Test Runner  # Unity-native tests
+# 完整测试套件（按项目调整命令）
+dotnet test -v n        # .NET 项目
+# 或：Unity Test Runner  # Unity 原生测试
 
-# Targeted by category
+# 按分类定向运行
 dotnet test --filter "Category=Login" -v n
 
-# Smoke test (critical path only)
+# 冒烟测试（仅关键路径）
 dotnet test --filter "Priority=P0" -v n
 ```
 
-## Quality Gates
+## 质量门禁
 
-### Before Code Review
-- [ ] Project builds with 0 errors
-- [ ] New code has tests
-- [ ] Existing tests still pass
+### 代码审查前
+- [ ] 项目构建 0 错误
+- [ ] 新代码有测试
+- [ ] 现有测试仍然通过
 
-### Before Sprint Demo
-- [ ] All P0/P1 test cases pass
-- [ ] No Critical bugs open
-- [ ] Performance within budget
-- [ ] Basic playtest completed
+### Sprint 演示前
+- [ ] 所有 P0/P1 测试用例通过
+- [ ] 无严重 Bug 未关闭
+- [ ] 性能在预算范围内
+- [ ] 基本玩测已完成
 
-### Before Release
-- [ ] Full regression suite passes
-- [ ] Load test at target capacity
-- [ ] Security review completed
-- [ ] Playtest signoff from game designer
-- [ ] No known Critical or Major bugs
+### 发布前
+- [ ] 完整回归套件通过
+- [ ] 目标容量负载测试完成
+- [ ] 安全审查已完成
+- [ ] 策划玩测签字确认
+- [ ] 无已知严重或重要 Bug

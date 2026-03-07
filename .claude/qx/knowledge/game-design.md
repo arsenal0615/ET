@@ -1,141 +1,141 @@
-# Game Design Knowledge Base
+# 游戏设计知识库
 
-> Injected into game-designer agent context. Contains game design theory and best practices applicable to any Unity game project.
+> 注入到 game-designer Agent 上下文中。包含适用于任何 Unity 游戏项目的游戏设计理论和最佳实践。
 
-## Core Design Principles
+## 核心设计原则
 
-### Player Experience First
-- Every system, mechanic, and UI element serves the player experience
-- Technical elegance that hurts player experience is a failure
-- Measure success by player behavior, not system complexity
+### 玩家体验优先
+- 每个系统、机制和 UI 元素都服务于玩家体验
+- 损害玩家体验的技术优雅是失败的设计
+- 以玩家行为衡量成功，而非系统复杂度
 
-### Iterative Design
-- Paper prototype -> Digital prototype -> Playtest -> Iterate
-- Kill your darlings: if playtesting says it's not fun, cut it
-- "Fun" is discovered, not designed — create conditions for emergent fun
+### 迭代式设计
+- 纸面原型 -> 数字原型 -> 玩测 -> 迭代
+- 断舍离：如果玩测结果表明不好玩，就砍掉
+- "好玩"是被发现的，而非被设计的 — 创造涌现式乐趣的条件
 
-### Systems Thinking
-- Games are interconnected systems, not isolated features
-- Every new system affects existing systems (economy, difficulty, progression)
-- Map dependencies before implementing: input → process → output → feedback
+### 系统思维
+- 游戏是相互关联的系统，不是孤立的功能
+- 每个新系统都会影响现有系统（经济、难度、进度）
+- 实现前先映射依赖关系：输入 → 处理 → 输出 → 反馈
 
-## Game Design Document (GDD) Structure
+## 游戏设计文档（GDD）结构
 
-### Essential Sections
-1. **Vision Statement** — One paragraph that captures the game's core identity
-2. **Core Loop** — The primary activity cycle players repeat
-3. **Pillars** — 3-5 design pillars that guide all decisions
-4. **Systems Overview** — Each game system with inputs, outputs, and interactions
-5. **Progression** — How the player grows (power, knowledge, access)
-6. **Economy** — Resource flow: sources, sinks, exchange rates
-7. **Content Matrix** — What content exists at each progression stage
+### 必要章节
+1. **愿景声明** — 一段话概括游戏的核心特质
+2. **核心循环** — 玩家反复进行的主要活动周期
+3. **设计支柱** — 3-5 个指导所有决策的设计支柱
+4. **系统概览** — 每个游戏系统的输入、输出和交互关系
+5. **成长体系** — 玩家如何成长（能力、知识、解锁内容）
+6. **经济系统** — 资源流向：来源、消耗、兑换比率
+7. **内容矩阵** — 每个进度阶段存在什么内容
 
-### Technical Considerations for GDD
-When writing a GDD, always consider the technical implications that need programmer input:
-- **Authority Model** — Which systems need server validation vs client-only?
-- **Synchronization** — Which sync model fits each system? (state sync, lockstep, etc.)
-- **Concurrency** — Which systems need dedicated threads/processes?
-- **Hot-Update Scope** — Which systems need frequent iteration without full rebuilds?
+### GDD 中的技术考量
+编写 GDD 时，始终考虑需要程序员介入的技术影响：
+- **权威模型** — 哪些系统需要服务端验证 vs 纯客户端？
+- **同步方案** — 哪种同步模型适合每个系统？（状态同步、帧同步等）
+- **并发模型** — 哪些系统需要独立线程/进程？
+- **热更新范围** — 哪些系统需要频繁迭代且无需完整重新构建？
 
-> **Note:** Read the project's CLAUDE.md and framework documentation for specific technical patterns. The GDD should flag technical concerns, not prescribe framework-specific solutions.
+> **注意：** 阅读项目的 CLAUDE.md 和框架文档了解具体技术模式。GDD 应标记技术关注点，而非指定框架特定的解决方案。
 
-## System Architecture Patterns
+## 系统架构模式
 
-### Component-Based Design
-- Each game system maps to data containers + behavior processors
-- Data and behavior are separate — enables hot-reload and parallel development
-- Prefer composition over inheritance for game entities
+### 基于组件的设计
+- 每个游戏系统映射为数据容器 + 行为处理器
+- 数据和行为分离 — 支持热重载和并行开发
+- 优先组合而非继承来构建游戏实体
 
-### Event-Driven Design
-- Systems communicate via events, not direct coupling
-- Reduces dependencies, enables parallel development
-- Decoupled systems are easier to test, iterate, and remove
+### 事件驱动设计
+- 系统间通过事件通信，而非直接耦合
+- 减少依赖，支持并行开发
+- 解耦的系统更容易测试、迭代和移除
 
-### Config-Driven Design
-- Balance values, content definitions, and progression curves in data files
-- Designers modify data, not code
-- Enables rapid iteration without programmer involvement
+### 配置驱动设计
+- 数值平衡、内容定义和成长曲线放在数据文件中
+- 策划修改数据，不改代码
+- 支持无需程序员介入的快速迭代
 
-## Narrative Design
+## 叙事设计
 
-### Story Structure
-- **Three-Act Structure**: Setup → Confrontation → Resolution
-- **Hero's Journey**: Applicable to player progression arc
-- **Environmental Storytelling**: Let the world tell stories through placement and design
+### 故事结构
+- **三幕式结构**：铺垫 → 冲突 → 解决
+- **英雄之旅**：适用于玩家成长弧线
+- **环境叙事**：让世界通过布置和设计来讲述故事
 
-### Dialogue Systems
-- Branching dialogue: choices → consequences → player agency
-- Bark system: ambient NPC reactions to player state
-- Quest text: brief, actionable, personality-appropriate
+### 对话系统
+- 分支对话：选择 → 后果 → 玩家能动性
+- 闲聊系统：NPC 对玩家状态的环境反应
+- 任务文本：简洁、可操作、符合角色性格
 
-## Balance & Economy
+## 平衡与经济
 
-### Resource Economy
-- **Sources**: Where resources enter the system (quests, drops, purchases)
-- **Sinks**: Where resources leave (crafting, upgrades, durability loss)
-- **Equilibrium**: Sources and sinks balance at target play rate
-- **Inflation control**: Time-gating, diminishing returns, caps
+### 资源经济
+- **来源**：资源从哪里进入系统（任务、掉落、购买）
+- **消耗**：资源从哪里离开（制作、升级、耐久损耗）
+- **平衡点**：来源和消耗在目标游玩频率下达到均衡
+- **通胀控制**：时间门槛、收益递减、上限
 
-### Difficulty Curves
-- Introduce one mechanic at a time
-- Challenge should match growing player skill
-- Provide difficulty options OR adaptive difficulty
-- "Easy to learn, hard to master" — separate skill floor from skill ceiling
+### 难度曲线
+- 每次只引入一个新机制
+- 挑战应与玩家不断增长的技巧匹配
+- 提供难度选项或自适应难度
+- "易学难精" — 将技能地板和技能天花板分开
 
-### Stat System Design
-- Define the stat formula BEFORE implementing: base value + modifiers = final value
-- Common modifier types: flat add, percentage, final flat add, final percentage
-- Document the calculation order clearly for programmer handoff
-- Use spreadsheets to simulate balance across progression stages
+### 数值系统设计
+- 实现前先定义数值公式：基础值 + 修正值 = 最终值
+- 常见修正类型：固定加成、百分比加成、最终固定加成、最终百分比加成
+- 清晰记录计算顺序以便交接给程序员
+- 用电子表格模拟不同进度阶段的平衡性
 
-## Sprint Planning for Game Features
+## Sprint 规划（游戏功能）
 
-### Story Sizing
-- **1 point**: Single data container + logic, no network messages, no config
-- **2 points**: Data + logic + message handler, may need new protocol
-- **3 points**: Multiple interconnected pieces, protocol + config, cross-system
-- **5 points**: New subsystem, significant protocol + config changes
-- **8+ points**: Epic — must be broken down further
+### Story 估点
+- **1 点**：单个数据容器 + 逻辑，无网络消息，无配置
+- **2 点**：数据 + 逻辑 + 消息处理器，可能需要新协议
+- **3 点**：多个相互关联的部件，协议 + 配置，跨系统
+- **5 点**：新子系统，大量协议 + 配置变更
+- **8+ 点**：Epic — 必须进一步拆分
 
-### Acceptance Criteria Template
+### 验收标准模板
 ```
-GIVEN [initial state/context]
-WHEN [player action / system event]
-THEN [observable outcome]
-AND [secondary effects if any]
+GIVEN [初始状态/上下文]
+WHEN [玩家操作 / 系统事件]
+THEN [可观察的结果]
+AND [次要影响（如有）]
 ```
 
-### Technical Acceptance Criteria
-Always include these for programmer clarity:
-- Which server process/scene handles the feature
-- Server authority requirements (what must be validated server-side)
-- Network sync requirements (what data is sent, how often)
-- Data lifecycle expectations (when created, when cleaned up)
+### 技术验收标准
+始终包含这些内容以便程序员理解：
+- 哪个服务器进程/场景处理该功能
+- 服务端权威要求（哪些内容必须服务端验证）
+- 网络同步要求（发送什么数据、多频繁）
+- 数据生命周期预期（何时创建、何时清理）
 
-> **Note:** Use the project's specific terminology (scene types, message types, etc.) from project documentation.
+> **注意：** 使用项目文档中的特定术语（场景类型、消息类型等）。
 
-## Playtest Methodology
+## 玩测方法论
 
-### Internal Playtesting
-1. Define hypothesis: "Players will discover X mechanic within Y minutes"
-2. Observe without interfering
-3. Record: what confused them, what delighted them, what they skipped
-4. Prioritize findings by frequency and severity
+### 内部玩测
+1. 定义假设："玩家将在 Y 分钟内发现 X 机制"
+2. 观察，不干预
+3. 记录：什么让他们困惑、什么让他们愉悦、什么被跳过
+4. 按频率和严重程度对发现进行优先排序
 
-### Metrics to Track
-- Time-to-first-action (onboarding quality)
-- Session length and return rate (engagement)
-- Feature discovery rate (discoverability)
-- Failure/success ratio (difficulty calibration)
-- Resource accumulation rate (economy balance)
+### 需要追踪的指标
+- 首次操作时间（新手引导质量）
+- 单次游玩时长和回访率（参与度）
+- 功能发现率（可发现性）
+- 失败/成功比率（难度校准）
+- 资源积累速率（经济平衡）
 
-## Common Design Pitfalls
+## 常见设计陷阱
 
-| Pitfall | Symptom | Fix |
-|---------|---------|-----|
-| Feature creep | Scope grows every sprint | Enforce design pillars as filter |
-| Kitchen sink design | Too many unrelated systems | Core loop test: does it serve the loop? |
-| Designer's blindness | "It's obvious" (but only to you) | Playtest with fresh players |
-| Balance by feel | "Seems right" | Use spreadsheets, simulate 1000 players |
-| Copy without understanding | "Game X does it" | Understand WHY it works in Game X's context |
-| Ignoring server cost | "Cool system!" (but 100ms per frame) | Always estimate server tick budget |
+| 陷阱 | 症状 | 解决方案 |
+|------|------|----------|
+| 功能蔓延 | 每个 Sprint 范围都在扩大 | 用设计支柱作为过滤器 |
+| 大杂烩设计 | 太多不相关的系统 | 核心循环测试：它服务于核心循环吗？ |
+| 设计者盲区 | "这很明显"（但只对你而言） | 让新玩家来玩测 |
+| 凭感觉平衡 | "感觉差不多" | 用电子表格，模拟 1000 个玩家 |
+| 照搬不理解 | "游戏 X 就是这么做的" | 理解为什么它在游戏 X 的上下文中有效 |
+| 忽略服务端开销 | "酷系统！"（但每帧 100ms） | 始终估算服务端 tick 预算 |
