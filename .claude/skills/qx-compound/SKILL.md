@@ -184,4 +184,4 @@ Bug 修复 → /qx-dev-debug（找到解决方案）─────────�
 - **qx-dev-close** — 归档阶段触发复合积累
 - **qx-gd-sprint** — 回顾阶段建议复合积累
 - **qx-dev-debug** — 调试经验注入复合积累
-- **qx-dev-impact** — 系统关系图是复合积累的关键目标
+- **qx-dev-design** — 代码调研发现可反哺系统关系图

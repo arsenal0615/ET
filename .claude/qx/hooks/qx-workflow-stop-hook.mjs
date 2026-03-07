@@ -43,7 +43,6 @@ const WORKFLOW_TRANSITIONS = {
   "/qx-compound": "下一个 Story → /qx-dev-create",
 
   // 其他
-  "/qx-dev-impact": "根据影响分析结果决定下一步",
   "/qx-dev-debug": "修复后 → /qx-verify（验证修复）",
   "/qx-qa-test design": "/qx-qa-test automate（自动化测试）",
   "/qx-qa-test automate": "/qx-qa-test execute（执行测试）",

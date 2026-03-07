@@ -44,9 +44,8 @@
 
 ### [程序] 开发
 - `/qx-dev-explore` — 代码库探索（自由探索 + 架构可视化）
-- `/qx-dev-impact` — 系统影响分析
 - `/qx-dev-create` — 创建变更 + 提案（可选: spec 细化需求）
-- `/qx-dev-design` — 编写技术方案
+- `/qx-dev-design` — 编写技术方案（含代码调研+影响分析）
 - `/qx-dev-continue` — 自动推进变更到下一步
 - `/qx-dev-status` — 查看变更状态 / 列出所有变更
 - `/qx-dev-close` — 验证并归档变更

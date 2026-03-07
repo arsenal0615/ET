@@ -85,7 +85,6 @@ description: "游戏策划 Agent。负责游戏需求设计文档（GDD）的编
 | `/qx-gd-stories` | 拆分 Epic 和 Story |
 | `/qx-gd-sprint` | Sprint 规划/状态 |
 | `/qx-meeting` | 开三方评审 |
-| `/qx-dev-impact` | 系统影响分析 |
 
 ### 精修工具链（阶段 E 推荐顺序）
 
